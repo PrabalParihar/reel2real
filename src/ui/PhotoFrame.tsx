@@ -150,7 +150,7 @@ export function PhotoFrame({
   zoom = 1,
   status,
   showProgress = false,
-  showDuration = false,
+  durationSec,
   drawOutlines = true,
   labelMode = "centroid",
 }: {
@@ -167,8 +167,8 @@ export function PhotoFrame({
   zoom?: number;
   status?: string | null;
   showProgress?: boolean;
-  /** Show the file length only. A still with no known duration stays blank. */
-  showDuration?: boolean;
+  /** Stored loop length. The chip does not wait on a media event. */
+  durationSec?: number;
   /** False drops every contour. A partial outline is never drawn. */
   drawOutlines?: boolean;
   /** Tags sit in a row on the card. Centroid chips float on the object. */
@@ -181,7 +181,7 @@ export function PhotoFrame({
   const [reduced, setReduced] = useState(false);
   const [ratio, setRatio] = useState(0);
   const [clock, setClock] = useState("0:00");
-  const [durationLabel, setDurationLabel] = useState<string | null>(null);
+  const durationLabel = durationChipLabel(durationSec);
   const nounKey = (overlay?.nouns ?? []).map((noun) => `${noun.objectId}:${noun.requestId ?? ""}:${noun.present ? 1 : 0}`).join("|");
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
@@ -291,10 +291,6 @@ export function PhotoFrame({
             playsInline
             autoPlay
             style={{ objectFit: "fill", maxWidth: "none" }}
-            onLoadedMetadata={(event) => {
-              if (!showDuration) return;
-              setDurationLabel(durationChipLabel(event.currentTarget.duration));
-            }}
             onTimeUpdate={(event) => {
               const video = event.currentTarget;
               if (!video.duration) return;

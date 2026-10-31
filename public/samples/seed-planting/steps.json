@@ -50,8 +50,8 @@
     {
       "index": 1,
       "id": "step_02_pots",
-      "title": "Move along the tray",
-      "instruction": "Move along the tray with gloves on. Keep the gloves fully in frame.",
+      "title": "Work down the row",
+      "instruction": "Keep moving with gloves on. Keep the gloves fully in frame.",
       "hinglishPrompt": "Gloves dikhao.",
       "keyframe": "step-2.jpg",
       "samFile": "sam/step-2.json",

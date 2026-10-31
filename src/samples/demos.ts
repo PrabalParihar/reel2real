@@ -45,6 +45,11 @@ export interface DemoDefinition {
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
+  /**
+   * Length of hero-loop.mp4 from ffprobe. Absent when the grid card is a still.
+   * Origami is 8.008s and the chip rounds down to 0:08.
+   */
+  loopDurationSec?: number;
   /** Shown on the demo card and the coach. Kids science uses "Grown-up supervision". */
   safetyNote?: string;
 }
@@ -55,6 +60,7 @@ interface DemoInput {
   scene: SampleScene;
   credit: DemoCredit;
   safetyNote?: string;
+  loopDurationSec?: number;
 }
 
 function boxesFor(slug: string): FrameBox[][] {
@@ -91,6 +97,7 @@ export function defineDemo(input: DemoInput): DemoDefinition {
     cardCrop: fit.card.position,
     cardZoom: fit.card.zoom,
     cardOutlines: fit.card.outlines,
+    loopDurationSec: input.loopDurationSec,
     safetyNote: input.safetyNote?.trim() || undefined,
   };
 }
@@ -112,6 +119,7 @@ export const DEMOS: DemoDefinition[] = [
       href: "https://www.pexels.com/video/5480225/",
       licenseHref: "https://www.pexels.com/license/",
     },
+    loopDurationSec: 5,
   }),
   defineDemo({
     slug: "flask-colour",
@@ -124,6 +132,7 @@ export const DEMOS: DemoDefinition[] = [
       licenseHref: "https://pixabay.com/service/license-summary/",
     },
     safetyNote: "Grown-up supervision",
+    loopDurationSec: 10,
   }),
   defineDemo({
     slug: "origami",
@@ -135,6 +144,7 @@ export const DEMOS: DemoDefinition[] = [
       href: "https://www.pexels.com/video/a-person-making-origami-6364305/",
       licenseHref: "https://www.pexels.com/license/",
     },
+    loopDurationSec: 8.008,
   }),
   defineDemo({
     slug: "seed-planting",
@@ -146,6 +156,7 @@ export const DEMOS: DemoDefinition[] = [
       href: "https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/",
       licenseHref: "https://www.pexels.com/license/",
     },
+    loopDurationSec: 8,
   }),
   defineDemo({
     slug: "latte-art",

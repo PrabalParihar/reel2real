@@ -18,12 +18,14 @@ describe("grid duration chip", () => {
     const landing = readFileSync("src/ui/Landing.tsx", "utf8");
     const grid = landing.slice(landing.indexOf('id="demos"'));
     expect(grid).toContain("showProgress={false}");
-    expect(grid).toContain("showDuration={!sample.cardOutlines}");
+    expect(grid).toContain("durationSec={sample.cardOutlines ? undefined : sample.loopDurationSec}");
+    expect(grid).not.toContain("onLoadedMetadata");
     expect(grid).not.toContain("0:00");
     expect(grid).not.toMatch(/durationSec\s*[:=]\s*0/);
 
     const frame = readFileSync("src/ui/PhotoFrame.tsx", "utf8");
     expect(frame).toContain("durationChipLabel");
+    expect(frame).not.toContain("onLoadedMetadata");
     expect(frame).toContain('className="reel-status is-duration"');
     expect(frame).not.toContain(">{durationLabel || \"0:00\"}");
   });

@@ -4,7 +4,7 @@ import { DEMOS } from "@/src/samples/demos";
 import { highlightedBoxes } from "@/src/samples/boxes";
 import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, requiredAspect, sampleStageSize, titlePlacementFor, usesSourceEdgeException } from "@/src/samples/frame-fit";
 import { coverTransform, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
-import { tutorialFromScene, type SampleScene } from "@/src/samples/scene";
+import { heroStep, presentNouns, tutorialFromScene, unverifiedStep, unverifiedStepHint, type SampleScene } from "@/src/samples/scene";
 import { missingObjectHint } from "@/src/fsm/ui";
 import { PUBLISHED_SAMPLES } from "./catalog";
 
@@ -231,8 +231,9 @@ describe("catalog frame shapes", () => {
         expect(step.nouns.filter((noun) => noun.present).map((noun) => noun.noun)).toEqual(nouns);
         expect(step.title.trim().length).toBeGreaterThan(0);
         expect(step.instruction.trim().length).toBeGreaterThan(0);
-        const listed = (step as { keepFullyInFrame?: string[] }).keepFullyInFrame;
-        expect(listed ?? []).toEqual(nouns);
+        const listed = (step as { keepFullyInFrame?: string[] }).keepFullyInFrame ?? [];
+        const drawnNames = step.nouns.filter((noun) => noun.present && noun.verified === true).map((noun) => noun.noun);
+        expect(listed).toEqual(drawnNames);
         const drawable = step.nouns.filter((noun) => noun.present && noun.verified !== false);
         if (!drawable.length) {
           expect(boxes[index]).toEqual([]);
@@ -267,33 +268,58 @@ describe("catalog frame shapes", () => {
     expect(origami?.stepFullFrame[0]).toBe(true);
   });
 
-  it("does not name a dropped noun in that step's copy", () => {
-    const dropped: Record<string, string[][]> = {
-      origami: [["hands"], [], []],
-      "seed-planting": [[], ["pot"], []],
-    };
+  it("names only objects drawn on that step, including the title and the card", () => {
+    const vocab = [...new Set(DEMOS.flatMap((demo) => demo.scene.steps.flatMap((step) => step.nouns.map((noun) => noun.noun.toLowerCase()))))]
+      .sort((left, right) => right.length - left.length);
+    const named = (text: string) => vocab.filter((noun) => new RegExp(`\\b${noun}s?\\b`, "i").test(text));
+    const drawnOn = (step: SampleScene["steps"][number]) => new Set(
+      step.nouns.filter((noun) => noun.present && noun.verified === true).map((noun) => noun.noun.toLowerCase()),
+    );
     const docs = ["docs/demo-script.md", "README.md", "docs/SUBMISSION-DRAFT.md"].map((file) => readFileSync(file, "utf8")).join("\n");
     expect(docs).not.toMatch(/both hands/i);
     expect(docs).not.toMatch(/beside the pot/i);
     expect(docs).not.toMatch(/small pot/i);
+    expect(docs).not.toMatch(/move along the tray/i);
     expect(docs).not.toMatch(/\u2013|\u2014/);
+    expect(DEMOS.reduce((count, demo) => count + demo.scene.steps.length, 0)).toBe(15);
     for (const demo of DEMOS) {
+      const tutorial = tutorialFromScene(demo.scene, demo.domain);
       demo.scene.steps.forEach((step, index) => {
-        const copy = [
-          step.title,
-          step.instruction,
-          step.hinglishPrompt ?? "",
-          ...(step as { keepFullyInFrame?: string[] }).keepFullyInFrame ?? [],
-        ].join("\n");
-        expect(copy).not.toMatch(/\u2013|\u2014/);
-        for (const noun of dropped[demo.slug]?.[index] ?? []) {
-          expect(copy, `${demo.slug} step ${index + 1}`).not.toMatch(new RegExp(`\\b${noun}s?\\b`, "i"));
+        const drawn = drawnOn(step);
+        const fields: Record<string, string> = {
+          title: step.title,
+          body: step.instruction,
+          prompt: step.hinglishPrompt ?? "",
+          inFrame: ((step as { keepFullyInFrame?: string[] }).keepFullyInFrame ?? []).join(" "),
+          stepList: tutorial.steps[index].instructionText,
+        };
+        expect(fields.stepList).toBe(step.title);
+        expect(`${fields.title}\n${fields.body}\n${fields.prompt}`).not.toMatch(/\u2013|\u2014/);
+        for (const [field, text] of Object.entries(fields)) {
+          for (const noun of named(text)) {
+            expect(drawn.has(noun), `${demo.slug} step ${index + 1} ${field} names ${noun}`).toBe(true);
+          }
         }
-        const unverified = step.nouns.filter((noun) => noun.present && noun.verified === false).map((noun) => noun.noun);
-        if (!unverified.length) return;
-        const hint = `Keep the ${unverified.join(" and ")} fully in frame`;
-        expect(hint === "Keep the cup fully in frame" || hint === "Keep the crane fully in frame").toBe(true);
+        if (unverifiedStep(step.nouns)) {
+          expect(unverifiedStepHint(step.nouns)).toBe(`Keep the ${step.nouns.find((noun) => noun.verified === false)?.noun} fully in frame`);
+          return;
+        }
+        for (const noun of named(missingObjectHint(tutorial.steps[index], null) ?? "")) {
+          expect(drawn.has(noun), `${demo.slug} step ${index + 1} hint names ${noun}`).toBe(true);
+        }
       });
+      const step1 = demo.scene.steps[0];
+      const cover = heroStep(demo.scene) ?? step1;
+      const cardNouns = new Set([...drawnOn(step1), ...drawnOn(cover)]);
+      const description = tutorial.steps[0].successCheck.description;
+      for (const noun of named(description)) {
+        expect(cardNouns.has(noun), `${demo.slug} card description names ${noun}`).toBe(true);
+      }
+      if (!demo.cardOutlines) {
+        for (const noun of presentNouns(cover)) {
+          expect(cardNouns.has(noun.noun.toLowerCase()), `${demo.slug} card chip ${noun.noun}`).toBe(true);
+        }
+      }
     }
   });
 });

@@ -141,7 +141,7 @@ export function Landing() {
                     zoom={sample.cardZoom}
                     sampleChip
                     showProgress={false}
-                    showDuration={!sample.cardOutlines}
+                    durationSec={sample.cardOutlines ? undefined : sample.loopDurationSec}
                     drawOutlines={sample.cardOutlines}
                     overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
                   />

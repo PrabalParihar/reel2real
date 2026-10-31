@@ -25,6 +25,8 @@ export interface PublishedSample {
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
+  /** Loop file length. Unset when the card shows a still and must not render a time chip. */
+  loopDurationSec?: number;
   /** Grown-up note for demos that need one. Empty when the catalog entry has none. */
   safetyNote?: string;
   demo: DemoDefinition;
@@ -50,6 +52,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     cardCrop: demo.cardCrop,
     cardZoom: demo.cardZoom,
     cardOutlines: demo.cardOutlines,
+    loopDurationSec: demo.cardOutlines ? undefined : demo.loopDurationSec,
     safetyNote: demo.safetyNote,
     demo,
   };

@@ -48,7 +48,7 @@
       "index": 1,
       "id": "step_02_crush",
       "title": "Crush the spice mix",
-      "instruction": "Use your hands to crush and mix the dried spices inside the mortar.",
+      "instruction": "Use your hands to crush and mix the dried spices.",
       "hinglishPrompt": "Spices haath se crush karo.",
       "keyframe": "step-2.jpg",
       "samFile": "sam/step-2.json",
@@ -76,9 +76,9 @@
     {
       "index": 2,
       "id": "step_03_add_herbs",
-      "title": "Drop dried herbs into the mortar",
-      "instruction": "Strip dried herbs into the mortar so the spice mix is ready for chai.",
-      "hinglishPrompt": "Dried herbs mortar mein daalo.",
+      "title": "Drop the dried herbs",
+      "instruction": "Strip the dried herbs onto the spices so the mix is ready for chai.",
+      "hinglishPrompt": "Dried herbs spices par daalo.",
       "keyframe": "step-3.jpg",
       "samFile": "sam/step-3.json",
       "nouns": [

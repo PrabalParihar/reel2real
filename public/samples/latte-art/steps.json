@@ -17,9 +17,9 @@
     {
       "index": 0,
       "id": "step_01_start",
-      "title": "Start filling the cup",
-      "instruction": "Pour milk into the green cup of espresso. Keep the cup fully in frame.",
-      "hinglishPrompt": "Cup dikhao.",
+      "title": "Start the pour",
+      "instruction": "Pour the milk into the espresso.",
+      "hinglishPrompt": "Pour shuru karo.",
       "keyframe": "step-1.jpg",
       "samFile": "sam/step-1.json",
       "nouns": [
@@ -33,9 +33,7 @@
           "requestId": "07c487f0-09ec-4272-b213-a082be8e3a9c"
         }
       ],
-      "keepFullyInFrame": [
-        "cup"
-      ]
+      "keepFullyInFrame": []
     },
     {
       "index": 1,
@@ -63,9 +61,9 @@
     {
       "index": 2,
       "id": "step_03_finish",
-      "title": "Finish the foam on the cup",
-      "instruction": "Finish the foam pattern on top of the cup. Keep the cup fully in frame.",
-      "hinglishPrompt": "Cup ka pattern finish karo.",
+      "title": "Finish the foam",
+      "instruction": "Finish the foam pattern on top.",
+      "hinglishPrompt": "Foam finish karo.",
       "keyframe": "step-3.jpg",
       "samFile": "sam/step-3.json",
       "nouns": [
@@ -79,9 +77,7 @@
           "requestId": "843ab4e9-586e-47c3-b0e2-5e1f7eee58ed"
         }
       ],
-      "keepFullyInFrame": [
-        "cup"
-      ]
+      "keepFullyInFrame": []
     }
   ]
 }
