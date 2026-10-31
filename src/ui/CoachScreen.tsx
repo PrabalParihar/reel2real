@@ -151,7 +151,7 @@ function CoachBody() {
 
         <section className="coach-side">
           {published ? (
-            <ol className="filmstrip">
+            <ol className={`filmstrip${tutorial.steps.length > 3 ? " is-scroll" : ""}`}>
               {tutorial.steps.map((item, index) => (
                 <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
                   <PhotoFrame

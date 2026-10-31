@@ -125,34 +125,42 @@ export function Landing() {
       <section className="section wrap" id="demos">
         <p className="kicker">Demos</p>
         <h2>Sample tutorials</h2>
-        <div className="demo-grid">
-          {PUBLISHED_SAMPLES.map((sample) => (
-            <article className="panel demo-card" key={sample.id}>
-              <div className="reel-phone card-frame">
-                <PhotoFrame
-                  className="is-fill"
-                  src={frameSrc(sample.scene, sample.poster)}
-                  alt={`${sample.tutorial.title} sample frame`}
-                  loopSrc={frameSrc(sample.scene, sample.clip)}
-                  objectPosition={sample.cardCrop}
-                  zoom={sample.cardZoom}
-                  sampleChip
-                  showProgress
-                  drawOutlines={sample.cardOutlines}
-                  labelMode={sample.cardOutlines ? "centroid" : "tags"}
-                  overlay={heroOverlay(sample.scene)}
-                />
-              </div>
-              <div className="demo-body">
-                <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
-                <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
-                <ol className="step-list">
-                  {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
-                </ol>
-                <Link className="btn btn-primary" href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
-              </div>
-            </article>
-          ))}
+        <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : ""}`}>
+          {PUBLISHED_SAMPLES.map((sample) => {
+            const tags = presentNouns(heroStep(sample.scene) ?? sample.scene.steps[0]);
+            return (
+              <article className="panel demo-card" key={sample.id}>
+                <div className="reel-phone card-frame">
+                  <PhotoFrame
+                    className="is-fill"
+                    src={frameSrc(sample.scene, sample.poster)}
+                    alt={`${sample.tutorial.title} sample frame`}
+                    loopSrc={frameSrc(sample.scene, sample.clip)}
+                    objectPosition={sample.cardCrop}
+                    zoom={sample.cardZoom}
+                    sampleChip
+                    showProgress
+                    drawOutlines={sample.cardOutlines}
+                    overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
+                  />
+                </div>
+                <div className="demo-body">
+                  <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
+                  <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
+                  {tags.length ? (
+                    <ul className="demo-tags">
+                      {tags.map((noun) => <li key={noun.noun} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
+                    </ul>
+                  ) : null}
+                  {PUBLISHED_SAMPLES.length === 1 ? <SceneCredit scene={sample.scene} /> : null}
+                  <ol className="step-list">
+                    {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
+                  </ol>
+                  <Link className="btn btn-primary" href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
