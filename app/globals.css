@@ -320,11 +320,11 @@ p { margin: 0; color: var(--ink-2); }
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(8, 10, 14, 0.42);
+  background: rgba(11, 13, 18, 0.85);
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
   white-space: nowrap;
   pointer-events: none;
@@ -425,6 +425,7 @@ p { margin: 0; color: var(--ink-2); }
 .sample-credits a { color: var(--ink); }
 .step-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .step-list li { color: var(--ink-2); font-size: 13px; }
+.demo-grid.is-featured .step-list li { color: #e4e4e7; font-size: 14px; line-height: 1.45; }
 .mini-visual { display: grid; gap: 6px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
 .mini-visual span { font-family: var(--font-mono); font-size: 11px; color: var(--saffron); }
 .blob-row { color: var(--mask); font-family: var(--font-mono); font-size: 12px; }
@@ -816,7 +817,7 @@ p { margin: 0; color: var(--ink-2); }
     background: #000;
   }
   .hero-reel { width: min(300px, 42%); flex: none; }
-  .hero-source .noun-chip { font-size: 10px; padding: 2px 7px; }
+  .hero-source .noun-chip { font-size: 12px; padding: 3px 8px; }
   .screen.coach .filmstrip:not(.is-scroll) li { flex: 1 1 0; }
   .screen.coach .filmstrip:not(.is-scroll) .photo-frame { max-height: 150px; }
   .screen.coach {

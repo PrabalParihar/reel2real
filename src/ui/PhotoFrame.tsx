@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
+import { readableChipColor } from "@/src/ui/chip-color";
+import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -29,6 +30,49 @@ function boxFullyInside(box: FrameBox, view: FrameBox): boolean {
   return box.x1 >= view.x1 - 0.5 && box.y1 >= view.y1 - 0.5 && box.x2 <= view.x2 + 0.5 && box.y2 <= view.y2 + 0.5;
 }
 
+function outlineSegments(d: string, frameW: number, frameH: number, cover: CoverTransform): Array<[Point, Point]> {
+  const tokens = d.match(/[MLZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
+  const segments: Array<[Point, Point]> = [];
+  let cursor: Point | null = null;
+  let start: Point | null = null;
+  const at = (x: number, y: number) => frameToView(x, y, frameW, frameH, cover);
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index].toUpperCase();
+    if (token === "M" || token === "L") {
+      const x = Number(tokens[index + 1]);
+      const y = Number(tokens[index + 2]);
+      index += 2;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      const next = at(x, y);
+      if (token === "M") {
+        cursor = next;
+        start = next;
+      } else if (cursor) {
+        segments.push([cursor, next]);
+        cursor = next;
+      }
+    } else if (token === "Z" && cursor && start) {
+      segments.push([cursor, start]);
+      cursor = start;
+    }
+  }
+  return segments;
+}
+
+function strokeHits(rect: { x1: number; y1: number; x2: number; y2: number }, segments: Array<[Point, Point]>, padX: number, padY: number): boolean {
+  const box = { x1: rect.x1 - padX, y1: rect.y1 - padY, x2: rect.x2 + padX, y2: rect.y2 + padY };
+  const inside = (point: Point) => point.x >= box.x1 && point.x <= box.x2 && point.y >= box.y1 && point.y <= box.y2;
+  for (const [start, end] of segments) {
+    const span = Math.hypot(end.x - start.x, end.y - start.y);
+    const steps = Math.max(1, Math.ceil(span / 3));
+    for (let step = 0; step <= steps; step += 1) {
+      const t = step / steps;
+      if (inside({ x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t })) return true;
+    }
+  }
+  return false;
+}
+
 function placeLabels(
   items: DrawItem[],
   frameW: number,
@@ -40,12 +84,14 @@ function placeLabels(
   const labels: Array<{ noun: string; color: string; x: number; y: number }> = [];
   const chipTop = view.h - 78;
   const chipRight = Math.min(view.w - 8, 248);
+  const padX = (4.5 * cover.width) / frameW / 2 + 3;
+  const padY = (4.5 * cover.height) / frameH / 2 + 3;
   for (const item of items) {
     if (!item.draw.centroid) continue;
     const point = frameToView(item.draw.centroid.x, item.draw.centroid.y, frameW, frameH, cover);
-    if (point.x < 8 || point.y < 8 || point.x > view.w - 8 || point.y > view.h - 8) continue;
-    const labelW = Math.max(64, item.noun.length * 7.2 + 22);
-    const labelH = 26;
+    const outline = outlineSegments(item.draw.d, frameW, frameH, cover);
+    const labelW = Math.max(76, item.noun.length * 8 + 22);
+    const labelH = 28;
     const halfW = labelW / 2;
     const halfH = labelH / 2;
     const clamp = (rawX: number, rawY: number) => {
@@ -54,16 +100,50 @@ function placeLabels(
       if (y + halfH > chipTop && x - halfW < chipRight) y = Math.max(halfH + 6, chipTop - halfH - 4);
       return { x, y };
     };
-    let { x, y } = clamp(point.x, point.y);
-    for (let pass = 0; pass < 8; pass += 1) {
-      const mine = { x1: x - halfW, y1: y - halfH, x2: x + halfW, y2: y + halfH };
-      const hit = placed.find((other) => mine.x1 < other.x2 && mine.x2 > other.x1 && mine.y1 < other.y2 && mine.y2 > other.y1);
-      if (!hit) break;
-      const otherCx = (hit.x1 + hit.x2) / 2;
-      ({ x, y } = clamp(x + (x >= otherCx ? 14 : -14), y));
+    const bounds = outline.reduce((acc, [start, end]) => ({
+      minX: Math.min(acc.minX, start.x, end.x),
+      minY: Math.min(acc.minY, start.y, end.y),
+      maxX: Math.max(acc.maxX, start.x, end.x),
+      maxY: Math.max(acc.maxY, start.y, end.y),
+    }), { minX: point.x, minY: point.y, maxX: point.x, maxY: point.y });
+    const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
+    const candidates = [
+      point,
+      { x: center.x, y: bounds.minY - halfH - 8 },
+      { x: center.x, y: bounds.maxY + halfH + 8 },
+      { x: bounds.minX - halfW - 8, y: center.y },
+      { x: bounds.maxX + halfW + 8, y: center.y },
+    ];
+    for (const step of [24, 48, 72]) {
+      candidates.push(
+        { x: center.x, y: center.y - step },
+        { x: center.x, y: center.y + step },
+        { x: center.x - step, y: center.y },
+        { x: center.x + step, y: center.y },
+      );
     }
-    placed.push({ x1: x - halfW, y1: y - halfH, x2: x + halfW, y2: y + halfH });
-    labels.push({ noun: item.noun, color: item.color, x, y });
+    for (let gy = halfH + 10; gy <= view.h - halfH - 10; gy += 18) {
+      for (let gx = halfW + 10; gx <= view.w - halfW - 10; gx += 22) candidates.push({ x: gx, y: gy });
+    }
+    let chosen = clamp(point.x, point.y);
+    let chosenHits = true;
+    let chosenDistance = Number.POSITIVE_INFINITY;
+    for (const candidate of candidates) {
+      const next = clamp(candidate.x, candidate.y);
+      const rect = { x1: next.x - halfW, y1: next.y - halfH, x2: next.x + halfW, y2: next.y + halfH };
+      if (rect.x1 < 4 || rect.y1 < 4 || rect.x2 > view.w - 4 || rect.y2 > view.h - 4) continue;
+      if (strokeHits(rect, outline, padX, padY)) continue;
+      if (placed.some((other) => rect.x1 < other.x2 && rect.x2 > other.x1 && rect.y1 < other.y2 && rect.y2 > other.y1)) continue;
+      const distance = Math.hypot(next.x - point.x, next.y - point.y);
+      if (distance < chosenDistance) {
+        chosen = next;
+        chosenHits = false;
+        chosenDistance = distance;
+      }
+    }
+    if (chosenHits) continue;
+    placed.push({ x1: chosen.x - halfW, y1: chosen.y - halfH, x2: chosen.x + halfW, y2: chosen.y + halfH });
+    labels.push({ noun: item.noun, color: readableChipColor(item.color), x: chosen.x, y: chosen.y });
   }
   return labels;
 }
@@ -262,7 +342,7 @@ export function PhotoFrame({
       {labelMode === "tags" ? (
         <div className="noun-tags">
           {(overlay?.nouns ?? []).filter((noun) => noun.present).map((noun) => (
-            <span key={noun.noun} className="noun-chip" style={{ borderColor: noun.color, color: noun.color }}>{noun.noun}</span>
+            <span key={noun.noun} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
           ))}
         </div>
       ) : cover ? placeLabels(items, frameW, frameH, cover, view).map((label) => (
