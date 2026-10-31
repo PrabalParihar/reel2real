@@ -10,6 +10,8 @@ import { postSpark, type ExtractStage } from "./sparkOnce";
 import { applyUserAttribution } from "@/src/schema/attribution";
 import { validateTutorialSteps } from "@/src/schema/validate";
 import { PUBLISHED_SAMPLES, sampleByPublishedId } from "@/src/domains/catalog";
+import { heroNouns, heroSamFile, heroStep, sceneAsset } from "@/src/samples/scene";
+import { PhotoFrame } from "./PhotoFrame";
 import { readStepsCache, writeStepsCache } from "./steps-cache";
 
 async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: TutorialSteps; toolCalls: ToolCall[]; source: StepsSource } | null> {
@@ -118,6 +120,8 @@ export function ExtractingScreen() {
     };
   }, [attempt, error, router, session, session.prepare]);
 
+  const published = sampleByPublishedId(demo) ?? sampleByPublishedId(session.prepare?.sampleId);
+  const heroFile = published ? heroSamFile(published.scene) : undefined;
   const order: ExtractStage[] = session.prepare?.hasClip
     ? ["upload", "reading", "validating", "preparing"]
     : ["reading", "validating", "preparing"];
@@ -127,6 +131,17 @@ export function ExtractingScreen() {
     <AppShell backHref="/upload">
       <main className="screen extract">
         <section className="extract-stage panel">
+          {published ? (
+            <PhotoFrame
+              className="extract-photo"
+              src={sceneAsset(published.scene, heroStep(published.scene)?.keyframe ?? published.scene.hero.image)}
+              alt={`${published.tutorial.title} sample frame`}
+              sizes="(max-width: 800px) 100vw, 520px"
+              recordedLabel
+              priority
+              overlay={heroFile ? { samUrl: sceneAsset(published.scene, heroFile), nouns: heroNouns(published.scene) } : null}
+            />
+          ) : null}
           <div className="ring is-idle">
             <strong className="mono">{(elapsed / 1000).toFixed(1)}s</strong>
             <span>this run</span>

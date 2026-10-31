@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "tutorialId": "sample_aloo_jeera_prep_v1",
-  "title": "Sample · Aloo jeera — onion prep",
+  "title": "Sample · Aloo jeera, onion prep",
   "domain": "indian_recipe",
   "sampleLabel": true,
   "attribution": {
     "creatorName": "Sample cook (self-filmed)",
-    "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+    "creditLine": "Sample · Self-filmed for Reel2Real demo. Not a public creator Reel",
     "licence": "self_filmed_sample"
   },
   "sourceClip": {
@@ -40,10 +40,10 @@
       "id": "step_01_board_setup",
       "index": 0,
       "instructionText": "Place the chopping board and knife in frame, onion whole on the board.",
-      "hinglishPrompt": "Board aur knife dikhao — onion ready.",
+      "hinglishPrompt": "Board aur knife dikhao. Onion ready.",
       "sourceTimeRange": { "startSec": 0.0, "endSec": 6.0 },
       "credit": {
-        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creditLine": "Sample · Self-filmed for Reel2Real demo. Not a public creator Reel",
         "creatorName": "Sample cook (self-filmed)",
         "sampleLabel": true
       },
@@ -81,10 +81,10 @@
       "id": "step_02_chop_onion",
       "index": 1,
       "instructionText": "Chop the onion into small pieces on the board.",
-      "hinglishPrompt": "Onion kaato — pieces board pe.",
+      "hinglishPrompt": "Onion kaato. Pieces board pe.",
       "sourceTimeRange": { "startSec": 6.0, "endSec": 18.0 },
       "credit": {
-        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creditLine": "Sample · Self-filmed for Reel2Real demo. Not a public creator Reel",
         "sampleLabel": true
       },
       "objects": [
@@ -127,17 +127,17 @@
       "safety": {
         "ruleId": "knife_on_board_wrong_step",
         "triggerObjectIds": ["obj_knife"],
-        "message": "Knife detected — keep fingers clear. Sample safety cue."
+        "message": "Knife detected. Keep fingers clear. Sample safety cue."
       }
     },
     {
       "id": "step_03_knife_down",
       "index": 2,
       "instructionText": "Set the knife off the board and gather the chopped onion.",
-      "hinglishPrompt": "Knife hatao — onion ikattha karo.",
+      "hinglishPrompt": "Knife hatao. Onion ikattha karo.",
       "sourceTimeRange": { "startSec": 18.0, "endSec": 30.0 },
       "credit": {
-        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creditLine": "Sample · Self-filmed for Reel2Real demo. Not a public creator Reel",
         "creatorName": "Sample cook (self-filmed)",
         "sampleLabel": true
       },

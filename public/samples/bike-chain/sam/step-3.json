@@ -1,0 +1,60 @@
+{
+  "demo": "bike-chain",
+  "step": 3,
+  "keyframe": "public/samples/bike-chain/step-3.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "bike-chain",
+      "step": 3,
+      "objectId": "obj_hand",
+      "noun": "hand",
+      "image": "public/samples/bike-chain/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 60877
+      },
+      "status": 200,
+      "ms": 450,
+      "requestId": "afaf8d8d-5944-4191-917d-ce8c70ca9737",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 412,
+            "y1": 0,
+            "x2": 545,
+            "y2": 94,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5722222222222222,
+            "y": 0,
+            "w": 0.18472222222222223,
+            "h": 0.23209876543209876
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 133,
+            "height": 94,
+            "payloadLen": 73
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 94,
+            "width": 133,
+            "payload": "!!!!![DXZ@UV:!LRAm@8QriRFRH3x*44O4WTcvj!eCyl.7^0]_zLv{gj_k8aCLVyq`9q3rx!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import aloo from "@/src/fixtures/sample-aloo-jeera.steps.json";
-import chai from "@/src/fixtures/sample-masala-chai.steps.json";
-import bike from "@/src/fixtures/sample-bike-chain.steps.json";
+import { SAMPLE_SCENES, tutorialFromScene } from "@/src/samples/scene";
 import { normalizeSparkPayload } from "./normalize";
 import { validateTutorialSteps } from "./validate";
+
+const chai = tutorialFromScene(SAMPLE_SCENES[0]);
+const bike = tutorialFromScene(SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain") ?? SAMPLE_SCENES[1]);
 
 describe("steps schema", () => {
   it("accepts the Sample aloo jeera fixture", () => {
@@ -26,37 +28,50 @@ describe("steps schema", () => {
     const second = validateTutorialSteps(bike);
     expect(second.ok).toBe(true);
     if (!second.ok) return;
+    const bikeScene = SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain");
     expect(second.value.sampleLabel).toBe(true);
-    expect(second.value.attribution.licence).toBe("self_filmed_sample");
-    expect(second.value.attribution.creatorName).toBe("Sample");
-    expect(second.value.attribution.creditLine).toBe("Sample");
+    expect(second.value.attribution.licence).toBe("other_cleared");
+    expect(second.value.attribution.creatorName).toBe(bikeScene?.sourceClip.author);
+    expect(second.value.steps.map((step) => step.instructionText)).toEqual(bikeScene?.steps.map((step) => step.title));
+    expect(second.value.steps.map((step) => step.objects.map((object) => object.noun))).toEqual(
+      bikeScene?.steps.map((step) => step.nouns.filter((noun) => noun.present).map((noun) => noun.noun)),
+    );
     expect(second.value.steps).toHaveLength(3);
-    const safety = second.value.steps.filter((step) => step.safety);
-    expect(safety).toHaveLength(1);
     for (const step of second.value.steps) {
       expect(step.credit.sampleLabel).toBe(true);
-      expect(step.credit.creditLine).toBe("Sample");
-      expect(step.objects.length).toBeGreaterThanOrEqual(2);
       expect(step.objects.length).toBeLessThanOrEqual(4);
+      for (const object of step.objects) {
+        expect(object.noun.toLowerCase()).not.toMatch(/cassette|sprocket|rag|lube/);
+      }
     }
+    const chaiScene = SAMPLE_SCENES.find((scene) => scene.demo === "masala-chai");
+    expect(chai.steps.map((step) => step.instructionText)).toEqual(chaiScene?.steps.map((step) => step.title));
+    expect(JSON.stringify(chai.steps)).not.toMatch(/ginger|cardamom|\bcup\b/);
   });
 
   it("accepts stills_only on the same schema", () => {
     const copy = structuredClone(chai) as typeof chai;
+    if (!copy.runtimeHints) throw new Error("runtime hints missing");
     copy.runtimeHints.preferredLiveMode = "stills_only";
     const result = validateTutorialSteps(copy);
     expect(result.ok).toBe(true);
   });
 
   it("rejects the wrong object counts", () => {
-    const tooFew = structuredClone(chai) as typeof chai;
-    tooFew.steps[0].objects = tooFew.steps[0].objects.slice(0, 1);
-    expect(validateTutorialSteps(tooFew).ok).toBe(false);
-    const tooMany = structuredClone(chai) as typeof chai;
+    const empty = structuredClone(chai);
+    empty.steps[0].objects = [];
+    empty.steps[0].successCheck = { kind: "all_required_present", description: "Needs nouns.", requiredObjectIds: [] };
+    expect(validateTutorialSteps(empty).ok).toBe(false);
+    const manual = structuredClone(chai);
+    manual.steps[0].objects = [];
+    manual.steps[0].successCheck = { kind: "manual_confirm_only", description: "No highlight on this frame." };
+    expect(validateTutorialSteps(manual).ok).toBe(true);
+    const tooMany = structuredClone(chai);
     tooMany.steps[0].objects = [
       ...tooMany.steps[0].objects,
       { objectId: "obj_extra_a", noun: "extra", role: "optional", samPrompt: "extra one", expectedTrack: false },
       { objectId: "obj_extra_b", noun: "extra_two", role: "optional", samPrompt: "extra two", expectedTrack: false },
+      { objectId: "obj_extra_c", noun: "extra_three", role: "optional", samPrompt: "extra three", expectedTrack: false },
     ];
     expect(validateTutorialSteps(tooMany).ok).toBe(false);
   });

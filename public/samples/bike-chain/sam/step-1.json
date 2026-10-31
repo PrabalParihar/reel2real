@@ -1,0 +1,82 @@
+{
+  "demo": "bike-chain",
+  "step": 1,
+  "keyframe": "public/samples/bike-chain/step-1.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "bike-chain",
+      "step": 1,
+      "objectId": "obj_chain",
+      "noun": "chain",
+      "image": "public/samples/bike-chain/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 63424
+      },
+      "status": 200,
+      "ms": 2127,
+      "requestId": "cc6f86cf-53aa-45c1-b802-c0695e168bde",
+      "route": "model-api-rust",
+      "present": false,
+      "records": [],
+      "hasMaskToken": false,
+      "error": null,
+      "maskDecoded": false,
+      "decodeNote": null
+    },
+    {
+      "demo": "bike-chain",
+      "step": 1,
+      "objectId": "obj_chain",
+      "noun": "bicycle chain",
+      "image": "public/samples/bike-chain/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 63424
+      },
+      "status": 200,
+      "ms": 1894,
+      "requestId": "24e94893-d87b-44d2-bf2e-da6292074e32",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 310,
+            "y1": 94,
+            "x2": 385,
+            "y2": 375,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.4305555555555556,
+            "y": 0.23209876543209876,
+            "w": 0.10416666666666667,
+            "h": 0.6938271604938272
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 75,
+            "height": 281,
+            "payloadLen": 211
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 281,
+            "width": 75,
+            "payload": "!!!!#vDq!DLWzr:oR'v]]p^Yh[ggQf5[iFO[/lz3e:mRod1[EyEl[qS]D1/C?Wwd!]rxS+qr^fllocw0^^wd@8%?NOL:p=%u3SDA'jT+94J-PC&[j&KYw87aV2^:`MAq*ReFUYv/!j'9Z2Rln*h6VBjab#reZf+7*gWf]78F]&:HbWNn$duUpmi.&)`6!M80X-$m0jQy[wIQ74Jmd3Q"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

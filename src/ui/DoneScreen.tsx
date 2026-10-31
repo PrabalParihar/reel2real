@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { frameForDomain } from "@/src/domains/catalog";
+import { sceneForPublishedId } from "@/src/domains/catalog";
 import { coachHonesty } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
+import { sceneAsset } from "@/src/samples/scene";
 import { AppShell, Chip } from "./chrome";
-import { StillFrame } from "./StandScene";
+import { PhotoFrame } from "./PhotoFrame";
+import { SampleCredit, SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 
 export function DoneScreen() {
@@ -13,7 +15,9 @@ export function DoneScreen() {
   const summary = session.summary;
   const tutorial = session.tutorial;
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
-  const kind = frameForDomain(tutorial?.domain);
+  const scene = !session.prepare?.hasClip
+    ? sceneForPublishedId(session.prepare?.sampleId) ?? sceneForPublishedId(tutorial?.tutorialId)
+    : undefined;
   const showTiming = !session.runtime.mock && session.stepsSource === "clip" && session.sparkLatencyMs != null && session.sparkLatencyMs > 0;
   return (
     <AppShell>
@@ -34,7 +38,13 @@ export function DoneScreen() {
                 const skipped = summary?.skippedStepIds?.includes(`index:${index}`) ?? false;
                 return (
                   <li key={step.id}>
-                    <StillFrame kind={kind} label={false} />
+                    {scene?.steps[index] ? (
+                      <PhotoFrame
+                        src={sceneAsset(scene, scene.steps[index].keyframe)}
+                        alt={scene.steps[index].title}
+                        sizes="84px"
+                      />
+                    ) : <span className="photo-frame" />}
                     <div>
                       <p>{step.instructionText}</p>
                       <span>{skipped ? "Skipped" : "Done"}</span>
@@ -44,7 +54,8 @@ export function DoneScreen() {
               })}
             </ol>
           ) : null}
-          <p className="credit">{tutorial ? formatCredit(tutorial.attribution) : "Credit · Sample cook · self-filmed"}</p>
+          {scene ? <SceneCredit scene={scene} /> : <p className="credit">{tutorial ? formatCredit(tutorial.attribution) : "Credit · Sample cook · self-filmed"}</p>}
+          {scene ? <SampleCredit /> : null}
           <div className="cta-row">
             <Link className="btn btn-primary" href="/coach">Run again</Link>
             <Link className="btn btn-ghost" href="/upload" onClick={() => session.reset()}>Upload another</Link>

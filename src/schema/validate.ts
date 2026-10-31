@@ -89,6 +89,9 @@ function semantic(tutorial: TutorialSteps): ValidationIssue[] {
     if (maxObjects && step.objects.length > maxObjects) {
       push(errors, `/steps/${index}/objects`, `exceeds maxObjectsPerStep ${maxObjects}`);
     }
+    if (!step.objects.length && step.successCheck.kind !== "manual_confirm_only") {
+      push(errors, `/steps/${index}/successCheck`, "a step with no nouns uses manual confirm");
+    }
     const objectIds = new Set<string>();
     for (const object of step.objects) {
       if (objectIds.has(object.objectId)) {

@@ -1,0 +1,111 @@
+{
+  "demo": "masala-chai",
+  "step": 3,
+  "keyframe": "public/samples/masala-chai/step-3.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "masala-chai",
+      "step": 3,
+      "objectId": "obj_mortar",
+      "noun": "mortar",
+      "image": "public/samples/masala-chai/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 36663
+      },
+      "status": 200,
+      "ms": 1384,
+      "requestId": "bf68982b-b330-4dd9-bd86-5f25a6af34a2",
+      "route": "model-api-rust",
+      "present": false,
+      "records": [],
+      "hasMaskToken": false,
+      "error": null,
+      "maskDecoded": false,
+      "decodeNote": null
+    },
+    {
+      "demo": "masala-chai",
+      "step": 3,
+      "objectId": "obj_spices",
+      "noun": "spices",
+      "image": "public/samples/masala-chai/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 36663
+      },
+      "status": 200,
+      "ms": 482,
+      "requestId": "3f2fec2b-d033-447e-8cc1-a90c23bfbb5f",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 395,
+            "y1": 309,
+            "x2": 408,
+            "y2": 336,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5486111111111112,
+            "y": 0.762962962962963,
+            "w": 0.018055555555555554,
+            "h": 0.06666666666666667
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 13,
+            "height": 27,
+            "payloadLen": 31
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 27,
+            "width": 13,
+            "payload": "!!!!!7L7wZG0``[^4=UX3)%DNL']WMD"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok"
+        },
+        {
+          "ordinal": "1",
+          "box": {
+            "x1": 389,
+            "y1": 197,
+            "x2": 467,
+            "y2": 306,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5402777777777777,
+            "y": 0.48641975308641977,
+            "w": 0.10833333333333334,
+            "h": 0.2691358024691358
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 78,
+            "height": 109,
+            "payloadLen": 96
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 109,
+            "width": 78,
+            "payload": "!!!!!oB+'^o3Pm$P$n.u78:KMm`GOW_kN6Lz`?KP^[9DTm-])1iSADR+Sw)$8txqH'i%*jA2L+w@#b=nw9'f9LQ5uMCgDck-"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

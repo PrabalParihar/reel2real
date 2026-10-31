@@ -43,26 +43,34 @@ If the coach says a noun is not highlighted, stop and reframe. Do not keep going
 - Hands and props only, unless you have consent for a face.
 - Upload a clip you filmed. Do not paste an Instagram link. There is no fetch field.
 
-## Masala chai (primary)
+## Masala chai (primary Sample)
 
-Self-filmed Sample. Placeholder path in the repo: `placeholders/sample-masala-chai.mp4`. Do not commit the video. Keep the real file in `clips/`.
+Pexels mortar kitchen clip, one continuous scene. Keyframes live in `public/samples/masala-chai/`. Recorded overlays are labelled Sample · recorded SAM output.
 
-1. Mortar, pestle, and ginger, all fully visible.
-2. Crush ginger and cardamom in the mortar. Four objects, all inside the frame.
-3. Set the cup beside the mortar. The whole cup stays in frame. This is the step Gate 0 failed when the cup was cropped. A knife in this step is the safety halt. Move it off the board and press Retry. Do not expect Next to skip safety.
+1. Set out the mortar and pestle.
+2. Crush the spice mix. Spices and a hand.
+3. Drop dried herbs into the mortar.
 
-## Bike chain (second, if time)
+## Bike chain (second Sample)
 
-Wheel, chain, and rag in frame, then wipe, then oil one link with the rag off the chain.
+Same drivetrain clip throughout. Keyframes live in `public/samples/bike-chain/`. The landing card uses the chain frame.
+
+1. Frame the bicycle chain.
+2. Brush the drivetrain.
+3. Steady the bike with your hand.
+
+## Your own filming
+
+Upload a clip you filmed. The coach uses the laptop camera when you allow it, and Sample keyframes only on the Sample runs above. If live SAM does not answer, the stage says Highlights unavailable. Next still moves the step.
 
 ## Shot list
 
 1. Upload and the Spark progress capsules. Hold long enough to see the wait. Live Spark was reported around 6–9 seconds.
 2. Coach with the Keyframe mode chip, Sample chip, and model ids `muse-spark-1.3` and `sam-3.1`.
-3. Boxes on the objects that are actually in frame.
+3. Recorded Sample contours on the objects that are actually in the frame. Live highlights only when SAM returns them.
 4. Move one required object out. Wait for the hint, then the Skip chip. The missed step’s credit stays on screen. Press Skip only when you mean to leave the step.
 5. Bring the next step’s object in early and wait for Out of order.
-6. On the cup step, leave a knife in frame and show the safety chip. Clear it, then Retry.
+6. Knife safety still lives on the aloo jeera fixture, not on the published chai sample. If you load that fixture, leave a knife in frame on the knife-down step, then Retry.
 7. Done screen with the step, skip, and safety counts, plus the model ids.
 
 ## Before you roll

@@ -5,15 +5,23 @@ import Link from "next/link";
 import { ArrowRight, Camera, Clapperboard, ScanLine } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
+import { heroNouns, heroSamFile, heroStep, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { Chip } from "./chrome";
 import { SparkMark } from "./mark";
-import { StillFrame } from "./StandScene";
+import { PhotoFrame } from "./PhotoFrame";
+import { SampleCredit, SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 
-const HERO_STEPS = PUBLISHED_SAMPLES[0].tutorial.steps.map((step) => step.instructionText);
+const CHAI = PUBLISHED_SAMPLES[0];
+const HERO_STEPS = CHAI.tutorial.steps.map((step) => step.instructionText);
+
+function frameSrc(scene: SampleScene, file: string): string {
+  return sceneAsset(scene, file);
+}
 
 export function Landing() {
   const { runtime } = useSession();
+  const chai = CHAI.scene;
   return (
     <div className="landing">
       <div className="nav-wrap">
@@ -41,7 +49,7 @@ export function Landing() {
             <a className="btn btn-ghost" href="#demos">Watch the demos</a>
           </div>
         </div>
-        <HeroStage mock={runtime.mock} />
+        <HeroStage mock={runtime.mock} scene={chai} />
       </header>
 
       <section className="section wrap" id="how">
@@ -53,7 +61,11 @@ export function Landing() {
             <Camera strokeWidth={1.5} />
             <h3>Upload a clip you own</h3>
             <p>MP4 or WebM you filmed, or a creator clip with written permission. You enter the creator name and the licence. The file stays in this browser.</p>
-            <StillFrame kind="chai" />
+            <PhotoFrame
+              src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
+              alt="Kitchen mortar and pestle, first sample frame"
+              sampleChip
+            />
           </article>
           <article className="panel">
             <span className="index">02</span>
@@ -61,7 +73,7 @@ export function Landing() {
             <h3>Spark writes the steps</h3>
             <p>Muse Spark reads the clip once and returns steps JSON. A short clip goes as a 2 second chunk. A longer one uses the files upload.</p>
             <div className="mini-visual">
-              <span>{PUBLISHED_SAMPLES[0].tutorial.title.replace(/^Sample · /, "")} · {HERO_STEPS.length} steps</span>
+              <span>{CHAI.tutorial.title.replace(/^Sample · /, "")} · {HERO_STEPS.length} steps</span>
               <ol className="step-list">
                 {HERO_STEPS.map((line) => <li key={line}>{line}</li>)}
               </ol>
@@ -72,7 +84,11 @@ export function Landing() {
             <ScanLine strokeWidth={1.5} />
             <h3>Coach with SAM</h3>
             <p>SAM 3.1 checks 2–4 objects about every 2 seconds on a keyframe. Advance, skip, out of order, one safety rule.</p>
-            <StillFrame kind="chai" />
+            <PhotoFrame
+              src={frameSrc(chai, chai.steps[1]?.keyframe ?? chai.hero.image)}
+              alt="Hands crushing spices in the same mortar"
+              sampleChip
+            />
           </article>
         </div>
       </section>
@@ -88,9 +104,13 @@ export function Landing() {
             </p>
           </div>
           <div className="credit-mock">
-            <StillFrame kind="chai" />
+            <PhotoFrame
+              src={frameSrc(chai, chai.steps[2]?.keyframe ?? chai.hero.image)}
+              alt="Dried herbs over the same kitchen mortar"
+              sampleChip
+            />
             <p>{HERO_STEPS[1]}</p>
-            <p>Credit · Sample cook · self-filmed</p>
+            <SceneCredit scene={chai} />
           </div>
         </article>
       </section>
@@ -101,7 +121,12 @@ export function Landing() {
         <div className="demo-grid">
           {PUBLISHED_SAMPLES.map((sample) => (
             <article className="panel demo-card" key={sample.id}>
-              <StillFrame kind={sample.frame} tall />
+              <PhotoFrame
+                className="tall"
+                src={frameSrc(sample.scene, sample.scene.hero.image)}
+                alt={`${sample.tutorial.title} sample frame`}
+                sampleChip
+              />
               <div className="demo-body">
                 <Chip tone="neutral">Sample</Chip>
                 <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
@@ -109,12 +134,12 @@ export function Landing() {
                 <ol className="step-list">
                   {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
                 </ol>
-                <Link className={sample.id === PUBLISHED_SAMPLES[0].id ? "btn btn-primary" : "btn btn-ghost"} href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
+                <Link className="btn btn-primary" href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
               </div>
             </article>
           ))}
         </div>
-        </section>
+      </section>
 
       <section className="section wrap" id="meta">
         <p className="kicker">Models</p>
@@ -147,6 +172,7 @@ export function Landing() {
       <footer className="footer wrap">
         <p>© Reel2Real · Indie · Meta Global AI Hackathon</p>
         <p>Upload only. Self-filmed demos are labelled Sample.</p>
+        <SampleCredit />
         <p className="footer-links">
           <a href="#how">How it works</a>
           <a href="#demos">Demos</a>
@@ -157,9 +183,11 @@ export function Landing() {
   );
 }
 
-function HeroStage({ mock }: { mock: boolean }) {
+function HeroStage({ mock, scene }: { mock: boolean; scene: SampleScene }) {
   const [index, setIndex] = useState(0);
   const [motion, setMotion] = useState(true);
+  const samFile = heroSamFile(scene);
+  const heroStill = heroStep(scene)?.keyframe ?? scene.hero.image;
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => setMotion(!media.matches);
@@ -173,24 +201,27 @@ function HeroStage({ mock }: { mock: boolean }) {
     return () => clearInterval(timer);
   }, [motion]);
   return (
-    <div className="hero-stage" aria-hidden="true">
-      <div className="dot-grid" />
-      <div className="phone-ghost" />
-      <div className="coach-mock">
-        <div className="mock-top">
-          <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
-        </div>
-        <div className={motion ? "mock-view is-loop" : "mock-view"} key={motion ? index : "still"}>
-          <span className="blob blob-a"><i />{PUBLISHED_SAMPLES[0].tutorial.steps[0].objects[0]?.noun}</span>
-          <span className="blob blob-b"><i />{PUBLISHED_SAMPLES[0].tutorial.steps[0].objects[1]?.noun}</span>
-          <span className="checking">Checking…</span>
-        </div>
-        <article className="mock-card" key={HERO_STEPS[index]}>
-          <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>
-          <h2>{HERO_STEPS[index]}</h2>
-          <p>Sample cook · self-filmed</p>
-        </article>
+    <div className="hero-media">
+      <div className="hero-chip-stack">
+        <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
+        <Chip tone="running">Checking…</Chip>
       </div>
+      <div className="hero-stage">
+        <PhotoFrame
+          className="is-fill"
+          src={frameSrc(scene, heroStill)}
+          alt="Stone mortar and pestle in one kitchen, sample hero frame"
+          sizes="(max-width: 800px) 100vw, 720px"
+          priority
+          recordedLabel
+          overlay={samFile ? { samUrl: sceneAsset(scene, samFile), nouns: heroNouns(scene) } : null}
+        />
+      </div>
+      <article className="mock-card is-below" key={HERO_STEPS[index]}>
+        <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>
+        <h2>{HERO_STEPS[index]}</h2>
+        <SceneCredit scene={scene} />
+      </article>
     </div>
   );
 }

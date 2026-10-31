@@ -1,0 +1,77 @@
+{
+  "demo": "bike-chain",
+  "title": "Sample \u00b7 Clean a bike chain",
+  "label": "Sample \u00b7 recorded SAM output",
+  "sourceClip": {
+    "file": "bike-chain-clean-20694685.mp4",
+    "pexelsId": "20694685",
+    "page": "https://www.pexels.com/video/cleaning-a-bike-20694685/",
+    "author": "Benjamin Eriksen",
+    "license": "Pexels License"
+  },
+  "hero": {
+    "image": "hero.jpg",
+    "samNoun": "chain",
+    "samStep": 1,
+    "samPrompt": "bicycle chain"
+  },
+  "steps": [
+    {
+      "index": 0,
+      "id": "step_01_chain",
+      "title": "Frame the bicycle chain",
+      "instruction": "Put the rear drivetrain in frame so the bicycle chain across the cassette is clear.",
+      "hinglishPrompt": "Chain cassette par dikhao.",
+      "keyframe": "step-1.jpg",
+      "samFile": "sam/step-1.json",
+      "nouns": [
+        {
+          "objectId": "obj_chain",
+          "noun": "chain",
+          "samPrompt": "bicycle chain",
+          "color": "#3CC878",
+          "present": true,
+          "requestId": "24e94893-d87b-44d2-bf2e-da6292074e32"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "step_02_brush",
+      "title": "Brush the drivetrain",
+      "instruction": "Hold the cleaning brush against the cassette so the bristles touch the chain.",
+      "hinglishPrompt": "Brush se drivetrain scrub karo.",
+      "keyframe": "step-2.jpg",
+      "samFile": "sam/step-2.json",
+      "nouns": [
+        {
+          "objectId": "obj_brush",
+          "noun": "brush",
+          "samPrompt": "brush",
+          "color": "#DC3C50",
+          "present": true,
+          "requestId": "6939a6c3-2703-4eef-a8de-c75a6e802296"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "step_03_hand",
+      "title": "Steady the bike with your hand",
+      "instruction": "Keep one hand visible as you finish brushing so the bike stays steady.",
+      "hinglishPrompt": "Haath dikhao, bike steady rakho.",
+      "keyframe": "step-3.jpg",
+      "samFile": "sam/step-3.json",
+      "nouns": [
+        {
+          "objectId": "obj_hand",
+          "noun": "hand",
+          "samPrompt": "hand",
+          "color": "#50A0E6",
+          "present": true,
+          "requestId": "afaf8d8d-5944-4191-917d-ce8c70ca9737"
+        }
+      ]
+    }
+  ]
+}

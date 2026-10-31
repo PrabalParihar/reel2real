@@ -8,7 +8,11 @@ describe("published samples", () => {
   it("keeps the second domain as one swappable slot", () => {
     expect(PUBLISHED_SAMPLES).toHaveLength(2);
     expect(PUBLISHED_SAMPLES[1]).toBe(SECOND_DOMAIN);
-    expect(SECOND_DOMAIN.creatorName).toBe("Sample");
+    expect(SECOND_DOMAIN.creatorName).toBe(SECOND_DOMAIN.scene.sourceClip.author);
+    expect(SECOND_DOMAIN.scene.hero.image).toBeTruthy();
+    expect(SECOND_DOMAIN.scene.steps.map((step) => step.title)).toEqual(
+      SECOND_DOMAIN.tutorial.steps.map((step) => step.instructionText),
+    );
     expect(SECOND_DOMAIN.tutorial.sampleLabel).toBe(true);
     expect(SECOND_DOMAIN.tutorial.steps).toHaveLength(3);
   });

@@ -1,0 +1,112 @@
+{
+  "demo": "masala-chai",
+  "step": 1,
+  "keyframe": "public/samples/masala-chai/step-1.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "masala-chai",
+      "step": 1,
+      "objectId": "obj_mortar",
+      "noun": "mortar",
+      "image": "public/samples/masala-chai/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 42911
+      },
+      "status": 200,
+      "ms": 711,
+      "requestId": "98b5fe17-38f5-45bb-8c33-c8c6354ab727",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 221,
+            "y1": 85,
+            "x2": 568,
+            "y2": 380,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.30694444444444446,
+            "y": 0.20987654320987653,
+            "w": 0.48194444444444445,
+            "h": 0.7283950617283951
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 347,
+            "height": 295,
+            "payloadLen": 473
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 295,
+            "width": 347,
+            "payload": "!!!!&GA/pJglMrWW2pk]Pt!'%m3mZ+TY+^@%iKET)DNu-&_SD.Y-6m{b)4Z5LY{bx#k[1]Hw9Q1*bf8TQ^nUGyD7q=d[Q[MC$Xg0?5sc!(y+V6S//KScmNM4P-dfw&@tNl/+FMdN=p??TNcazXCfCM$bYM$adm%Hi-.5MN&8YlEpKL%:aRB'$j]fG]SA$=u%gn4oxQlxyI[pUK--E?h(O.YTwF*cf`I*dPnl^c@pe4]/'hvUySM%_.Vu^#_`MWZ+AVBv7RL#n3jJGzA'#xEE_%P:5W*s8QORu-ZLC8qMil`N$XbE.MZrM^k?V^v(Fjii^).UNGGmCZwT446I@`q^o%w=+KTgthhLLo1O3oRlNU]1{D)/!c].$uJjN*J&D:o+46PqN$/==fQ!O.&/^klRVKn$1Y4gRd4Z=^{3GeT4T$[0hY{/L_`5?f)1Je`n]BipmS@BwqYo!k2pYb7Cx2y!EpP!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    },
+    {
+      "demo": "masala-chai",
+      "step": 1,
+      "objectId": "obj_pestle",
+      "noun": "pestle",
+      "image": "public/samples/masala-chai/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 42911
+      },
+      "status": 200,
+      "ms": 812,
+      "requestId": "d0f8d0f0-6d6f-4000-9cd0-dd386ab6ad12",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 100,
+            "y1": 0,
+            "x2": 217,
+            "y2": 250,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.1388888888888889,
+            "y": 0,
+            "w": 0.1625,
+            "h": 0.6172839506172839
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 117,
+            "height": 250,
+            "payloadLen": 123
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 250,
+            "width": 117,
+            "payload": "!!!!#*FG0?M0H+=K[%)B4Xo?.j.f10iA8Z/7P=B(F%+qC8(*^19Kg+bp%*AF4xS%uVpBisOWt:i9qPYqW41!`9!we6h)$Hs%ljld6rmg+LsLhxdlK9kN^%7&%!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

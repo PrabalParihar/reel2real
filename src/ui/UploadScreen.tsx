@@ -7,7 +7,8 @@ import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import type { LicenceChoice } from "@/src/schema/attribution";
 import { applyUserAttribution } from "@/src/schema/attribution";
 import { AppShell } from "./chrome";
-import { StillFrame } from "./StandScene";
+import { sceneAsset } from "@/src/samples/scene";
+import { PhotoFrame } from "./PhotoFrame";
 import { useSession } from "./session";
 import { readStepsCache, sha256Hex } from "./steps-cache";
 
@@ -171,7 +172,12 @@ export function UploadScreen() {
                     setDomain(sample.domain);
                   }}
                 >
-                  <StillFrame kind={sample.frame} />
+                  <PhotoFrame
+                    src={sceneAsset(sample.scene, sample.scene.hero.image)}
+                    alt={`${sample.tutorial.title} sample frame`}
+                    sizes="180px"
+                    sampleChip
+                  />
                   <span>{sample.tutorial.title}</span>
                 </button>
               ))}
@@ -184,6 +190,16 @@ export function UploadScreen() {
           </section>
           <aside className="panel tips">
             <h2>Framing</h2>
+            <div className="frame-examples">
+              {PUBLISHED_SAMPLES.map((sample) => (
+                <PhotoFrame
+                  key={sample.id}
+                  src={sceneAsset(sample.scene, sample.scene.steps[0]?.keyframe ?? sample.scene.hero.image)}
+                  alt={`${sample.tutorial.title} framing still`}
+                  sizes="220px"
+                />
+              ))}
+            </div>
             <p>2–4 objects work best. Good light. Each tracked object stays fully inside the frame.</p>
             <p>If an object is not highlighted, move it fully into the frame before you continue.</p>
             <p className="mono">Credit and licence come from this form. Spark does not choose them.</p>

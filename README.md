@@ -48,7 +48,7 @@ A verified 2 second Spark clip took about 16.7 seconds median (3 runs, HTTP 200,
 
 This app is a Node web service. `npm run build` then `npm run start`. `next start` listens on `PORT` (default 3000). Node is `>=22 <23` in `engines`, and `.nvmrc` says `22`. `railway.json` sets the Railpack build command and the start command.
 
-Set the model key and, for a public preview, `PREVIEW_PASSWORD`. Basic auth then covers every route, including `/_next/static` and files in `public`, because middleware is registered without a matcher that excludes them. An empty `PREVIEW_PASSWORD` returns 503 on every route. Sign in as any username with that password. There is no health-check path in `railway.json`, because a check would also have to send the password.
+Set the model key and, for a public preview, `PREVIEW_PASSWORD`. Basic auth covers pages and API routes. `/samples/*`, `/_next/image`, `/_next/static`, and the favicon stay public so the image optimizer can read the sample frames. An empty `PREVIEW_PASSWORD` returns 503 on gated routes. Sign in as any username with that password. There is no health-check path in `railway.json`, because a check would also have to send the password.
 
 Docs used: [Next.js Node.js server deployment](https://nextjs.org/docs/app/building-your-application/deploying#nodejs-server), [Next.js CLI `next start` port](https://nextjs.org/docs/app/api-reference/cli/next#next-start-options), [Next.js middleware](https://nextjs.org/docs/app/api-reference/file-conventions/middleware), [Railway config as code](https://docs.railway.com/reference/config-as-code), [Railway start command](https://docs.railway.com/guides/start-command). The Railway variables reference lists `RAILWAY_*` names and does not list an HTTP `PORT` key. `next start` still reads `PORT` when the platform sets it.
 
@@ -70,8 +70,8 @@ npm run gate0 -- clips/your-clip.mp4
 
 ## Sample data
 
-Fixtures in `src/fixtures/` are labelled Sample and point at placeholder paths. No creator media is in the repo. Filming notes are in `docs/demo-script.md`. Gate 0 missed a cup that was out of frame. The coach shows a hint when an expected object is not highlighted.
+Published Sample steps, keyframes, and recorded SAM masks live in `public/samples/`. Titles and nouns come from each demo's `steps.json`. Filming notes are in `docs/demo-script.md`. The coach shows a hint when an expected object is not highlighted. A step with no recorded hit shows that honestly and does not invent a box.
 
 ## Safety rule
 
-On the chai cup step, and on the aloo jeera “knife down” step, a knife that is not required for the step raises `safety_halt`. Next stays disabled until Retry.
+On the aloo jeera knife-down step, a knife that is not required for the step raises `safety_halt`. Next stays disabled until Retry. The published chai sample does not claim a cup, ginger, or cardamom.

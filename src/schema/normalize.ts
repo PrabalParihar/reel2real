@@ -47,7 +47,7 @@ export function normalizeSparkPayload(payload: unknown, input: NormalizeInput = 
     return validateTutorialSteps(payload);
   }
   const rawSteps = Array.isArray(record?.steps) ? record.steps : [];
-  const creditLine = input.creditLine?.trim() || "Sample · Self-filmed for Reel2Real demo — not a public creator Reel";
+  const creditLine = input.creditLine?.trim() || "Sample · Self-filmed for Reel2Real demo. Not a public creator Reel";
   const duration = input.durationSec && input.durationSec > 0 ? input.durationSec : Math.max(rawSteps.length * 8, 8);
   const slice = duration / Math.max(rawSteps.length, 1);
   const steps = rawSteps.map((raw, index) => {
