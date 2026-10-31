@@ -123,5 +123,30 @@ export function chooseLabelPosition(input: LabelPlaceInput): Point | null {
       }
     }
   }
+  const inward = inwardLabel(input, gap, halfW, halfH);
+  return inward;
+}
+
+/** Last resort for an outline on the source edge: walk inside the frame until a clear spot exists. */
+function inwardLabel(input: LabelPlaceInput, gap: number, halfW: number, halfH: number): Point | null {
+  const { minX, minY, maxX, maxY } = input.bounds;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const targetX = input.viewW / 2;
+  const targetY = input.viewH / 2;
+  for (let step = 0; step <= 24; step += 1) {
+    const t = step / 24;
+    const candidate = { x: cx + (targetX - cx) * t, y: cy + (targetY - cy) * t };
+    const rect = {
+      x1: candidate.x - halfW,
+      y1: candidate.y - halfH,
+      x2: candidate.x + halfW,
+      y2: candidate.y + halfH,
+    };
+    if (rect.x1 < 4 || rect.y1 < 4 || rect.x2 > input.viewW - 4 || rect.y2 > input.viewH - 4) continue;
+    if (strokeClearance(rect, input.strokes) < gap - 0.01) continue;
+    if ((input.blocked ?? []).some((block) => intersects(rect, block))) continue;
+    return candidate;
+  }
   return null;
 }

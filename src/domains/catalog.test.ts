@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEMOS } from "@/src/samples/demos";
 import { highlightedBoxes } from "@/src/samples/boxes";
-import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, requiredAspect, sampleStageSize, titlePlacementFor } from "@/src/samples/frame-fit";
+import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, requiredAspect, sampleStageSize, titlePlacementFor, usesSourceEdgeException } from "@/src/samples/frame-fit";
 import { coverTransform, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
 import { tutorialFromScene, type SampleScene } from "@/src/samples/scene";
 import { missingObjectHint } from "@/src/fsm/ui";
@@ -95,11 +95,18 @@ describe("catalog frame shapes", () => {
       );
       const fit = fitDemo(boxes);
       const widest = FRAME_SHAPES[FRAME_SHAPES.length - 1];
-      const fitsWidest = boxes.every((stepBoxes) => placementFor(stepBoxes, widest.aspect, 1));
       const forced = demo.scene.steps[fit.forcedByStep];
       const needs = boxes.map((stepBoxes, index) => `step ${index + 1} needs ${requiredAspect(stepBoxes).toFixed(3)}`);
-      console.log(`${demo.slug} ${fitsWidest ? fit.shape : "UNFIT"} forced by step ${fit.forcedByStep + 1} ${forced?.title ?? ""} ${needs.join("; ")}`);
-      if (!fitsWidest) {
+      console.log(`${demo.slug} ${fit.shape} forced by step ${fit.forcedByStep + 1} ${forced?.title ?? ""} ${needs.join("; ")}`);
+      boxes.forEach((stepBoxes, index) => {
+        if (demo.slug === "origami" && index === 0 && usesSourceEdgeException(stepBoxes)) {
+          console.log("origami step 1: source-edge exception");
+        }
+      });
+      const uncovered = boxes.filter((stepBoxes) => (
+        !placementFor(stepBoxes, widest.aspect, 1) && !usesSourceEdgeException(stepBoxes)
+      ));
+      if (uncovered.length) {
         unfit.push(`${demo.slug} does not fit ${widest.id} with a 4% margin. Do not cut objects. ${needs.join("; ")}`);
         continue;
       }
@@ -108,9 +115,20 @@ describe("catalog frame shapes", () => {
       expect(demo.stepCrops).toEqual(fit.steps.map((step) => step.position));
       expect(demo.stepZooms).toEqual(fit.steps.map((step) => step.zoom));
       expect(demo.stepTitle).toEqual(fit.stepTitle);
+      expect(demo.stepFullFrame).toEqual(fit.steps.map((step) => step.fullFrame === true));
       expect(demo.cardOutlines).toBe(fit.card.outlines);
       expect(demo.cardCrop).toEqual(fit.card.position);
       for (const [index, stepBoxes] of boxes.entries()) {
+        if (fit.steps[index]?.fullFrame) {
+          expect(usesSourceEdgeException(stepBoxes)).toBe(true);
+          expect(demo.stepZooms[index]).toBe(1);
+          expect(demo.stepCrops[index]).toEqual({ x: 0.5, y: 0.5 });
+          const source = { x1: 0, y1: 0, x2: 720, y2: 405 };
+          for (const box of stepBoxes) {
+            expect(boxInsideCrop(box, source, 720, 405), `${demo.slug} step ${index + 1} is cut on the source frame`).toBe(true);
+          }
+          continue;
+        }
         const placed = placementFor(stepBoxes, shape?.aspect ?? 1, demo.stepZooms[index] ?? 1);
         expect(placed, `${demo.slug} step ${index + 1} has no crop`).not.toBeNull();
         for (const box of stepBoxes) {
@@ -141,9 +159,17 @@ describe("catalog frame shapes", () => {
         expect(stage.width / stage.height).toBeCloseTo(stage.aspect, 5);
         boxes.forEach((stepBoxes, index) => {
           const zoom = demo.stepZooms[index] ?? 1;
-          const widest = FRAME_SHAPES[FRAME_SHAPES.length - 1];
-          if (!placementFor(stepBoxes, widest.aspect, 1)) {
-            expect(placementFor(stepBoxes, stage.aspect, zoom), `${demo.slug} step ${index + 1} has no 5:4 crop`).toBeNull();
+          if (demo.stepFullFrame[index]) {
+            const viewW = width;
+            const viewH = width * (405 / 720);
+            const cover = coverTransform(720, 405, viewW, viewH, { x: 0.5, y: 0.5 }, 1);
+            const window = visibleFrameRect(720, 405, viewW, viewH, cover);
+            for (const box of stepBoxes) {
+              expect(box.x1).toBeGreaterThanOrEqual(window.x1 - 0.6);
+              expect(box.y1).toBeGreaterThanOrEqual(window.y1 - 0.6);
+              expect(box.x2).toBeLessThanOrEqual(window.x2 + 0.6);
+              expect(box.y2).toBeLessThanOrEqual(window.y2 + 0.6);
+            }
             return;
           }
           const cover = coverTransform(720, 405, stage.width, stage.height, demo.stepCrops[index], zoom);

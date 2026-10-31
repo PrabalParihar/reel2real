@@ -22,6 +22,8 @@ export const CARD_SHAPE: FrameShapeId = "4:5";
 export interface StepCrop {
   position: ObjectPosition;
   zoom: number;
+  /** Whole source frame at zoom 1. Set only by the source-edge exception. */
+  fullFrame?: boolean;
 }
 
 export interface DemoFrameFit {
@@ -155,6 +157,27 @@ function bestEffort(boxes: FrameBox[], aspect: number, frameW: number, frameH: n
   };
 }
 
+/** Smallest gap from the box union to the source frame, in source pixels. */
+export function sourceClearance(boxes: FrameBox[], frameW = 720, frameH = 405): number {
+  if (!boxes.length) return Number.POSITIVE_INFINITY;
+  const minX = Math.min(...boxes.map((box) => box.x1));
+  const maxX = Math.max(...boxes.map((box) => box.x2));
+  const minY = Math.min(...boxes.map((box) => box.y1));
+  const maxY = Math.max(...boxes.map((box) => box.y2));
+  return Math.min(minX, frameW - maxX, minY, frameH - maxY);
+}
+
+/**
+ * A step may fill the source frame, zoom 1 and no crop, only when the source
+ * itself has under 4% clearance around the masks and no chain shape can hold
+ * them. A step that already has a valid crop keeps the strict 4% rule.
+ */
+export function usesSourceEdgeException(boxes: FrameBox[], frameW = 720, frameH = 405): boolean {
+  if (!boxes.length) return false;
+  if (!(sourceClearance(boxes, frameW, frameH) < marginPx(frameH))) return false;
+  return !FRAME_SHAPES.some((shape) => placementFor(boxes, shape.aspect, 1, frameW, frameH));
+}
+
 export function requiredAspect(boxes: FrameBox[], frameW = 720, frameH = 405): number {
   if (!boxes.length) return FRAME_SHAPES[0].aspect;
   let lo = 0.5;
@@ -170,22 +193,31 @@ export function requiredAspect(boxes: FrameBox[], frameW = 720, frameH = 405): n
 
 /** Narrowest chain shape that holds every step. Zoom stays 1 unless a later pass needs more. */
 export function fitDemo(steps: FrameBox[][], frameW = 720, frameH = 405): DemoFrameFit {
+  const exception = steps.map((boxes) => usesSourceEdgeException(boxes, frameW, frameH));
   const needs = steps.map((boxes) => requiredAspect(boxes, frameW, frameH));
-  let forcedByStep = 0;
-  for (let index = 1; index < needs.length; index += 1) {
+  let forcedByStep = exception.findIndex((flag) => !flag);
+  if (forcedByStep < 0) forcedByStep = 0;
+  for (let index = 0; index < needs.length; index += 1) {
+    if (exception[index] || index === forcedByStep) continue;
     if (needs[index] > needs[forcedByStep] + 1e-6) forcedByStep = index;
   }
-  const chosen = FRAME_SHAPES.find((shape) => steps.every((boxes) => placementFor(boxes, shape.aspect, 1, frameW, frameH)))
-    ?? FRAME_SHAPES[FRAME_SHAPES.length - 1];
-  const fitted = steps.map((boxes) => {
+  const chosen = FRAME_SHAPES.find((shape) => steps.every((boxes, index) => (
+    exception[index] || placementFor(boxes, shape.aspect, 1, frameW, frameH)
+  ))) ?? FRAME_SHAPES[FRAME_SHAPES.length - 1];
+  const fitted = steps.map((boxes, index) => {
+    if (exception[index]) return { position: { x: 0.5, y: 0.5 }, zoom: 1, fullFrame: true };
     const placed = placementFor(boxes, chosen.aspect, 1, frameW, frameH);
     return { position: placed?.position ?? { x: 0.5, y: 0.5 }, zoom: 1 };
   });
-  const stage = sampleStageSize(chosen.id, 390);
+  const stageFor = (index: number) => (
+    fitted[index]?.fullFrame
+      ? { width: 390, height: 390 * (frameH / frameW) }
+      : sampleStageSize(chosen.id, 390)
+  );
   const stepTitle = steps.map((boxes, index) => titlePlacementFor(
     boxes,
-    stage.width,
-    stage.height,
+    stageFor(index).width,
+    stageFor(index).height,
     fitted[index]?.position ?? { x: 0.5, y: 0.5 },
     fitted[index]?.zoom ?? 1,
     frameW,

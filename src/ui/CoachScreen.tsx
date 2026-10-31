@@ -84,8 +84,10 @@ function CoachBody() {
   const scene = published?.scene;
   const sceneStep = scene?.steps[coach.machine.context.stepIndex];
   const showRecorded = Boolean(scene) && coach.cameraPhase !== "live";
-  const stepCrop = published?.stepCrops[coach.machine.context.stepIndex] ?? published?.crop ?? { x: 0.5, y: 0.5 };
-  const stepZoom = published?.stepZooms[coach.machine.context.stepIndex] ?? published?.zoom ?? 1;
+  const stepIndex = coach.machine.context.stepIndex;
+  const fullFrame = published?.stepFullFrame[stepIndex] === true;
+  const stepCrop = fullFrame ? { x: 0.5, y: 0.5 } : published?.stepCrops[stepIndex] ?? published?.crop ?? { x: 0.5, y: 0.5 };
+  const stepZoom = fullFrame ? 1 : published?.stepZooms[stepIndex] ?? published?.zoom ?? 1;
   const liveCamera = coach.cameraPhase === "live";
   const titleBelow = showRecorded && (published?.stepTitle[coach.machine.context.stepIndex] ?? "below") === "below";
   const onVideoStatus = highlights
@@ -106,7 +108,7 @@ function CoachBody() {
     <AppShell backHref="/upload">
       <main className="screen coach">
         <section className={`stage-wrap${showRecorded ? " is-sample" : ""}${liveCamera ? " is-live" : ""}${titleBelow ? " title-below" : ""}`}>
-          <div className={`reel-phone${published ? ` ${shapeClass(published.shape)}` : ""}${liveCamera ? " is-live" : " is-sample"}`}>
+          <div className={`reel-phone${fullFrame ? " is-source" : published ? ` ${shapeClass(published.shape)}` : ""}${liveCamera ? " is-live" : " is-sample"}`}>
             <video ref={videoRef} className={coach.cameraPhase === "live" ? "camera" : "camera is-hidden"} playsInline muted />
             {showRecorded && scene && sceneStep ? (
               <PhotoFrame
@@ -156,11 +158,11 @@ function CoachBody() {
               {tutorial.steps.map((item, index) => (
                 <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
                   <PhotoFrame
-                    className={shapeClass(published.shape)}
+                    className={published.stepFullFrame[index] ? "is-source" : shapeClass(published.shape)}
                     src={sceneAsset(published.scene, published.scene.steps[index]?.keyframe ?? published.poster)}
                     alt=""
-                    objectPosition={published.stepCrops[index] ?? published.crop}
-                    zoom={published.stepZooms[index] ?? published.zoom}
+                    objectPosition={published.stepFullFrame[index] ? { x: 0.5, y: 0.5 } : published.stepCrops[index] ?? published.crop}
+                    zoom={published.stepFullFrame[index] ? 1 : published.stepZooms[index] ?? published.zoom}
                     sizes="160px"
                   />
                   <span className="film-num">{index + 1}</span>

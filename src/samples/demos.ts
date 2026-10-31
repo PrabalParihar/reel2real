@@ -39,6 +39,8 @@ export interface DemoDefinition {
   stepCrops: ObjectPosition[];
   stepZooms: number[];
   stepTitle: Array<"overlay" | "below">;
+  /** True when that step shows the whole source frame instead of a cover crop. */
+  stepFullFrame: boolean[];
   /** Demo grid cards are always 4:5. Outlines are omitted when they would be cut. */
   cardCrop: ObjectPosition;
   cardZoom: number;
@@ -84,6 +86,7 @@ export function defineDemo(input: DemoInput): DemoDefinition {
     stepCrops: fit.steps.map((step) => step.position),
     stepZooms: fit.steps.map((step) => step.zoom),
     stepTitle: fit.stepTitle,
+    stepFullFrame: fit.steps.map((step) => step.fullFrame === true),
     cardCrop: fit.card.position,
     cardZoom: fit.card.zoom,
     cardOutlines: fit.card.outlines,

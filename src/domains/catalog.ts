@@ -21,6 +21,7 @@ export interface PublishedSample {
   stepCrops: ObjectPosition[];
   stepZooms: number[];
   stepTitle: Array<"overlay" | "below">;
+  stepFullFrame: boolean[];
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
@@ -45,6 +46,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     stepCrops: demo.stepCrops,
     stepZooms: demo.stepZooms,
     stepTitle: demo.stepTitle,
+    stepFullFrame: demo.stepFullFrame,
     cardCrop: demo.cardCrop,
     cardZoom: demo.cardZoom,
     cardOutlines: demo.cardOutlines,

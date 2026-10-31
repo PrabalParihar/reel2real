@@ -62,6 +62,10 @@ function outlineSegments(d: string, frameW: number, frameH: number, cover: Cover
 
 /** Outer painted contour. The 4.5 core sits inside this glow stroke. */
 const OUTLINE_STROKE = 14;
+/** feGaussianBlur stdDeviation on that glow. */
+const OUTLINE_GLOW = 6;
+/** Pull the path in by the glow stroke plus the blur so overflow does not clip it. */
+export const EDGE_STROKE_INSET = OUTLINE_STROKE + OUTLINE_GLOW;
 
 function statusRect(text: string, viewW: number, viewH: number, bottom: number): LabelRect {
   const textWidth = text.length * 7;
@@ -252,10 +256,10 @@ export function PhotoFrame({
   const visible = cover ? visibleFrameRect(frameW, frameH, view.w, view.h, cover) : null;
   const clipRect = visible
     ? {
-        x1: visible.x1 + 6,
-        y1: visible.y1 + 6,
-        x2: visible.x2 - 6,
-        y2: visible.y2 - 6,
+        x1: visible.x1 + EDGE_STROKE_INSET,
+        y1: visible.y1 + EDGE_STROKE_INSET,
+        x2: visible.x2 - EDGE_STROKE_INSET,
+        y2: visible.y2 - EDGE_STROKE_INSET,
       }
     : null;
 
