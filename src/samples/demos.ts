@@ -4,6 +4,10 @@ import type { SampleScene } from "@/src/samples/scene";
 import type { TutorialSteps } from "@/src/schema/types";
 import recordedBoxes from "@/src/samples/recorded-boxes.json";
 import chaiSceneJson from "../../public/samples/masala-chai/steps.json";
+import flaskSceneJson from "../../public/samples/flask-colour/steps.json";
+import origamiSceneJson from "../../public/samples/origami/steps.json";
+import seedSceneJson from "../../public/samples/seed-planting/steps.json";
+import latteSceneJson from "../../public/samples/latte-art/steps.json";
 
 /**
  * One record per Sample reel. Adding a demo is a new entry here plus files under public/samples/<slug>/.
@@ -88,6 +92,10 @@ export function defineDemo(input: DemoInput): DemoDefinition {
 }
 
 const chai = chaiSceneJson as SampleScene;
+const flask = flaskSceneJson as SampleScene;
+const origami = origamiSceneJson as SampleScene;
+const seed = seedSceneJson as SampleScene;
+const latte = latteSceneJson as SampleScene;
 
 export const DEMOS: DemoDefinition[] = [
   defineDemo({
@@ -99,6 +107,51 @@ export const DEMOS: DemoDefinition[] = [
       license: "Pexels License",
       href: "https://www.pexels.com/video/5480225/",
       licenseHref: "https://www.pexels.com/license/",
+    },
+  }),
+  defineDemo({
+    slug: "flask-colour",
+    domain: "other",
+    scene: flask,
+    credit: {
+      name: "AlexKopeykin",
+      license: "Pixabay Content License",
+      href: "https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/",
+      licenseHref: "https://pixabay.com/service/license-summary/",
+    },
+    safetyNote: "Grown-up supervision",
+  }),
+  defineDemo({
+    slug: "origami",
+    domain: "non_cooking_diy",
+    scene: origami,
+    credit: {
+      name: "Yogendra Singh",
+      license: "Pexels License",
+      href: "https://www.pexels.com/video/a-person-making-origami-6364305/",
+      licenseHref: "https://www.pexels.com/license/",
+    },
+  }),
+  defineDemo({
+    slug: "seed-planting",
+    domain: "non_cooking_diy",
+    scene: seed,
+    credit: {
+      name: "Tima Miroshnichenko",
+      license: "Pexels License",
+      href: "https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/",
+      licenseHref: "https://www.pexels.com/license/",
+    },
+  }),
+  defineDemo({
+    slug: "latte-art",
+    domain: "other",
+    scene: latte,
+    credit: {
+      name: "franklandgrave",
+      license: "Mixkit Stock Video Free License",
+      href: "https://mixkit.co/free-stock-video/latte-art-810/",
+      licenseHref: "https://mixkit.co/license/#videoFree",
     },
   }),
 ];

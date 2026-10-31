@@ -1,0 +1,358 @@
+{
+  "demo": "flask-colour",
+  "step": 1,
+  "keyframe": "public/samples/flask-colour/step-1.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "flask-colour",
+      "step": 1,
+      "objectId": "obj_flask",
+      "noun": "flask",
+      "image": "public/samples/flask-colour/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 25862
+      },
+      "status": 200,
+      "ms": 1873,
+      "requestId": "9baffec5-6e6f-4a3b-9e1a-82cca92727fb",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "boxRaw": {
+            "kind": "box",
+            "order": 0,
+            "objectId": "0",
+            "left": 235,
+            "top": 76,
+            "right": 393,
+            "bottom": 371
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 158,
+            "height": 295,
+            "payloadLen": 156
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 295,
+            "width": 158,
+            "payload": "!!!!#IC=d4H:TS-:9)4I81+iWT+JK$5'yEkK9x%/8=yl:HnxtuHw]v^Uex40/Se6G9PKoI%O`&v+AIIw'vvX&{QRKyA`Y*igvG'.*NB?f{+BZDB9D*X]XHNDy[nXp$i[{nyP9:U##1-b5U5.iU@l`[mf7J$f"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 235,
+            "y1": 76,
+            "x2": 393,
+            "y2": 371,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.3263888888888889,
+            "y": 0.18765432098765433,
+            "w": 0.21944444444444444,
+            "h": 0.7283950617283951
+          }
+        },
+        {
+          "ordinal": "1",
+          "boxRaw": {
+            "kind": "box",
+            "order": 2,
+            "objectId": "1",
+            "left": 441,
+            "top": 311,
+            "right": 532,
+            "bottom": 405
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 91,
+            "height": 94,
+            "payloadLen": 64
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 94,
+            "width": 91,
+            "payload": "!!!!!TE9cXZ3X4I^+WQvs`948fUr!@oMe7K=1q0SLW53VWWG!{bp4.7^3HS!T*YI"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 441,
+            "y1": 311,
+            "x2": 532,
+            "y2": 405,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.6125,
+            "y": 0.7679012345679013,
+            "w": 0.12638888888888888,
+            "h": 0.23209876543209876
+          }
+        },
+        {
+          "ordinal": "2",
+          "boxRaw": {
+            "kind": "box",
+            "order": 4,
+            "objectId": "2",
+            "left": 391,
+            "top": 235,
+            "right": 472,
+            "bottom": 405
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 81,
+            "height": 170,
+            "payloadLen": 104
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 170,
+            "width": 81,
+            "payload": "!!!!!uE-h**/Q$'LxqH]P761CenbJmS#a`wp%gZ%QFJ'O@I1{u0NU*Wecy1?%#W-dU[f$=zk.$mzX*:1'b%^VF@]rqt#:Wh)+Z?l=CVB"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 391,
+            "y1": 235,
+            "x2": 472,
+            "y2": 405,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5430555555555555,
+            "y": 0.5802469135802469,
+            "w": 0.1125,
+            "h": 0.41975308641975306
+          }
+        },
+        {
+          "ordinal": "3",
+          "boxRaw": {
+            "kind": "box",
+            "order": 6,
+            "objectId": "3",
+            "left": 304,
+            "top": 0,
+            "right": 462,
+            "bottom": 45
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 158,
+            "height": 45,
+            "payloadLen": 79
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 45,
+            "width": 158,
+            "payload": "!!!!!aGxZS9n'3wwn9Mg+0vT/#*[4$WPKO!-!ClHu9GNALAN/%jr=HP=FiUfgG9n`bl9E/NLtg]/dFt"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 304,
+            "y1": 0,
+            "x2": 462,
+            "y2": 45,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.4222222222222222,
+            "y": 0.0,
+            "w": 0.21944444444444444,
+            "h": 0.1111111111111111
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    },
+    {
+      "demo": "flask-colour",
+      "step": 1,
+      "objectId": "obj_bottle",
+      "noun": "bottle",
+      "image": "public/samples/flask-colour/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 25862
+      },
+      "status": 200,
+      "ms": 1440,
+      "requestId": "17e3459b-89bc-4f50-aa6e-570a292dda9d",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "boxRaw": {
+            "kind": "box",
+            "order": 0,
+            "objectId": "0",
+            "left": 441,
+            "top": 310,
+            "right": 532,
+            "bottom": 405
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 91,
+            "height": 95,
+            "payloadLen": 68
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 95,
+            "width": 91,
+            "payload": "!!!!!WDz0fDJTCd'T_lTz)rSbnHat[xZBin1:m6dxp:x'AwJmv&uadX%HSfoQh[4Y#QG"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 441,
+            "y1": 310,
+            "x2": 532,
+            "y2": 405,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.6125,
+            "y": 0.7654320987654321,
+            "w": 0.12638888888888888,
+            "h": 0.2345679012345679
+          }
+        },
+        {
+          "ordinal": "1",
+          "boxRaw": {
+            "kind": "box",
+            "order": 2,
+            "objectId": "1",
+            "left": 235,
+            "top": 77,
+            "right": 393,
+            "bottom": 371
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 158,
+            "height": 294,
+            "payloadLen": 153
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 294,
+            "width": 158,
+            "payload": "!!!!#FCRH@n:qLtTbyH:Z%dnjowh8)Q4!r=&_][bo:IP5tg2p$UmV#)Hw%C7s!K`?u_]cGI#Rs*E2Q?#yD+k.E9H5%X`NsOhb?:o{x_nkVN])!3kRybLiD/WLNp5TgJDwMWPX5-#-unRc^NE*$I76uz!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 235,
+            "y1": 77,
+            "x2": 393,
+            "y2": 371,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.3263888888888889,
+            "y": 0.19012345679012346,
+            "w": 0.21944444444444444,
+            "h": 0.725925925925926
+          }
+        },
+        {
+          "ordinal": "2",
+          "boxRaw": {
+            "kind": "box",
+            "order": 4,
+            "objectId": "2",
+            "left": 391,
+            "top": 235,
+            "right": 472,
+            "bottom": 405
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 81,
+            "height": 170,
+            "payloadLen": 99
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 170,
+            "width": 81,
+            "payload": "!!!!!qE-gd8oib.j0HWg)@=g2is7eYx+-8CopCt#N@&9eU`/2U=]abXD'^J4A4yYPo.G#hn:Z7k@_ibI![NdQ.cx4[[pApVp*$y"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 391,
+            "y1": 235,
+            "x2": 472,
+            "y2": 405,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5430555555555555,
+            "y": 0.5802469135802469,
+            "w": 0.1125,
+            "h": 0.41975308641975306
+          }
+        },
+        {
+          "ordinal": "3",
+          "boxRaw": {
+            "kind": "box",
+            "order": 6,
+            "objectId": "3",
+            "left": 304,
+            "top": 0,
+            "right": 462,
+            "bottom": 46
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 158,
+            "height": 46,
+            "payloadLen": 80
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 46,
+            "width": 158,
+            "payload": "!!!!!bGxZS9n'3wwn9Mg+0vT/#*a&U5WS-[QUE*LQa$'#hSqx+2gP/qs5m2U^Sj9kS.dPGP)vw8-$rpx"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 304,
+            "y1": 0,
+            "x2": 462,
+            "y2": 46,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.4222222222222222,
+            "y": 0.0,
+            "w": 0.21944444444444444,
+            "h": 0.11358024691358025
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

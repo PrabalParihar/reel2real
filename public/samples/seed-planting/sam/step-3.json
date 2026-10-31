@@ -1,0 +1,159 @@
+{
+  "demo": "seed-planting",
+  "step": 3,
+  "keyframe": "public/samples/seed-planting/step-3.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "seed-planting",
+      "step": 3,
+      "objectId": "obj_jar",
+      "noun": "glass jar",
+      "image": "public/samples/seed-planting/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 87314
+      },
+      "status": 200,
+      "ms": 1579,
+      "requestId": "4d2a3dd9-0d46-4285-bc08-d586f47f68c7",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 665,
+            "y1": 297,
+            "x2": 720,
+            "y2": 392,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.9236111111111112,
+            "y": 0.7333333333333333,
+            "w": 0.0763888888888889,
+            "h": 0.2345679012345679
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 55,
+            "height": 95,
+            "payloadLen": 49
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 95,
+            "width": 55,
+            "payload": "!!!!!HD5:P-9@_drSTw0+1(UVHf/E_A@i+lhb9b1U9C)mw!!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 665,
+            "top": 297,
+            "right": 720,
+            "bottom": 392
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    },
+    {
+      "demo": "seed-planting",
+      "step": 3,
+      "objectId": "obj_gloves",
+      "noun": "gloves",
+      "image": "public/samples/seed-planting/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 87314
+      },
+      "status": 200,
+      "ms": 1254,
+      "requestId": "940de15b-d5db-4eeb-bd3e-0f684335b19c",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 277,
+            "y1": 98,
+            "x2": 378,
+            "y2": 237,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.38472222222222224,
+            "y": 0.2419753086419753,
+            "w": 0.14027777777777778,
+            "h": 0.3432098765432099
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 101,
+            "height": 139,
+            "payloadLen": 126
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 139,
+            "width": 101,
+            "payload": "!!!!#.DOLc0mjKu)c-dsWHKSHMwIe_%hZz$T1mUO&jo63-cYuN]P!OydRKdocp+qP8VO_o2UHyPKFBolKUFa=US4pspaPdGR]tF/Po3iEF-{=0'o1bCyN(iPJex=Vk"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 277,
+            "top": 98,
+            "right": 378,
+            "bottom": 237
+          }
+        },
+        {
+          "ordinal": "1",
+          "box": {
+            "x1": 322,
+            "y1": 14,
+            "x2": 443,
+            "y2": 84,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.44722222222222224,
+            "y": 0.0345679012345679,
+            "w": 0.16805555555555557,
+            "h": 0.1728395061728395
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 121,
+            "height": 70,
+            "payloadLen": 89
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 70,
+            "width": 121,
+            "payload": "!!!!!iFFte&fjOgdsf8XE^3]cIG*ST7nidW/LfXr[+sKUCBR)x4+xe0RrZi8-?vs3TCFt1K#)n-w7H0-?[&ZK!T/P"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 322,
+            "top": 14,
+            "right": 443,
+            "bottom": 84
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

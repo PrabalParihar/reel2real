@@ -1,6 +1,6 @@
 # Sample demo drop-in
 
-Each folder here is one Sample demo, ready to copy.
+Each folder is one Sample demo, in the same shape as `public/samples/masala-chai/`, plus a `meta.json`.
 
 ```
 build/<slug>/
@@ -16,8 +16,12 @@ build/<slug>/
   meta.json
 ```
 
-Copy the folder to `public/samples/<slug>/` and delete `meta.json` from that public copy. The app serves files from `public/`. `meta.json` stays in this folder and is folded into the catalog entry in `src/samples/demos.ts` (credit, licence link, domain, safety note).
+Copy the folder to `public/samples/<slug>/` and leave `meta.json` out of `public/`. The app serves files from `public/`. Fold the credit, the licence link, and any safety note from `meta.json` into one `defineDemo` entry in `src/samples/demos.ts`.
 
-Then rebuild the box list and add the catalog entry. `docs/ADD-A-DEMO.md` has the steps. `fitDemo` chooses the frame. Do not hand-tune crops, and do not draw a box the sam file does not contain.
+Then rebuild the box list:
 
-An empty `sam/step-N.json` is a step with no recorded highlight. The coach still shows that step's text.
+```bash
+npx tsx scripts/sync-sample-boxes.ts
+```
+
+`fitDemo` chooses 4:5, 1:1, or 5:4 from those boxes. Do not paste crops into a screen, and do not draw a box the sam file does not contain. See `docs/ADD-A-DEMO.md`.

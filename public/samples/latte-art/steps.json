@@ -1,0 +1,84 @@
+{
+  "demo": "latte-art",
+  "title": "Sample \u00b7 Pour latte art",
+  "label": "Sample \u00b7 recorded SAM output",
+  "sourceClip": {
+    "file": "latte-art.mp4",
+    "page": "https://mixkit.co/free-stock-video/latte-art-810/",
+    "author": "franklandgrave",
+    "license": "Mixkit Stock Video Free License"
+  },
+  "hero": {
+    "image": "hero.jpg",
+    "samNoun": "cup",
+    "samStep": 1
+  },
+  "steps": [
+    {
+      "index": 0,
+      "id": "step_01_start",
+      "title": "Start filling the cup",
+      "instruction": "Pour milk into the green cup of espresso. Keep the cup fully in frame.",
+      "hinglishPrompt": "Cup dikhao.",
+      "keyframe": "step-1.jpg",
+      "samFile": "sam/step-1.json",
+      "nouns": [
+        {
+          "objectId": "obj_cup",
+          "noun": "cup",
+          "samPrompt": "cup",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "07c487f0-09ec-4272-b213-a082be8e3a9c"
+        }
+      ],
+      "keepFullyInFrame": [
+        "cup"
+      ]
+    },
+    {
+      "index": 1,
+      "id": "step_02_centre",
+      "title": "Build a foam circle in the cup",
+      "instruction": "Keep a steady pour into the cup so a white foam circle forms. Keep the cup fully in frame.",
+      "hinglishPrompt": "Cup mein foam circle banao.",
+      "keyframe": "step-2.jpg",
+      "samFile": "sam/step-2.json",
+      "nouns": [
+        {
+          "objectId": "obj_cup",
+          "noun": "cup",
+          "samPrompt": "cup",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "5aa4009f-4637-4249-bb06-40d943b36ced"
+        }
+      ],
+      "keepFullyInFrame": [
+        "cup"
+      ]
+    },
+    {
+      "index": 2,
+      "id": "step_03_finish",
+      "title": "Finish the foam on the cup",
+      "instruction": "Finish the foam pattern on top of the cup. Keep the cup fully in frame.",
+      "hinglishPrompt": "Cup ka pattern finish karo.",
+      "keyframe": "step-3.jpg",
+      "samFile": "sam/step-3.json",
+      "nouns": [
+        {
+          "objectId": "obj_cup",
+          "noun": "cup",
+          "samPrompt": "cup",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "843ab4e9-586e-47c3-b0e2-5e1f7eee58ed"
+        }
+      ],
+      "keepFullyInFrame": [
+        "cup"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "demo": "seed-planting",
+  "title": "Sample \u00b7 Plant seeds in a tray",
+  "label": "Sample \u00b7 recorded SAM output",
+  "sourceClip": {
+    "file": "pexels-planting.mp4",
+    "page": "https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/",
+    "author": "Tima Miroshnichenko",
+    "license": "Pexels License"
+  },
+  "hero": {
+    "image": "hero.jpg",
+    "samNoun": "gloves",
+    "samStep": 1
+  },
+  "steps": [
+    {
+      "index": 0,
+      "id": "step_01_poke",
+      "title": "Poke cells in the seed tray",
+      "instruction": "With gloves on, poke a hole in a soil cell of the seed tray. Keep the tray and gloves fully in frame.",
+      "hinglishPrompt": "Tray aur gloves dikhao.",
+      "keyframe": "step-1.jpg",
+      "samFile": "sam/step-1.json",
+      "nouns": [
+        {
+          "objectId": "obj_gloves",
+          "noun": "gloves",
+          "samPrompt": "gloves",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "0c215f43-aeaa-4d2f-899e-215eb9d19624"
+        },
+        {
+          "objectId": "obj_tray",
+          "noun": "tray",
+          "samPrompt": "seed tray",
+          "color": "#2DB4AA",
+          "present": true,
+          "requestId": "544f9274-fa2c-441d-8b08-980137e54437"
+        }
+      ],
+      "keepFullyInFrame": [
+        "gloves",
+        "tray"
+      ]
+    },
+    {
+      "index": 1,
+      "id": "step_02_pots",
+      "title": "Work across the tray beside the pot",
+      "instruction": "Move along the tray with gloves on while a small pot stays in view. Keep the pot and gloves fully in frame.",
+      "hinglishPrompt": "Pot aur gloves dikhao.",
+      "keyframe": "step-2.jpg",
+      "samFile": "sam/step-2.json",
+      "nouns": [
+        {
+          "objectId": "obj_pot",
+          "noun": "pot",
+          "samPrompt": "pot",
+          "color": "#B450A0",
+          "present": true,
+          "requestId": "54978711-dd33-4ec8-8cd5-7fe081230ac0"
+        },
+        {
+          "objectId": "obj_gloves",
+          "noun": "gloves",
+          "samPrompt": "gloves",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "6e91e4cc-97e2-47d4-9548-40af88ba4be7"
+        }
+      ],
+      "keepFullyInFrame": [
+        "pot",
+        "gloves"
+      ]
+    },
+    {
+      "index": 2,
+      "id": "step_03_jar",
+      "title": "Finish with the jar in view",
+      "instruction": "Finish the row with gloves on and the glass jar of seeds visible. Keep the jar and gloves fully in frame.",
+      "hinglishPrompt": "Jar aur gloves dikhao.",
+      "keyframe": "step-3.jpg",
+      "samFile": "sam/step-3.json",
+      "nouns": [
+        {
+          "objectId": "obj_jar",
+          "noun": "jar",
+          "samPrompt": "glass jar",
+          "color": "#50A0E6",
+          "present": true,
+          "requestId": "4d2a3dd9-0d46-4285-bc08-d586f47f68c7"
+        },
+        {
+          "objectId": "obj_gloves",
+          "noun": "gloves",
+          "samPrompt": "gloves",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "940de15b-d5db-4eeb-bd3e-0f684335b19c"
+        }
+      ],
+      "keepFullyInFrame": [
+        "jar",
+        "gloves"
+      ]
+    }
+  ]
+}

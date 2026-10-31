@@ -1,0 +1,62 @@
+{
+  "demo": "latte-art",
+  "step": 1,
+  "keyframe": "public/samples/latte-art/step-1.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "latte-art",
+      "step": 1,
+      "objectId": "obj_cup",
+      "noun": "cup",
+      "image": "public/samples/latte-art/step-1.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 25975
+      },
+      "status": 200,
+      "ms": 386,
+      "requestId": "07c487f0-09ec-4272-b213-a082be8e3a9c",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "mask": {
+            "encoding": "one_bit",
+            "width": 262,
+            "height": 276,
+            "payloadLen": 459
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 276,
+            "width": 262,
+            "payload": "!!!!&9B@34Y01Q8GlvxfK@sCG7J3yA5:O%B`HO&)cq1tw)kLJ9$Qp-u4tO2*-[0YV-TwF.SAE9-h`^/YL8__dCpcO=#*/A$*k)m?HeiaLlvQknb%5):Ghws[QAx&@V$T)Ez1gQe[dH5(VhU:vPPk#3_lf-]]?98Ej.+mb!N?Q^{v(/eIjIe^)8bg{rVi7QDgi-#nE4yI3cH:'_6aW%6#Z#`y6)kHUa3Vd:wFs.T+VgQs3Ao3fJDQ^p2Z6fhJv%[DM9RTAtL'-(TLLsM4#84Mbu8=i`2T@*jDiSu7`HR&DJ3oxVH:^a7ABUsI!4E^vWG&$xIf'A)KG6'+RecYS_muT*H1M!93kV6+U'ntLYl@{W!uDoImn2b1BI?bq=]l2xmh4he#c7BEJY?k&&o7j.Nb3Jcn&+Fj!Fk!253dx-w'+rZ?L8Fh332T*+-&F5O9'jWFY:uy%B.!TY7"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 128,
+            "y1": 12,
+            "x2": 390,
+            "y2": 288,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.17777777777777778,
+            "y": 0.02962962962962963,
+            "w": 0.3638888888888889,
+            "h": 0.6814814814814815
+          },
+          "boxRecovered": true,
+          "boxRecoverNote": "box recovered by matching mask raster to step frame (bounds were dropped in first parse)"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

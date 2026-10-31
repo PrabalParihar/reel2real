@@ -31,7 +31,7 @@ export interface SampleScene {
   label: string;
   sourceClip: {
     file: string;
-    pexelsId: string;
+    pexelsId?: string;
     page: string;
     author: string;
     license: string;

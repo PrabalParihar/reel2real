@@ -2,17 +2,46 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEMOS } from "@/src/samples/demos";
 import { highlightedBoxes } from "@/src/samples/boxes";
-import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, sampleStageSize, titlePlacementFor } from "@/src/samples/frame-fit";
+import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, requiredAspect, sampleStageSize, titlePlacementFor } from "@/src/samples/frame-fit";
 import { coverTransform, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
 import { tutorialFromScene, type SampleScene } from "@/src/samples/scene";
+import { missingObjectHint } from "@/src/fsm/ui";
 import { PUBLISHED_SAMPLES } from "./catalog";
+
+const DEMO_ORDER = ["masala-chai", "flask-colour", "origami", "seed-planting", "latte-art"];
+
+/** Hit nouns, in steps.json order. The coach list must use these words. */
+const HIT_NOUNS: Record<string, string[][]> = {
+  "flask-colour": [
+    ["flask", "bottle"],
+    ["flask", "bottle"],
+    ["rod", "flask"],
+  ],
+  origami: [
+    ["paper", "hands"],
+    ["heart"],
+    ["crane"],
+  ],
+  "seed-planting": [
+    ["gloves", "tray"],
+    ["pot", "gloves"],
+    ["jar", "gloves"],
+  ],
+  "latte-art": [
+    ["cup"],
+    ["cup"],
+    ["cup"],
+  ],
+};
+
+const FLASK_CHEMICAL = /chemical|chemistry|chimique|acid|alkali|vinegar|bicarbonate|sodium|peroxide|ammonia|bleach|hydroxide|phenolphthalein|litmus|reagent|hydrochloric|sulfuric|ethanol|methanol|\bph\b/i;
 
 const UI_COPY = ["src/ui/Landing.tsx", "src/fsm/ui.ts", "src/ui/CoachScreen.tsx", "src/ui/UploadScreen.tsx", "src/ui/chrome.tsx"];
 
 describe("published samples", () => {
   it("publishes demos only from the catalog data", () => {
-    expect(DEMOS.length).toBeGreaterThanOrEqual(1);
-    expect(DEMOS.length).toBeLessThanOrEqual(5);
+    expect(DEMOS.map((demo) => demo.slug)).toEqual(DEMO_ORDER);
+    expect(DEMOS.length).toBe(5);
     expect(PUBLISHED_SAMPLES).toHaveLength(DEMOS.length);
     expect(PUBLISHED_SAMPLES.map((item) => item.id)).toEqual(DEMOS.map((demo) => demo.slug));
     expect(PUBLISHED_SAMPLES.some((item) => item.id === "bike-chain")).toBe(false);
@@ -58,6 +87,7 @@ function diskBoxes(scene: SampleScene): FrameBox[][] {
 describe("catalog frame shapes", () => {
   it("picks the narrowest cover that holds every step, and logs which step forced it", () => {
     expect(DEMOS.length).toBeGreaterThan(0);
+    const unfit: string[] = [];
     for (const demo of DEMOS) {
       const boxes = diskBoxes(demo.scene);
       expect(boxes.map((step) => step.map((box) => `${box.x1},${box.y1},${box.x2},${box.y2}`))).toEqual(
@@ -66,13 +96,14 @@ describe("catalog frame shapes", () => {
       const fit = fitDemo(boxes);
       const widest = FRAME_SHAPES[FRAME_SHAPES.length - 1];
       const fitsWidest = boxes.every((stepBoxes) => placementFor(stepBoxes, widest.aspect, 1));
-      if (!fitsWidest) {
-        const needs = boxes.map((stepBoxes, index) => `step ${index + 1} needs aspect ${fitDemo([stepBoxes]).aspect.toFixed(3)}`);
-        throw new Error(`${demo.slug} does not fit ${widest.id} with a 4% margin. Do not cut objects. ${needs.join("; ")}`);
-      }
       const forced = demo.scene.steps[fit.forcedByStep];
+      const needs = boxes.map((stepBoxes, index) => `step ${index + 1} needs ${requiredAspect(stepBoxes).toFixed(3)}`);
+      console.log(`${demo.slug} ${fitsWidest ? fit.shape : "UNFIT"} forced by step ${fit.forcedByStep + 1} ${forced?.title ?? ""} ${needs.join("; ")}`);
+      if (!fitsWidest) {
+        unfit.push(`${demo.slug} does not fit ${widest.id} with a 4% margin. Do not cut objects. ${needs.join("; ")}`);
+        continue;
+      }
       const shape = FRAME_SHAPES.find((item) => item.id === fit.shape);
-      console.log(`${demo.slug} ${fit.shape} forced by step ${fit.forcedByStep + 1} ${forced?.title ?? ""}`);
       expect(demo.shape).toBe(fit.shape);
       expect(demo.stepCrops).toEqual(fit.steps.map((step) => step.position));
       expect(demo.stepZooms).toEqual(fit.steps.map((step) => step.zoom));
@@ -98,6 +129,8 @@ describe("catalog frame shapes", () => {
       }
     }
     expect(DEMOS.find((demo) => demo.slug === "masala-chai")?.shape).toBe("5:4");
+    expect(DEMOS.find((demo) => demo.slug === "seed-planting")?.shape).toBe("5:4");
+    expect(unfit, unfit.join("\n")).toEqual([]);
   });
 
   it("keeps every Sample stage, including 390 no-camera, on the demo shape", () => {
@@ -108,6 +141,11 @@ describe("catalog frame shapes", () => {
         expect(stage.width / stage.height).toBeCloseTo(stage.aspect, 5);
         boxes.forEach((stepBoxes, index) => {
           const zoom = demo.stepZooms[index] ?? 1;
+          const widest = FRAME_SHAPES[FRAME_SHAPES.length - 1];
+          if (!placementFor(stepBoxes, widest.aspect, 1)) {
+            expect(placementFor(stepBoxes, stage.aspect, zoom), `${demo.slug} step ${index + 1} has no 5:4 crop`).toBeNull();
+            return;
+          }
           const cover = coverTransform(720, 405, stage.width, stage.height, demo.stepCrops[index], zoom);
           const window = visibleFrameRect(720, 405, stage.width, stage.height, cover);
           for (const box of stepBoxes) {
@@ -145,10 +183,42 @@ describe("catalog frame shapes", () => {
       const recorded = diskBoxes(demo.scene);
       const built = tutorialFromScene(demo.scene, demo.domain);
       recorded.forEach((stepBoxes, index) => {
-        if (stepBoxes.length) return;
         expect(built.steps[index].instructionText).toBe(demo.scene.steps[index].title);
+        expect(demo.scene.steps[index].title.trim().length).toBeGreaterThan(0);
+        if (stepBoxes.length) return;
         expect(stepBoxes).toEqual([]);
       });
     }
+  });
+
+  it("names the recorded hit objects in the step text and the in-frame list", () => {
+    for (const [slug, steps] of Object.entries(HIT_NOUNS)) {
+      const demo = DEMOS.find((item) => item.slug === slug);
+      expect(demo, slug).toBeDefined();
+      const tutorial = tutorialFromScene(demo!.scene, demo!.domain);
+      const boxes = diskBoxes(demo!.scene);
+      expect(boxes.every((step) => step.length > 0), `${slug} has an empty mask step`).toBe(true);
+      steps.forEach((nouns, index) => {
+        const step = demo!.scene.steps[index];
+        expect(step.nouns.filter((noun) => noun.present).map((noun) => noun.noun)).toEqual(nouns);
+        expect(step.title.trim().length).toBeGreaterThan(0);
+        expect(step.instruction.trim().length).toBeGreaterThan(0);
+        const listed = (step as { keepFullyInFrame?: string[] }).keepFullyInFrame;
+        expect(listed).toEqual(nouns);
+        expect(missingObjectHint(tutorial.steps[index], null)).toBe(`Keep these fully in frame: ${nouns.join(", ")}.`);
+        expect(demo!.scene.label).toBe("Sample · recorded SAM output");
+      });
+    }
+    const flask = DEMOS.find((demo) => demo.slug === "flask-colour");
+    expect(flask?.safetyNote).toBe("Grown-up supervision");
+    const visible = flask!.scene.steps.flatMap((step) => [
+      step.title,
+      step.instruction,
+      step.hinglishPrompt ?? "",
+      ...step.nouns.flatMap((noun) => [noun.noun, noun.samPrompt]),
+    ]).join("\n") + (flask?.safetyNote ?? "");
+    expect(visible).not.toMatch(FLASK_CHEMICAL);
+    expect(visible).not.toContain("\u2014");
+    expect(DEMOS.filter((demo) => demo.slug !== "flask-colour").every((demo) => !demo.safetyNote)).toBe(true);
   });
 });

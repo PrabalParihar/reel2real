@@ -1,0 +1,217 @@
+{
+  "demo": "seed-planting",
+  "step": 2,
+  "keyframe": "public/samples/seed-planting/step-2.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "seed-planting",
+      "step": 2,
+      "objectId": "obj_pot",
+      "noun": "pot",
+      "image": "public/samples/seed-planting/step-2.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 87696
+      },
+      "status": 200,
+      "ms": 1499,
+      "requestId": "54978711-dd33-4ec8-8cd5-7fe081230ac0",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "mask": {
+            "encoding": "one_bit",
+            "width": 101,
+            "height": 59,
+            "payloadLen": 133
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 59,
+            "width": 101,
+            "payload": "!!!!#3DCC{a-aXcFwQzS@2@G^EHIDVs+3/i!(rfT%TbSpZ#lJYFmClGx.DEgglQ%0C*59w)nXUz)Fw.aR862*]V=E?$#]3nF7k^BJdM$7yGEe`w=U+dV[.[p?:QuQYrQH?0%o"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 458,
+            "y1": 264,
+            "x2": 559,
+            "y2": 323,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.6361111111111111,
+            "y": 0.6518518518518519,
+            "w": 0.14027777777777778,
+            "h": 0.145679012345679
+          },
+          "boxRecovered": true,
+          "boxRecoverNote": "box recovered by matching mask raster to step frame (bounds were dropped in first parse)"
+        },
+        {
+          "ordinal": "1",
+          "mask": {
+            "encoding": "one_bit",
+            "width": 79,
+            "height": 85,
+            "payloadLen": 129
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 85,
+            "width": 79,
+            "payload": "!!!!#0E_LZ9eLN5R1(5)^'B.h/g*mJmSBXf'eObVi-aCoENM.2M'YCn`hrnr48gwqCnha_6p+2R9gsG8RY!H)(4X.e)7PlIrf]SX=1:^{Ldoa.5dyS:=:N.N]Ruu*[!!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 428,
+            "y1": 246,
+            "x2": 507,
+            "y2": 331,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5944444444444444,
+            "y": 0.6074074074074074,
+            "w": 0.10972222222222222,
+            "h": 0.20987654320987653
+          },
+          "boxRecovered": true,
+          "boxRecoverNote": "box recovered by matching mask raster to step frame (bounds were dropped in first parse)"
+        },
+        {
+          "ordinal": "2",
+          "mask": {
+            "encoding": "one_bit",
+            "width": 95,
+            "height": 88,
+            "payloadLen": 135
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 88,
+            "width": 95,
+            "payload": "!!!!#5DbG-]:s%pg)a8sa/zW`OxX]xhB6%k9hmfaS+n=NJ7[kiTi=%$NMTM@yU+eU*i_gmMJ!s3Esq)A^(!wp`&5[9$ni:S94/hs39apr!YOUmIg82DvDh&%PF7f2pxJ2.Z_Hrr"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 494,
+            "y1": 272,
+            "x2": 589,
+            "y2": 360,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.6861111111111111,
+            "y": 0.671604938271605,
+            "w": 0.13194444444444445,
+            "h": 0.21728395061728395
+          },
+          "boxRecovered": true,
+          "boxRecoverNote": "box recovered by matching mask raster to step frame (bounds were dropped in first parse)"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    },
+    {
+      "demo": "seed-planting",
+      "step": 2,
+      "objectId": "obj_gloves",
+      "noun": "gloves",
+      "image": "public/samples/seed-planting/step-2.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 87696
+      },
+      "status": 200,
+      "ms": 1117,
+      "requestId": "6e91e4cc-97e2-47d4-9548-40af88ba4be7",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 263,
+            "y1": 103,
+            "x2": 379,
+            "y2": 226,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.36527777777777776,
+            "y": 0.254320987654321,
+            "w": 0.16111111111111112,
+            "h": 0.3037037037037037
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 116,
+            "height": 123,
+            "payloadLen": 136
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 123,
+            "width": 116,
+            "payload": "!!!!#6D{YuNx6L%YHbrn(W9NS3VaW0Sw_P41%-8y4eb#3J/?/4qbf693u-]ET2eXtBV'U7:j^?#NmK)dGN^GYLAxu:Y_$E2wksa5vN5]R.BC3?mU55%Er{$lQ+Z'`wuB-^'92!@l"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 263,
+            "top": 103,
+            "right": 379,
+            "bottom": 226
+          }
+        },
+        {
+          "ordinal": "1",
+          "box": {
+            "x1": 312,
+            "y1": 15,
+            "x2": 433,
+            "y2": 85,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.43333333333333335,
+            "y": 0.037037037037037035,
+            "w": 0.16805555555555557,
+            "h": 0.1728395061728395
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 121,
+            "height": 70,
+            "payloadLen": 86
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 70,
+            "width": 121,
+            "payload": "!!!!!gF9dbBbM=2IlkUZdm($B3'xF@&[dsM_]G%FE/[()sR3S6MpA9@jv)]5T:hSJyH]&!3_U[^`+oAsUIASxg"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 312,
+            "top": 15,
+            "right": 433,
+            "bottom": 85
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

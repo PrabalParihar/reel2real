@@ -1,0 +1,62 @@
+{
+  "demo": "origami",
+  "step": 3,
+  "keyframe": "public/samples/origami/step-3.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "origami",
+      "step": 3,
+      "objectId": "obj_crane",
+      "noun": "origami crane",
+      "image": "public/samples/origami/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 26084
+      },
+      "status": 200,
+      "ms": 1451,
+      "requestId": "e8a6e9b7-206b-4651-8ab8-5e2d82be14b3",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "mask": {
+            "encoding": "one_bit",
+            "width": 75,
+            "height": 80,
+            "payloadLen": 79
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 80,
+            "width": 75,
+            "payload": "!!!!!aE+.1tSe`%n$Z+L[R7b{yh][RZnCDjr0(q&J8[lVb]{t%c8T0#m=&kYF%QY$e^$VsEn.KGxdFt"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 54,
+            "y1": 74,
+            "x2": 129,
+            "y2": 154,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.075,
+            "y": 0.18271604938271604,
+            "w": 0.10416666666666667,
+            "h": 0.19753086419753085
+          },
+          "boxRecovered": true,
+          "boxRecoverNote": "box recovered by matching mask raster to step frame (bounds were dropped in first parse)"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

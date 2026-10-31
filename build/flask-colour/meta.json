@@ -1,0 +1,288 @@
+{
+  "title": "Flask colour reaction",
+  "slug": "flask-colour",
+  "domain": "kids_science",
+  "steps": [
+    {
+      "title": "Pour powder into the flask",
+      "instruction": "Tilt the white bottle and pour the powder into the flask. Keep the flask and bottle fully in frame. Grown-up supervision.",
+      "nouns": [
+        "flask",
+        "bottle"
+      ],
+      "samPrompts": [
+        "flask",
+        "bottle"
+      ],
+      "keepFullyInFrame": [
+        "flask",
+        "bottle"
+      ]
+    },
+    {
+      "title": "Watch the colour change",
+      "instruction": "Hold the bottle by the flask and watch the mix turn bright yellow. Keep the flask and bottle fully in frame.",
+      "nouns": [
+        "flask",
+        "bottle"
+      ],
+      "samPrompts": [
+        "flask",
+        "bottle"
+      ],
+      "keepFullyInFrame": [
+        "flask",
+        "bottle"
+      ]
+    },
+    {
+      "title": "Set the flask and rod in view",
+      "instruction": "Leave the flask with the yellow mix settled and the stirring rod beside it. Keep the flask and rod fully in frame.",
+      "nouns": [
+        "rod",
+        "flask"
+      ],
+      "samPrompts": [
+        "stirring rod",
+        "flask"
+      ],
+      "keepFullyInFrame": [
+        "rod",
+        "flask"
+      ]
+    }
+  ],
+  "segment": {
+    "source": "chemistry-balloon.mp4",
+    "startSec": 13.0,
+    "endSec": 23.0,
+    "durationSec": 10.0,
+    "stepTimestampsSec": [
+      14.0,
+      17.5,
+      22.0
+    ]
+  },
+  "shape": {
+    "id": "1:1",
+    "aspect": 1.0,
+    "forcedByStep": 2,
+    "margins": [
+      {
+        "minClearancePx": 0.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      },
+      {
+        "minClearancePx": 0.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      },
+      {
+        "minClearancePx": 32.0,
+        "requiredPadPx": 16.2,
+        "ok": true
+      }
+    ],
+    "requiredAspects": [
+      0.8132099062204361,
+      0.8132099062204361,
+      0.9218518882989883
+    ],
+    "stepCrops": [
+      {
+        "position": {
+          "x": 0.5746031746031746,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.5746031746031746,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.6444444444444445,
+          "y": 0.5
+        },
+        "zoom": 1
+      }
+    ],
+    "fitBoxes": [
+      [
+        {
+          "x1": 235,
+          "y1": 76,
+          "x2": 393,
+          "y2": 371
+        },
+        {
+          "x1": 441,
+          "y1": 310,
+          "x2": 532,
+          "y2": 405
+        }
+      ],
+      [
+        {
+          "x1": 235,
+          "y1": 76,
+          "x2": 393,
+          "y2": 371
+        },
+        {
+          "x1": 441,
+          "y1": 310,
+          "x2": 532,
+          "y2": 405
+        }
+      ],
+      [
+        {
+          "x1": 377,
+          "y1": 248,
+          "x2": 576,
+          "y2": 363
+        },
+        {
+          "x1": 235,
+          "y1": 76,
+          "x2": 392,
+          "y2": 371
+        }
+      ]
+    ]
+  },
+  "credit": {
+    "creator": "AlexKopeykin",
+    "sourceUrl": "https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/",
+    "licenseName": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/"
+  },
+  "safetyNote": "Grown-up supervision",
+  "sam": {
+    "label": "Sample \u00b7 recorded SAM output",
+    "batch2Used": 10,
+    "batch2Max": 10,
+    "allHits": [
+      {
+        "n": 1,
+        "step": 1,
+        "noun": "flask",
+        "present": true,
+        "requestId": "9baffec5-6e6f-4a3b-9e1a-82cca92727fb",
+        "batch": 1
+      },
+      {
+        "n": 2,
+        "step": 1,
+        "noun": "bottle",
+        "present": true,
+        "requestId": "17e3459b-89bc-4f50-aa6e-570a292dda9d",
+        "batch": 1
+      },
+      {
+        "n": 3,
+        "step": 2,
+        "noun": "flask",
+        "present": true,
+        "requestId": "0cd78863-9093-4408-bed2-b47753779be4",
+        "batch": 1
+      },
+      {
+        "n": 4,
+        "step": 3,
+        "noun": "rod",
+        "present": false,
+        "requestId": "e2fbd65f-96ba-4946-a086-873857b17611",
+        "batch": 1
+      },
+      {
+        "n": 5,
+        "step": 3,
+        "noun": "stirring rod",
+        "present": true,
+        "requestId": "dfc45833-29c0-4db3-b541-6b3a7bd0b3c2",
+        "batch": 1
+      },
+      {
+        "n": 25,
+        "step": 2,
+        "noun": "bottle",
+        "present": true,
+        "requestId": "ab23c68a-f7ad-4114-9720-c98771d8a864",
+        "batch": 2
+      },
+      {
+        "n": 26,
+        "step": 3,
+        "noun": "flask",
+        "present": true,
+        "requestId": "3e963e25-6b53-4155-950a-059ab4a00058",
+        "batch": 2
+      }
+    ],
+    "batch2Calls": [
+      {
+        "n": 25,
+        "batch2": 7,
+        "demo": "flask-colour",
+        "step": 2,
+        "noun": "bottle",
+        "objectId": "obj_bottle",
+        "image": "flask-colour_step-2.jpg",
+        "status": 200,
+        "ms": 917,
+        "requestId": "ab23c68a-f7ad-4114-9720-c98771d8a864",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 4,
+        "boxCount": 4,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 26,
+        "batch2": 8,
+        "demo": "flask-colour",
+        "step": 3,
+        "noun": "flask",
+        "objectId": "obj_flask",
+        "image": "flask-colour_step-3.jpg",
+        "status": 200,
+        "ms": 1379,
+        "requestId": "3e963e25-6b53-4155-950a-059ab4a00058",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 3,
+        "boxCount": 3,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      }
+    ]
+  },
+  "files": {
+    "heroLoop": "hero-loop.mp4",
+    "hero": "hero.jpg",
+    "steps": [
+      "step-1.jpg",
+      "step-2.jpg",
+      "step-3.jpg"
+    ],
+    "sam": [
+      "sam/step-1.json",
+      "sam/step-2.json",
+      "sam/step-3.json"
+    ],
+    "stepsJson": "steps.json"
+  },
+  "gaps": []
+}

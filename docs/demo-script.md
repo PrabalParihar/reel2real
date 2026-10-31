@@ -79,10 +79,10 @@ Say: "If SAM does not answer, we say so. Next still moves the step. We do not dr
 
 Open each remaining demo from the landing cards. Spend about 15 seconds on each. Read the step title. Do not invent a noun that is not on the chip.
 
-- Origami. Yogendra Singh, Pexels. Read each step title. The highlights are paper and hands, then a heart, then a crane.
-- Seed planting. Tima Miroshnichenko, Pexels. Read each step title. The highlights are gloves and a tray, then a pot and gloves, then a jar and gloves.
-- Latte art. franklandgrave, Mixkit. Read each step title. Each step highlights the cup. The second still is the retimed frame.
-- Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. The highlights are a flask and a bottle, then the same pair, then a rod and the flask. Do not name a chemical.
+- Origami. Yogendra Singh, Pexels. Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding beside the crane". Highlights: paper and hands, then heart, then crane.
+- Seed planting. Tima Miroshnichenko, Pexels. Read: "Poke cells in the seed tray", "Work across the tray beside the pot", "Finish with the jar in view". Highlights: gloves and tray, then pot and gloves, then jar and gloves.
+- Latte art. franklandgrave, Mixkit. Read: "Start filling the cup", "Build a foam circle in the cup", "Finish the foam on the cup". Each step highlights the cup. The second still is the retimed frame.
+- Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Read: "Pour powder into the flask", "Watch the colour change", "Set the flask and rod in view". Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. Highlights: flask and bottle, then flask and bottle, then rod and flask. Do not name a chemical.
 
 Every one of these steps has a recorded hit. Read the title on the glass. If a future step ever has no mask, the title stays and you do not draw a box. That is not this set.
 

@@ -1,0 +1,235 @@
+{
+  "title": "Fold an origami crane",
+  "slug": "origami",
+  "domain": "diy_craft",
+  "steps": [
+    {
+      "title": "Fold the patterned paper",
+      "instruction": "Crease the green patterned paper with both hands. Keep the paper and hands fully in frame.",
+      "nouns": [
+        "paper",
+        "hands"
+      ],
+      "samPrompts": [
+        "paper",
+        "hands"
+      ],
+      "keepFullyInFrame": [
+        "paper",
+        "hands"
+      ]
+    },
+    {
+      "title": "Press a clean triangle crease",
+      "instruction": "Flatten the fold into a triangle beside the paper heart. Keep the heart fully in frame.",
+      "nouns": [
+        "heart"
+      ],
+      "samPrompts": [
+        "paper heart"
+      ],
+      "keepFullyInFrame": [
+        "heart"
+      ]
+    },
+    {
+      "title": "Keep folding beside the crane",
+      "instruction": "Continue the folds with the finished origami crane in view. Keep the crane fully in frame.",
+      "nouns": [
+        "crane"
+      ],
+      "samPrompts": [
+        "origami crane"
+      ],
+      "keepFullyInFrame": [
+        "crane"
+      ]
+    }
+  ],
+  "segment": {
+    "source": "pexels-origami.mp4",
+    "startSec": 8.0,
+    "endSec": 16.0,
+    "durationSec": 8.0,
+    "stepTimestampsSec": [
+      9.0,
+      12.0,
+      15.0
+    ]
+  },
+  "shape": {
+    "id": "4:5",
+    "aspect": 0.8,
+    "forcedByStep": 0,
+    "margins": [
+      {
+        "minClearancePx": 1.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      },
+      {
+        "minClearancePx": 49.0,
+        "requiredPadPx": 16.2,
+        "ok": true
+      },
+      {
+        "minClearancePx": 54.0,
+        "requiredPadPx": 16.2,
+        "ok": true
+      }
+    ],
+    "requiredAspects": [
+      0.5341975390911102,
+      0.5000000447034836,
+      0.5000000447034836
+    ],
+    "stepCrops": [
+      {
+        "position": {
+          "x": 0.3181818181818182,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.0,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.0,
+          "y": 0.5
+        },
+        "zoom": 1
+      }
+    ],
+    "fitBoxes": [
+      [
+        {
+          "x1": 310,
+          "y1": 199,
+          "x2": 372,
+          "y2": 322
+        },
+        {
+          "x1": 196,
+          "y1": 162,
+          "x2": 270,
+          "y2": 290
+        },
+        {
+          "x1": 274,
+          "y1": 290,
+          "x2": 380,
+          "y2": 404
+        }
+      ],
+      [
+        {
+          "x1": 49,
+          "y1": 272,
+          "x2": 123,
+          "y2": 337
+        }
+      ],
+      [
+        {
+          "x1": 54,
+          "y1": 74,
+          "x2": 129,
+          "y2": 154
+        }
+      ]
+    ]
+  },
+  "credit": {
+    "creator": "Yogendra Singh",
+    "sourceUrl": "https://www.pexels.com/video/a-person-making-origami-6364305/",
+    "licenseName": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/"
+  },
+  "safetyNote": null,
+  "sam": {
+    "label": "Sample \u00b7 recorded SAM output",
+    "batch2Used": 10,
+    "batch2Max": 10,
+    "allHits": [
+      {
+        "n": 6,
+        "step": 1,
+        "noun": "paper",
+        "present": true,
+        "requestId": "22246bfd-82ab-4e8e-b2b7-bca8e730895c",
+        "batch": 1
+      },
+      {
+        "n": 7,
+        "step": 1,
+        "noun": "crane",
+        "present": false,
+        "requestId": "5cec6ca2-22d8-4fb2-8764-435eb09a5bb0",
+        "batch": 1
+      },
+      {
+        "n": 8,
+        "step": 2,
+        "noun": "heart",
+        "present": false,
+        "requestId": "0d1af997-c139-4865-b38b-905f4c605f15",
+        "batch": 1
+      },
+      {
+        "n": 9,
+        "step": 2,
+        "noun": "paper heart",
+        "present": true,
+        "requestId": "ddd9b238-bdf3-4e08-88ba-38248bb406ca",
+        "batch": 1
+      },
+      {
+        "n": 10,
+        "step": 3,
+        "noun": "crane",
+        "present": false,
+        "requestId": "f61114a0-2876-4137-93d9-8b0fef848177",
+        "batch": 1
+      },
+      {
+        "n": 11,
+        "step": 3,
+        "noun": "origami crane",
+        "present": true,
+        "requestId": "e8a6e9b7-206b-4651-8ab8-5e2d82be14b3",
+        "batch": 1
+      },
+      {
+        "n": 12,
+        "step": 1,
+        "noun": "hands",
+        "present": true,
+        "requestId": "fd879ed1-f00f-45b9-b5c7-d9198e433953",
+        "batch": 1
+      }
+    ],
+    "batch2Calls": []
+  },
+  "files": {
+    "heroLoop": "hero-loop.mp4",
+    "hero": "hero.jpg",
+    "steps": [
+      "step-1.jpg",
+      "step-2.jpg",
+      "step-3.jpg"
+    ],
+    "sam": [
+      "sam/step-1.json",
+      "sam/step-2.json",
+      "sam/step-3.json"
+    ],
+    "stepsJson": "steps.json"
+  },
+  "gaps": []
+}
