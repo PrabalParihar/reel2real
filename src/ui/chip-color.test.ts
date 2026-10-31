@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { DEMOS } from "@/src/samples/demos";
 import { CHIP_BACKING, chipBackingWorst, contrastRatio, parseHex, readableChipColor } from "./chip-color";
 
-const NOUNS = [
-  ["mortar", "#E88C30"],
-  ["pestle", "#2DB4AA"],
-  ["spices", "#B450A0"],
-  ["hand", "#50A0E6"],
-];
+const NOUNS = DEMOS.flatMap((demo) => demo.scene.steps.flatMap((step) => step.nouns
+  .filter((noun) => noun.noun.trim() && noun.color.trim())
+  .map((noun) => [noun.noun, noun.color] as const)));
 
 describe("on-video chip contrast", () => {
   it("brightens each outline colour to at least 4.5:1 on the chip backing", () => {

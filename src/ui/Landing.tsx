@@ -9,9 +9,10 @@ import { shapeClass } from "@/src/samples/frame-fit";
 import { heroSamFile, heroStep, presentNouns, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
+import { SafetyNote } from "./SafetyNote";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
 
-const CHAI = PUBLISHED_SAMPLES[0];
+const CHAI = PUBLISHED_SAMPLES.find((sample) => sample.id === "masala-chai") ?? PUBLISHED_SAMPLES[0];
 const HERO_STEPS = CHAI.tutorial.steps.map((step) => step.instructionText);
 
 function frameSrc(scene: SampleScene, file: string): string {
@@ -125,7 +126,7 @@ export function Landing() {
       <section className="section wrap" id="demos">
         <p className="kicker">Demos</p>
         <h2>Sample tutorials</h2>
-        <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : ""}`}>
+        <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : " is-set"}`}>
           {PUBLISHED_SAMPLES.map((sample) => {
             const tags = presentNouns(heroStep(sample.scene) ?? sample.scene.steps[0]);
             return (
@@ -146,13 +147,14 @@ export function Landing() {
                 </div>
                 <div className="demo-body">
                   <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
+                  <SafetyNote note={sample.safetyNote} />
                   <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
-                  {tags.length ? (
+                  {!sample.cardOutlines && tags.length ? (
                     <ul className="demo-tags">
                       {tags.map((noun) => <li key={noun.noun} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
                     </ul>
                   ) : null}
-                  {PUBLISHED_SAMPLES.length === 1 ? <SceneCredit scene={sample.scene} /> : null}
+                  <SceneCredit scene={sample.scene} />
                   <ol className="step-list">
                     {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
                   </ol>

@@ -11,6 +11,7 @@ import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
+import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 import { useCoach } from "./useCoach";
@@ -181,6 +182,7 @@ function CoachBody() {
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
             </div>
             <h1>{step.instructionText}</h1>
+            <SafetyNote note={published?.safetyNote} />
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
             {showStepPanelFrame(showRecorded || Boolean(scene)) ? (

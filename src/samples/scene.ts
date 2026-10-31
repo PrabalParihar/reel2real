@@ -1,5 +1,5 @@
 import type { TutorialSteps } from "@/src/schema/types";
-import chaiSceneJson from "../../public/samples/masala-chai/steps.json";
+import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
 export const SAM_FRAME = { width: 720, height: 405 } as const;
@@ -84,13 +84,7 @@ export interface SamStepFile {
   calls?: SamCall[];
 }
 
-const DOMAIN_BY_DEMO: Record<string, NonNullable<TutorialSteps["domain"]>> = {
-  "masala-chai": "indian_recipe",
-};
-
-export const SAMPLE_SCENES: SampleScene[] = [
-  chaiSceneJson as SampleScene,
-];
+export const SAMPLE_SCENES: SampleScene[] = DEMOS.map((demo) => demo.scene);
 
 export function sceneByDemo(id: string | null | undefined): SampleScene | undefined {
   if (!id) return undefined;
@@ -133,14 +127,17 @@ export function heroSamFile(scene: SampleScene): string | undefined {
 export function creditLineForScene(scene: SampleScene): string {
   const author = scene.sourceClip.author.trim();
   const page = scene.sourceClip.page.trim();
-  return page ? `${author} · Pexels License · ${page}` : `${author} · Pexels License`;
+  const license = scene.sourceClip.license.trim() || "Pexels License";
+  return page ? `${author} · ${license} · ${page}` : `${author} · ${license}`;
 }
 
 /** Build the coach tutorial from a demo's public steps.json. Swapping that file is enough. */
-export function tutorialFromScene(scene: SampleScene): TutorialSteps {
+export function tutorialFromScene(
+  scene: SampleScene,
+  domain: NonNullable<TutorialSteps["domain"]> = DEMOS.find((demo) => demo.slug === scene.demo)?.domain ?? "other",
+): TutorialSteps {
   const span = 10;
   const durationSec = Math.max(scene.steps.length * span, span);
-  const domain = DOMAIN_BY_DEMO[scene.demo] ?? "other";
   const creditLine = creditLineForScene(scene);
   const creatorName = scene.sourceClip.author.trim() || "Sample";
   return {

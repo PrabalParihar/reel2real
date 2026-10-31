@@ -1,16 +1,21 @@
 import { fitDemo, type FrameShapeId } from "@/src/samples/frame-fit";
 import type { FrameBox, ObjectPosition } from "@/src/samples/mask-geometry";
-import { sceneByDemo, type SampleScene } from "@/src/samples/scene";
+import type { SampleScene } from "@/src/samples/scene";
 import type { TutorialSteps } from "@/src/schema/types";
+import recordedBoxes from "@/src/samples/recorded-boxes.json";
+import chaiSceneJson from "../../public/samples/masala-chai/steps.json";
 
 /**
  * One record per Sample reel. Adding a demo is a new entry here plus files under public/samples/<slug>/.
- * See docs/ADD-A-DEMO.md. Shape and crops come from fitDemo, not from hand-tuned numbers.
+ * Boxes come from src/samples/recorded-boxes.json, which scripts/sync-sample-boxes.ts rebuilds from the sam files.
+ * Shape and crops come from fitDemo. See docs/ADD-A-DEMO.md.
  */
 export interface DemoCredit {
   name: string;
   license: string;
   href: string;
+  /** Licence summary page. The card links this when it is set. */
+  licenseHref?: string;
 }
 
 export interface DemoDefinition {
@@ -34,56 +39,68 @@ export interface DemoDefinition {
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
+  /** Shown on the demo card and the coach. Kids science uses "Grown-up supervision". */
+  safetyNote?: string;
 }
 
-const chai = sceneByDemo("masala-chai");
-if (!chai) throw new Error("masala-chai steps.json is missing");
+interface DemoInput {
+  slug: string;
+  domain: DemoDefinition["domain"];
+  scene: SampleScene;
+  credit: DemoCredit;
+  safetyNote?: string;
+}
 
-/** Present-noun boxes from public/samples/masala-chai/sam/step-*.json. The catalog test checks this list. */
-const CHAI_BOXES: FrameBox[][] = [
-  [
-    { x1: 221, y1: 85, x2: 568, y2: 380 },
-    { x1: 100, y1: 0, x2: 217, y2: 250 },
-  ],
-  [
-    { x1: 286, y1: 287, x2: 303, y2: 304 },
-    { x1: 297, y1: 185, x2: 491, y2: 341 },
-    { x1: 424, y1: 343, x2: 438, y2: 372 },
-    { x1: 553, y1: 0, x2: 720, y2: 129 },
-    { x1: 265, y1: 15, x2: 451, y2: 195 },
-  ],
-  [
-    { x1: 395, y1: 309, x2: 408, y2: 336 },
-    { x1: 389, y1: 197, x2: 467, y2: 306 },
-  ],
-];
+function boxesFor(slug: string): FrameBox[][] {
+  const rows = (recordedBoxes as Record<string, FrameBox[][]>)[slug];
+  if (!rows) {
+    throw new Error(`Recorded boxes missing for ${slug}. Run: npx tsx scripts/sync-sample-boxes.ts`);
+  }
+  return rows;
+}
 
-const chaiFit = fitDemo(CHAI_BOXES);
+export function defineDemo(input: DemoInput): DemoDefinition {
+  if (input.scene.demo !== input.slug) {
+    throw new Error(`${input.slug} steps.json says demo ${input.scene.demo}`);
+  }
+  const boxes = boxesFor(input.slug);
+  const fit = fitDemo(boxes);
+  return {
+    slug: input.slug,
+    title: input.scene.title,
+    domain: input.domain,
+    clip: "hero-loop.mp4",
+    poster: input.scene.hero.image,
+    credit: input.credit,
+    scene: input.scene,
+    boxes,
+    shape: fit.shape,
+    crop: fit.steps[0]?.position ?? { x: 0.5, y: 0.5 },
+    zoom: fit.steps[0]?.zoom ?? 1,
+    stepCrops: fit.steps.map((step) => step.position),
+    stepZooms: fit.steps.map((step) => step.zoom),
+    stepTitle: fit.stepTitle,
+    cardCrop: fit.card.position,
+    cardZoom: fit.card.zoom,
+    cardOutlines: fit.card.outlines,
+    safetyNote: input.safetyNote?.trim() || undefined,
+  };
+}
+
+const chai = chaiSceneJson as SampleScene;
 
 export const DEMOS: DemoDefinition[] = [
-  {
+  defineDemo({
     slug: "masala-chai",
-    title: chai.title,
     domain: "indian_recipe",
-    clip: "hero-loop.mp4",
-    poster: chai.hero.image,
+    scene: chai,
     credit: {
       name: "Pexels contributor",
       license: "Pexels License",
       href: "https://www.pexels.com/video/5480225/",
+      licenseHref: "https://www.pexels.com/license/",
     },
-    scene: chai,
-    boxes: CHAI_BOXES,
-    shape: chaiFit.shape,
-    crop: chaiFit.steps[0]?.position ?? { x: 0.5, y: 0.5 },
-    zoom: chaiFit.steps[0]?.zoom ?? 1,
-    stepCrops: chaiFit.steps.map((step) => step.position),
-    stepZooms: chaiFit.steps.map((step) => step.zoom),
-    stepTitle: chaiFit.stepTitle,
-    cardCrop: chaiFit.card.position,
-    cardZoom: chaiFit.card.zoom,
-    cardOutlines: chaiFit.card.outlines,
-  },
+  }),
 ];
 
 export function demoBySlug(slug: string | null | undefined): DemoDefinition | undefined {

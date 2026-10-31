@@ -1,6 +1,8 @@
 # Demo script
 
-Film with a phone on a stand. Default coaching mode is **Keyframe mode**. The honesty chip stays on screen. Sample footage is labelled Sample.
+About 2 to 3 minutes. Prabal films this on his laptop. The live SAM path runs on that machine. Sample demos use the recorded masks in the repo.
+
+Say the words below, or stay close to them. Read the step titles that are actually on screen. Do not rename a flask step, and do not name a chemical.
 
 ## Run locally for filming
 
@@ -16,7 +18,7 @@ There is no `.env.example`. Next.js reads `.env.local` for `npm run dev`, and `.
 META_MODEL_API_KEY=<your key>
 ```
 
-That value is a placeholder. Do not commit a real key.
+That value is a placeholder. Do not commit a real key, and do not say the key on camera.
 
 `PREVIEW_PASSWORD` is optional locally. Leave it unset and every route stays open. An empty value returns 503 on every route. A non-empty value requires HTTP basic auth.
 
@@ -24,54 +26,96 @@ That value is a placeholder. Do not commit a real key.
 npm run dev
 ```
 
-Open http://localhost:3000/coach. A new browser session has no tutorial yet, so the coach sends you to upload until you open a Sample.
+Open http://localhost:3000. A new browser session has no tutorial yet, so the coach sends you to upload until you open a Sample.
 
-Live SAM runs from the presenter's own machine.
-
-## Framing
-
-Gate 0 missed the cup because it was out of frame. SAM only boxes what the camera can see. Before every step, put all 2–4 tracked objects fully inside the frame: not cropped by the edge, not hidden in a hand, not behind the mortar.
-
-If the coach says a noun is not highlighted, stop and reframe. Do not keep going and hope the next keyframe guesses it.
-
-## Setup
-
-- Phone on a stand, lens aimed at the board. Browser open on the coach.
-- Record the laptop or the phone screen for the demo video.
-- Light from the side. Avoid a bright window behind the board.
-- Leave the mode on Keyframe. Chunk mode is optional. Gate 0 measured 2213 ms to the first box on a 2 second chunk, over the 2000 ms live threshold. A still was 922 ms.
-- Hands and props only, unless you have consent for a face.
-- Upload a clip you filmed. Do not paste an Instagram link. There is no fetch field.
-
-## Masala chai (primary Sample)
-
-Pexels mortar kitchen clip, one continuous scene. Keyframes live in `public/samples/masala-chai/`. Recorded overlays are labelled Sample · recorded SAM output.
-
-1. Set out the mortar and pestle.
-2. Crush the spice mix. Spices and a hand.
-3. Drop dried herbs into the mortar.
-
-## More demos
-
-The published list is the `DEMOS` array. Adding one is a data change. See `docs/ADD-A-DEMO.md`.
-
-## Your own filming
-
-Upload a clip you filmed. The coach uses the laptop camera when you allow it, and Sample keyframes only on the Sample runs above. If live SAM does not answer, the stage says Highlights unavailable. Next still moves the step.
-
-## Shot list
-
-1. Upload and the Spark progress capsules. Hold long enough to see the wait. Live Spark was reported around 6–9 seconds.
-2. Coach with the Keyframe mode chip, Sample chip, and model ids `muse-spark-1.3` and `sam-3.1`.
-3. Recorded Sample contours on the objects that are actually in the frame. Live highlights only when SAM returns them.
-4. Move one required object out. Wait for the hint, then the Skip chip. The missed step’s credit stays on screen. Press Skip only when you mean to leave the step.
-5. Bring the next step’s object in early and wait for Out of order.
-6. Knife safety still lives on the aloo jeera fixture, not on the published chai sample. If you load that fixture, leave a knife in frame on the knife-down step, then Retry.
-7. Done screen with the step, skip, and safety counts, plus the model ids.
+Live SAM runs from this laptop. Allow the camera when the coach asks. Use the laptop webcam, aimed at the desk, not a phone unless you want the phone-stand shot as a second angle.
 
 ## Before you roll
 
-- Point at each noun and confirm it is fully visible.
-- The chip reads Keyframe mode.
-- If the chip reads Mock, the highlights are the local stand-in, not SAM. Film the judging take with `META_MODEL_API_KEY` set on your machine.
-- Aim for a short demo. Check the portal’s length field before upload. This repo does not invent that limit.
+- Full screen the browser. Hide bookmarks. 1440-wide is a good frame. A second phone at 390 is optional, only if you want to show the card stack.
+- The hero must be the chai clip. The five cards under Demos are masala chai, flask colour, origami, seed planting, and latte art.
+- Sample chips say Sample, or Sample · recorded SAM output. If a chip says Live, you are on an uploaded clip, not a Sample. If a chip says Mock, the highlights are the local stand-in. Film the judging take with the model key set.
+- Leave the mode on Keyframe. Chunk mode is optional. Gate 0 measured 2213 ms to the first box on a 2 second chunk, over the 2000 ms live threshold. A still was 922 ms.
+- Point at each noun and confirm it is fully in frame before you claim a highlight.
+- flask-colour: the yellow note says Grown-up supervision. Do not say a chemical name. Describe the colour you see.
+- Hands and props only, unless you have consent for a face.
+- Upload a clip you filmed. Do not paste an Instagram link. There is no fetch field.
+
+## Shot list
+
+Aim for the times. Cut on the beats, not on silence.
+
+### 1. Landing (0:00 to 0:25)
+
+On camera: the laptop screen, browser at the landing page.
+
+Say: "Reel2Real coaches you through a short tutorial. The phone sits on a stand. You match the step, and the object lights up."
+
+Show the chai hero and the Sample label. Scroll to Demos. All five cards are in one row on a wide window, each cover 4:5. Hover or wait so one loop plays. Point at a credit line under a card. On the flask card, point at Grown-up supervision.
+
+### 2. Sample chai (0:25 to 0:50)
+
+Click Open in coach on masala chai.
+
+Say: "This is a Sample. The outlines were recorded from SAM. They are not the live camera."
+
+Show the chip `Sample · recorded SAM output`, the Keyframe mode chip, and the model ids when they are on screen (`muse-spark-1.3`, `sam-3.1`). Read the three step titles as they appear. Press Next through them. The credit stays `Pexels contributor` and links the Pexels page for the clip.
+
+### 3. Live camera (0:50 to 1:25)
+
+Back to Upload. This beat uses the laptop camera.
+
+Say: "The same coach runs live from this machine. Spark reads a clip once. SAM checks the frame."
+
+Either upload a 5 to 10 second clip you just filmed on the desk (mortar, paper, a mug, anything you can keep in frame), or open the coach with that clip and allow the camera.
+
+Hold on `/extracting` long enough to see the stage clock. Spark on a short clip was about 15 to 20 seconds. Do not pretend it is instant.
+
+When the coach opens, the header chip can say Live because this is your clip, not a Sample. Keep two or three objects fully in frame. When SAM returns a highlight, point at it. If it does not, leave the `Highlights unavailable` line on screen and press Next anyway.
+
+Say: "If SAM does not answer, we say so. Next still moves the step. We do not draw a fake box."
+
+### 4. The other Samples (1:25 to 2:25)
+
+Open each remaining demo from the landing cards. Spend about 15 seconds on each. Read the step title. Do not invent a noun that is not on the chip.
+
+- Origami. Yogendra Singh, Pexels. Read each step title. The highlights are paper and hands, then a heart, then a crane.
+- Seed planting. Tima Miroshnichenko, Pexels. Read each step title. The highlights are gloves and a tray, then a pot and gloves, then a jar and gloves.
+- Latte art. franklandgrave, Mixkit. Read each step title. Each step highlights the cup. The second still is the retimed frame.
+- Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. The highlights are a flask and a bottle, then the same pair, then a rod and the flask. Do not name a chemical.
+
+Every one of these steps has a recorded hit. Read the title on the glass. If a future step ever has no mask, the title stays and you do not draw a box. That is not this set.
+
+### 5. Done (2:25 to 2:45)
+
+Finish a Sample run so the done screen appears.
+
+Say: "Steps, skips, and safety hits. Spark for the steps, SAM for the highlights. Sample stays Sample."
+
+Hold on the model ids and the credit. End.
+
+## Framing notes for the Samples
+
+SAM only boxes what the camera can see. Before a live step, put the tracked objects fully inside the frame: not cropped by the edge, not hidden in a hand.
+
+If the coach says a noun is not highlighted, stop and reframe.
+
+| Demo | What the clip shows | Credit |
+| --- | --- | --- |
+| masala-chai | One kitchen, mortar and pestle, spices, herbs | Pexels contributor, Pexels License, https://www.pexels.com/video/5480225/ |
+| flask-colour | Flask, bottle, then a rod with the flask. No chemical names | AlexKopeykin, Pixabay Content License. Source and licence links are on the card |
+| origami | Paper and hands, then a heart, then a crane | Yogendra Singh, Pexels License, Pexels 6364305 |
+| seed-planting | Gloves with a tray, a pot, then a jar | Tima Miroshnichenko, Pexels License, Pexels 6508485 |
+| latte-art | A cup, including the retimed second still | franklandgrave, Mixkit Stock Video Free License, Mixkit 810 |
+
+## Your own filming
+
+The coach uses the laptop camera when you allow it, and Sample keyframes only on the Sample runs above. If live SAM does not answer, the stage says Highlights unavailable. Next still moves the step.
+
+## Extra beats if you have time
+
+These are optional. Cut them if you are over 3 minutes.
+
+- Move one required object out of frame. Wait for the hint, then Skip. The credit stays on screen.
+- Bring the next step's object in early and wait for Out of order.
+- Knife safety lives on the aloo jeera fixture, not on these five Samples. Do not load it unless you mean to show Retry.

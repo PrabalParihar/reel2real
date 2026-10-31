@@ -69,6 +69,15 @@ describe("mask to path", () => {
     expect(draw.d).not.toMatch(/rect/i);
   });
 
+  it("does not invent a mask when the sam file is empty", () => {
+    const scene = SAMPLE_SCENES[0];
+    const noun = scene.steps[0].nouns[0];
+    expect(selectMaskRecord([], noun)).toBeNull();
+    expect(selectMaskRecord(undefined, noun)).toBeNull();
+    expect(selectMaskRecord([{ noun: noun.noun, present: true, records: [] }], noun)).toBeNull();
+    expect(selectMaskRecord([{ noun: noun.noun, present: true, records: [{ box: { x1: 1, y1: 1, x2: 4, y2: 4 } }] }], noun)).toBeNull();
+  });
+
   it("ignores a recorded miss when the noun is marked absent", () => {
     const scene = SAMPLE_SCENES[0];
     const noun = { ...scene.steps[0].nouns[0], present: false };

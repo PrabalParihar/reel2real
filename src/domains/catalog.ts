@@ -24,6 +24,8 @@ export interface PublishedSample {
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
+  /** Grown-up note for demos that need one. Empty when the catalog entry has none. */
+  safetyNote?: string;
   demo: DemoDefinition;
 }
 
@@ -34,7 +36,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     frame: "reel",
     creatorName: demo.credit.name,
     scene: demo.scene,
-    tutorial: tutorialFromScene(demo.scene),
+    tutorial: tutorialFromScene(demo.scene, demo.domain),
     clip: demo.clip,
     poster: demo.poster,
     shape: demo.shape,
@@ -46,6 +48,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     cardCrop: demo.cardCrop,
     cardZoom: demo.cardZoom,
     cardOutlines: demo.cardOutlines,
+    safetyNote: demo.safetyNote,
     demo,
   };
 }
