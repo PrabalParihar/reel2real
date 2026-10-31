@@ -40,7 +40,7 @@ The real client calls `POST https://api.meta.ai/v1/responses` with `muse-spark-1
 | Muse Spark | `muse-spark-1.3` | Once, while extracting steps |
 | SAM 3.1 | `sam-3.1` | Every 1–2s keyframe in the coach |
 
-Gate 0 (reported, not re-run here): median time to first mask 922 ms on a still and 2213 ms on a 2s chunk. 2213 ms is over the 2000 ms live threshold, so the default is **Keyframe mode**. Chunk tracking is optional. Above 5000 ms, or a timeout, the fallback is stills-only. Flip `runtimeHints.preferredLiveMode` to `stills_only` and the coach shows **Stills mode · Sample**. Same steps schema either way.
+Gate 0 (reported, not re-run here): median time to first box 922 ms on a still and 2213 ms on a 2s chunk. 2213 ms is over the 2000 ms live threshold, so the default is **Keyframe mode**. Chunk tracking is optional. Above 5000 ms, or a timeout, the fallback is stills-only. Flip `runtimeHints.preferredLiveMode` to `stills_only` and the coach shows **Stills mode · Sample**. Same steps schema either way.
 
 A verified 2 second Spark clip took about 16.7 seconds median (3 runs, HTTP 200, schema-valid, 3 steps). Text-only Spark was reported around 6–9 seconds. `/extracting` shows the stages that actually happen and the elapsed time for this run. It does not draw a percentage. The same clip hash (SHA-256 of the file bytes) is cached in this browser, and a replay shows a Cached chip.
 
@@ -70,7 +70,7 @@ npm run gate0 -- clips/your-clip.mp4
 
 ## Sample data
 
-Fixtures in `src/fixtures/` are labelled Sample and point at placeholder paths. No creator media is in the repo. Filming notes are in `docs/demo-script.md`. Gate 0 missed a cup that was out of frame. The coach shows a hint when an expected object is not masked.
+Fixtures in `src/fixtures/` are labelled Sample and point at placeholder paths. No creator media is in the repo. Filming notes are in `docs/demo-script.md`. Gate 0 missed a cup that was out of frame. The coach shows a hint when an expected object is not highlighted.
 
 ## Safety rule
 
