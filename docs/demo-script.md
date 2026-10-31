@@ -2,6 +2,32 @@
 
 Film with a phone on a stand. Default coaching mode is **Keyframe mode**. The honesty chip stays on screen. Sample footage is labelled Sample.
 
+## Run locally for filming
+
+Use Node 22 (`.nvmrc` is `22`), then install dependencies.
+
+```bash
+npm i
+```
+
+There is no `.env.example`. Next.js reads `.env.local` for `npm run dev`, and `.env.*` is gitignored. Create `.env.local` in the repo root:
+
+```
+META_MODEL_API_KEY=<your key>
+```
+
+That value is a placeholder. Do not commit a real key.
+
+`PREVIEW_PASSWORD` is optional locally. Leave it unset and every route stays open. An empty value returns 503 on every route. A non-empty value requires HTTP basic auth.
+
+```bash
+npm run dev
+```
+
+Open http://localhost:3000/coach. A new browser session has no tutorial yet, so the coach sends you to upload until you open a Sample.
+
+Live SAM runs from the presenter's own machine.
+
 ## Framing
 
 Gate 0 missed the cup because it was out of frame. SAM only boxes what the camera can see. Before every step, put all 2–4 tracked objects fully inside the frame: not cropped by the edge, not hidden in a hand, not behind the mortar.
