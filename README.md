@@ -22,6 +22,10 @@ Names only. Never commit values, and never print them.
 - `PREVIEW_PASSWORD` (optional basic auth; an empty value closes the preview)
 - `META_DAILY_CALL_CAP` (optional, default 200 Meta calls per UTC day in this process)
 - `META_API_BASE` (optional, default `https://api.meta.ai/v1`)
+- `NEXT_PUBLIC_SAM_MIN_INTERVAL_MS` (optional, default 2000). The coach will not start a second SAM call until this gap has passed, and it keeps at most one call in flight.
+- `NEXT_PUBLIC_SAM_SESSION_CAP` (optional, default 60). After that many coach calls, polling stops and the stage shows Highlights paused. Next still moves the step.
+
+Node 22 is pinned with `.nvmrc` (`22`) and `package.json` `engines.node` `>=22 <23`. Railpack reads `engines.node` before `.nvmrc`.
 
 If neither model key is set, Spark and SAM use the mock clients. The UI shows a Mock chip. Sample tutorials stay labelled Sample.
 
@@ -42,7 +46,7 @@ A verified 2 second Spark clip took about 16.7 seconds median (3 runs, HTTP 200,
 
 ## Railway
 
-This app is a Node web service. `npm run build` then `npm run start`. `next start` listens on `PORT` (default 3000). Node 22 is declared in `package.json` `engines`. `railway.json` sets the Railpack build command and the start command.
+This app is a Node web service. `npm run build` then `npm run start`. `next start` listens on `PORT` (default 3000). Node is `>=22 <23` in `engines`, and `.nvmrc` says `22`. `railway.json` sets the Railpack build command and the start command.
 
 Set the model key and, for a public preview, `PREVIEW_PASSWORD`. Basic auth then covers every route, including `/_next/static` and files in `public`, because middleware is registered without a matcher that excludes them. An empty `PREVIEW_PASSWORD` returns 503 on every route. Sign in as any username with that password. There is no health-check path in `railway.json`, because a check would also have to send the password.
 

@@ -3,17 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
+import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import type { LicenceChoice } from "@/src/schema/attribution";
 import { applyUserAttribution } from "@/src/schema/attribution";
 import { AppShell } from "./chrome";
 import { StillFrame } from "./StandScene";
 import { useSession } from "./session";
 import { readStepsCache, sha256Hex } from "./steps-cache";
-
-const SAMPLES = [
-  { id: "masala-chai", title: "Sample · Masala chai", domain: "indian_recipe" as const, creatorName: "Sample cook", kind: "chai" as const },
-  { id: "bike-chain", title: "Sample · Bike chain wipe", domain: "non_cooking_diy" as const, creatorName: "Sample maker", kind: "bike" as const },
-];
 
 export function UploadScreen() {
   const router = useRouter();
@@ -50,7 +46,7 @@ export function UploadScreen() {
       return;
     }
     if (!file && !sampleId) return;
-    const sample = SAMPLES.find((item) => item.id === sampleId);
+    const sample = PUBLISHED_SAMPLES.find((item) => item.id === sampleId);
     let durationSec: number | undefined;
     let url: string | null = null;
     let videoBase64: string | undefined;
@@ -87,7 +83,7 @@ export function UploadScreen() {
       key: file ? `file:${clipHash}:${licence}` : `demo:${sampleId}:${creatorName}:${licence}`,
       sampleId: sampleId ?? undefined,
       transcript: transcript.trim() || undefined,
-      title: title.trim() || sample?.title,
+      title: title.trim() || sample?.tutorial.title,
       domain: sample?.domain ?? domain,
       filename: file?.name,
       durationSec,
@@ -162,7 +158,7 @@ export function UploadScreen() {
               <textarea className="field" rows={3} value={transcript} placeholder="Used only if no clip is sent." onChange={(event) => setTranscript(event.target.value)} />
             </label>
             <div className="sample-grid">
-              {SAMPLES.map((sample) => (
+              {PUBLISHED_SAMPLES.map((sample) => (
                 <button
                   key={sample.id}
                   type="button"
@@ -175,8 +171,8 @@ export function UploadScreen() {
                     setDomain(sample.domain);
                   }}
                 >
-                  <StillFrame kind={sample.kind} />
-                  <span>{sample.title}</span>
+                  <StillFrame kind={sample.frame} />
+                  <span>{sample.tutorial.title}</span>
                 </button>
               ))}
             </div>

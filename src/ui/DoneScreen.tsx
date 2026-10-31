@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { frameForDomain } from "@/src/domains/catalog";
 import { coachHonesty } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { AppShell, Chip } from "./chrome";
@@ -12,7 +13,7 @@ export function DoneScreen() {
   const summary = session.summary;
   const tutorial = session.tutorial;
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
-  const kind = tutorial?.domain === "non_cooking_diy" ? "bike" : "chai";
+  const kind = frameForDomain(tutorial?.domain);
   const showTiming = !session.runtime.mock && session.stepsSource === "clip" && session.sparkLatencyMs != null && session.sparkLatencyMs > 0;
   return (
     <AppShell mock={session.runtime.mock}>

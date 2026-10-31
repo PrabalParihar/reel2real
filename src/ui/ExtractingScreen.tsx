@@ -9,8 +9,7 @@ import type { ToolCall, TutorialSteps } from "@/src/schema/types";
 import { postSpark, type ExtractStage } from "./sparkOnce";
 import { applyUserAttribution } from "@/src/schema/attribution";
 import { validateTutorialSteps } from "@/src/schema/validate";
-import chaiFixture from "@/src/fixtures/sample-masala-chai.steps.json";
-import bikeFixture from "@/src/fixtures/sample-bike-chain.steps.json";
+import { PUBLISHED_SAMPLES, sampleByPublishedId } from "@/src/domains/catalog";
 import { readStepsCache, writeStepsCache } from "./steps-cache";
 
 async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: TutorialSteps; toolCalls: ToolCall[]; source: StepsSource } | null> {
@@ -22,7 +21,7 @@ async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: Tuto
       return { tutorial: applyUserAttribution(cached.tutorial, meta), toolCalls: cached.toolCalls, source: "cap_cache" };
     }
   }
-  const raw = prepare.domain === "non_cooking_diy" ? bikeFixture : chaiFixture;
+  const raw = PUBLISHED_SAMPLES.find((item) => item.domain === prepare.domain)?.tutorial ?? PUBLISHED_SAMPLES[0].tutorial;
   const validated = validateTutorialSteps(raw);
   if (!validated.ok) return null;
   return { tutorial: applyUserAttribution(validated.value, meta), toolCalls: [], source: "cap_sample" };
@@ -47,15 +46,16 @@ export function ExtractingScreen() {
 
   useEffect(() => {
     if (!demo || session.prepare) return;
-    const sampleId = demo === "bike-chain" ? "bike-chain" : demo === "aloo-jeera" ? "aloo-jeera" : "masala-chai";
+    const published = sampleByPublishedId(demo);
+    const sampleId = published?.id ?? (demo === "aloo-jeera" ? "aloo-jeera" : PUBLISHED_SAMPLES[0].id);
     const prepare: PrepareRequest = {
       key: `demo:${sampleId}`,
       sampleId,
       hasClip: false,
-      creatorName: sampleId === "bike-chain" ? "Sample maker" : "Sample cook",
+      creatorName: published?.creatorName ?? "Sample cook",
       licenceChoice: "self_filmed",
-      domain: sampleId === "bike-chain" ? "non_cooking_diy" : "indian_recipe",
-      title: sampleId === "bike-chain" ? "Sample · Bike chain wipe" : sampleId === "aloo-jeera" ? "Sample · Aloo jeera — onion prep" : "Sample · Masala chai",
+      domain: published?.domain ?? "indian_recipe",
+      title: published?.tutorial.title,
     };
     session.setPrepare(prepare, null);
   }, [demo, session]);

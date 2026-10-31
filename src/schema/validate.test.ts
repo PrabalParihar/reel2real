@@ -21,9 +21,24 @@ describe("steps schema", () => {
     }
   });
 
-  it("accepts the Sample chai and bike fixtures", () => {
+  it("accepts the Sample chai and the second-domain fixture", () => {
     expect(validateTutorialSteps(chai).ok).toBe(true);
-    expect(validateTutorialSteps(bike).ok).toBe(true);
+    const second = validateTutorialSteps(bike);
+    expect(second.ok).toBe(true);
+    if (!second.ok) return;
+    expect(second.value.sampleLabel).toBe(true);
+    expect(second.value.attribution.licence).toBe("self_filmed_sample");
+    expect(second.value.attribution.creatorName).toBe("Sample");
+    expect(second.value.attribution.creditLine).toBe("Sample");
+    expect(second.value.steps).toHaveLength(3);
+    const safety = second.value.steps.filter((step) => step.safety);
+    expect(safety).toHaveLength(1);
+    for (const step of second.value.steps) {
+      expect(step.credit.sampleLabel).toBe(true);
+      expect(step.credit.creditLine).toBe("Sample");
+      expect(step.objects.length).toBeGreaterThanOrEqual(2);
+      expect(step.objects.length).toBeLessThanOrEqual(4);
+    }
   });
 
   it("accepts stills_only on the same schema", () => {
