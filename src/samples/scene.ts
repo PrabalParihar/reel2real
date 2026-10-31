@@ -2,6 +2,8 @@ import type { TutorialSteps } from "@/src/schema/types";
 import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
+/** Coach fallback when a step has no verified mask. Grid cards must not use this. */
+export const NO_RECORDED_HIGHLIGHT = "No recorded highlight on this frame. Press Next when the step looks right.";
 
 export function unverifiedStep(nouns: SceneNoun[] | undefined): boolean {
   const present = (nouns ?? []).filter((noun) => noun.present !== false && noun.noun.trim());
@@ -136,6 +138,15 @@ export function heroStep(scene: SampleScene): SceneStep | undefined {
   return scene.steps[index] ?? scene.steps[0];
 }
 
+/**
+ * Step whose still is the grid card cover.
+ * An outlined card uses the sam step on that still. A looping card stays on step 1.
+ */
+export function cardCoverStep(scene: SampleScene, cardOutlines: boolean): SceneStep {
+  if (!cardOutlines) return scene.steps[0];
+  return heroStep(scene) ?? scene.steps[0];
+}
+
 /** Nouns drawn on the hero. Matches samNoun / samPrompt from steps.json, hits only. */
 export function heroNouns(scene: SampleScene): SceneNoun[] {
   const step = heroStep(scene);
@@ -240,7 +251,7 @@ export function tutorialFromScene(
           }
           : {
             kind: "manual_confirm_only" as const,
-            description: "No recorded highlight on this frame. Press Next when the step looks right.",
+            description: NO_RECORDED_HIGHLIGHT,
             minStableChunks: 1,
           },
       };

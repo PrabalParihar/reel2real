@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
+import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
@@ -128,13 +128,14 @@ export function Landing() {
         <h2>Sample tutorials</h2>
         <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : " is-set"}`}>
           {PUBLISHED_SAMPLES.map((sample) => {
-            const tags = presentNouns(heroStep(sample.scene) ?? sample.scene.steps[0]);
+            const cover = cardCoverStep(sample.scene, sample.cardOutlines);
+            const tags = presentNouns(cover).filter((noun) => noun.verified !== false);
             return (
               <article className="panel demo-card" key={sample.id}>
                 <div className="reel-phone card-frame">
                   <PhotoFrame
                     className="is-fill"
-                    src={frameSrc(sample.scene, sample.cardOutlines ? recordedFrameFile(sample.scene, Math.max(0, (sample.scene.hero.samStep ?? 1) - 1)) : sample.poster)}
+                    src={frameSrc(sample.scene, sample.cardOutlines ? recordedFrameFile(sample.scene, cover.index) : sample.poster)}
                     alt={`${sample.tutorial.title} sample frame`}
                     loopSrc={sample.cardOutlines ? undefined : frameSrc(sample.scene, sample.clip)}
                     objectPosition={sample.cardCrop}
@@ -149,7 +150,7 @@ export function Landing() {
                 <div className="demo-body">
                   <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
                   <SafetyNote note={sample.safetyNote} />
-                  <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
+                  <p>{sample.tutorial.steps[cover.index]?.successCheck.description}</p>
                   {!sample.cardOutlines && tags.length ? (
                     <ul className="demo-tags">
                       {tags.map((noun) => <li key={noun.noun} style={{ borderColor: noun.color }}>{noun.noun}</li>)}

@@ -4,7 +4,7 @@ import { DEMOS } from "@/src/samples/demos";
 import { highlightedBoxes } from "@/src/samples/boxes";
 import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, requiredAspect, sampleStageSize, titlePlacementFor, usesSourceEdgeException } from "@/src/samples/frame-fit";
 import { coverTransform, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
-import { heroStep, presentNouns, tutorialFromScene, unverifiedStep, unverifiedStepHint, type SampleScene } from "@/src/samples/scene";
+import { cardCoverStep, NO_RECORDED_HIGHLIGHT, presentNouns, tutorialFromScene, unverifiedStep, unverifiedStepHint, type SampleScene } from "@/src/samples/scene";
 import { missingObjectHint } from "@/src/fsm/ui";
 import { PUBLISHED_SAMPLES } from "./catalog";
 
@@ -282,6 +282,9 @@ describe("catalog frame shapes", () => {
     expect(docs).not.toMatch(/move along the tray/i);
     expect(docs).not.toMatch(/\u2013|\u2014/);
     expect(DEMOS.reduce((count, demo) => count + demo.scene.steps.length, 0)).toBe(15);
+    const landing = readFileSync("src/ui/Landing.tsx", "utf8");
+    expect(landing).toContain("cardCoverStep(sample.scene, sample.cardOutlines)");
+    expect(landing).toContain("sample.tutorial.steps[cover.index]?.successCheck.description");
     for (const demo of DEMOS) {
       const tutorial = tutorialFromScene(demo.scene, demo.domain);
       demo.scene.steps.forEach((step, index) => {
@@ -309,16 +312,29 @@ describe("catalog frame shapes", () => {
         }
       });
       const step1 = demo.scene.steps[0];
-      const cover = heroStep(demo.scene) ?? step1;
-      const cardNouns = new Set([...drawnOn(step1), ...drawnOn(cover)]);
-      const description = tutorial.steps[0].successCheck.description;
+      const cover = cardCoverStep(demo.scene, demo.cardOutlines);
+      const cardNouns = new Set(drawnOn(cover));
+      const description = tutorial.steps[cover.index].successCheck.description;
+      expect(description, demo.slug).not.toContain("No recorded highlight");
+      expect(description, demo.slug).not.toContain("No highlight on this frame");
+      expect(description, demo.slug).not.toBe(NO_RECORDED_HIGHLIGHT);
+      for (const step of demo.scene.steps) {
+        if (!unverifiedStep(step.nouns)) continue;
+        expect(description, demo.slug).not.toBe(unverifiedStepHint(step.nouns));
+      }
       for (const noun of named(description)) {
         expect(cardNouns.has(noun), `${demo.slug} card description names ${noun}`).toBe(true);
       }
+      const chips = presentNouns(cover).filter((noun) => noun.verified !== false);
+      for (const noun of chips) {
+        expect(cardNouns.has(noun.noun.toLowerCase()), `${demo.slug} card chip ${noun.noun}`).toBe(true);
+      }
+      if (demo.slug === "latte-art") {
+        expect(cover.index).toBe(1);
+        expect(description).toBe(demo.scene.steps[1].instruction);
+      }
       if (!demo.cardOutlines) {
-        for (const noun of presentNouns(cover)) {
-          expect(cardNouns.has(noun.noun.toLowerCase()), `${demo.slug} card chip ${noun.noun}`).toBe(true);
-        }
+        expect(cover.index).toBe(0);
       }
     }
   });
