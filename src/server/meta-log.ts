@@ -1,8 +1,6 @@
 import { RESPONSES_PATH } from "@/src/models";
 import { redactSecrets } from "./redact";
 
-export const META_USER_AGENT = "reel2real/0.1 (+server)";
-
 export interface UpstreamIds {
   requestId: string;
   route: string;
@@ -12,14 +10,6 @@ export interface MetaErrorFields {
   type: string;
   code: string;
   message: string;
-}
-
-export function metaJsonHeaders(key: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${key}`,
-    "Content-Type": "application/json",
-    "User-Agent": META_USER_AGENT,
-  };
 }
 
 /** Only the two debug headers. The Authorization header is never copied out. */
