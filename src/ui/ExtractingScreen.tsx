@@ -157,7 +157,7 @@ export function ExtractingScreen() {
           <p className="quiet">
             {session.runtime.mock
               ? "Mock client. This is not a live Spark call."
-              : "A clip often takes 15–20 seconds. This clock is this run."}
+              : "A clip often takes 15 to 20 seconds. This clock is this run."}
           </p>
         </section>
         <section>

@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { heroSamFile, heroStep, presentNouns, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
+import { heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
@@ -134,13 +134,13 @@ export function Landing() {
                 <div className="reel-phone card-frame">
                   <PhotoFrame
                     className="is-fill"
-                    src={frameSrc(sample.scene, sample.poster)}
+                    src={frameSrc(sample.scene, sample.cardOutlines ? recordedFrameFile(sample.scene, Math.max(0, (sample.scene.hero.samStep ?? 1) - 1)) : sample.poster)}
                     alt={`${sample.tutorial.title} sample frame`}
-                    loopSrc={frameSrc(sample.scene, sample.clip)}
+                    loopSrc={sample.cardOutlines ? undefined : frameSrc(sample.scene, sample.clip)}
                     objectPosition={sample.cardCrop}
                     zoom={sample.cardZoom}
                     sampleChip
-                    showProgress
+                    showProgress={sample.cardOutlines ? false : true}
                     drawOutlines={sample.cardOutlines}
                     overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
                   />
@@ -177,7 +177,7 @@ export function Landing() {
           </article>
           <article className="panel model-card">
             <h3>SAM 3.1</h3>
-            <p>Keyframe highlights for 2–4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
+            <p>Keyframe highlights for 2 to 4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>

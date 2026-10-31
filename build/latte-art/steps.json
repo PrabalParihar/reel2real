@@ -10,30 +10,30 @@
   },
   "hero": {
     "image": "hero.jpg",
-    "samNoun": "cup",
+    "samNoun": "jug",
     "samStep": 1
   },
   "steps": [
     {
       "index": 0,
       "id": "step_01_start",
-      "title": "Start filling the cup",
-      "instruction": "Pour milk into the green cup of espresso. Keep the cup fully in frame.",
-      "hinglishPrompt": "Cup dikhao.",
+      "title": "Tilt the milk jug",
+      "instruction": "Pour from the metal jug. Keep the jug fully in frame.",
+      "hinglishPrompt": "Jug dikhao.",
       "keyframe": "step-1.jpg",
       "samFile": "sam/step-1.json",
       "nouns": [
         {
-          "objectId": "obj_cup",
-          "noun": "cup",
-          "samPrompt": "cup",
+          "objectId": "obj_jug",
+          "noun": "jug",
+          "samPrompt": "jug",
           "color": "#E88C30",
           "present": true,
           "requestId": "07c487f0-09ec-4272-b213-a082be8e3a9c"
         }
       ],
       "keepFullyInFrame": [
-        "cup"
+        "jug"
       ]
     },
     {
@@ -61,23 +61,23 @@
     {
       "index": 2,
       "id": "step_03_finish",
-      "title": "Finish the foam on the cup",
-      "instruction": "Finish the foam pattern on top of the cup. Keep the cup fully in frame.",
-      "hinglishPrompt": "Cup ka pattern finish karo.",
+      "title": "Finish the pour from the jug",
+      "instruction": "The metal jug is still pouring. Keep the jug fully in frame.",
+      "hinglishPrompt": "Jug dikhao.",
       "keyframe": "step-3.jpg",
       "samFile": "sam/step-3.json",
       "nouns": [
         {
-          "objectId": "obj_cup",
-          "noun": "cup",
-          "samPrompt": "cup",
+          "objectId": "obj_jug",
+          "noun": "jug",
+          "samPrompt": "jug",
           "color": "#E88C30",
           "present": true,
           "requestId": "843ab4e9-586e-47c3-b0e2-5e1f7eee58ed"
         }
       ],
       "keepFullyInFrame": [
-        "cup"
+        "jug"
       ]
     }
   ]

@@ -18,9 +18,9 @@ const HIT_NOUNS: Record<string, string[][]> = {
     ["rod", "flask"],
   ],
   origami: [
-    ["paper", "hands"],
+    ["paper"],
     ["heart"],
-    ["crane"],
+    [],
   ],
   "seed-planting": [
     ["gloves", "tray"],
@@ -28,9 +28,9 @@ const HIT_NOUNS: Record<string, string[][]> = {
     ["jar", "gloves"],
   ],
   "latte-art": [
+    ["jug"],
     ["cup"],
-    ["cup"],
-    ["cup"],
+    ["jug"],
   ],
 };
 
@@ -223,14 +223,18 @@ describe("catalog frame shapes", () => {
       expect(demo, slug).toBeDefined();
       const tutorial = tutorialFromScene(demo!.scene, demo!.domain);
       const boxes = diskBoxes(demo!.scene);
-      expect(boxes.every((step) => step.length > 0), `${slug} has an empty mask step`).toBe(true);
       steps.forEach((nouns, index) => {
         const step = demo!.scene.steps[index];
         expect(step.nouns.filter((noun) => noun.present).map((noun) => noun.noun)).toEqual(nouns);
         expect(step.title.trim().length).toBeGreaterThan(0);
         expect(step.instruction.trim().length).toBeGreaterThan(0);
         const listed = (step as { keepFullyInFrame?: string[] }).keepFullyInFrame;
-        expect(listed).toEqual(nouns);
+        expect(listed ?? []).toEqual(nouns);
+        if (!nouns.length) {
+          expect(boxes[index]).toEqual([]);
+          return;
+        }
+        expect(boxes[index].length).toBeGreaterThan(0);
         expect(missingObjectHint(tutorial.steps[index], null)).toBe(`Keep these fully in frame: ${nouns.join(", ")}.`);
         expect(demo!.scene.label).toBe("Sample · recorded SAM output");
       });

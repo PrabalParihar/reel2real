@@ -200,7 +200,7 @@ export function UploadScreen() {
                 />
               ))}
             </div>
-            <p>2–4 objects work best. Good light. Each tracked object stays fully inside the frame.</p>
+            <p>2 to 4 objects work best. Good light. Each tracked object stays fully inside the frame.</p>
             <p>If an object is not highlighted, move it fully into the frame before you continue.</p>
             <p className="mono">Credit and licence come from this form. Spark does not choose them.</p>
           </aside>

@@ -79,9 +79,9 @@ Say: "If SAM does not answer, we say so. Next still moves the step. We do not dr
 
 Open each remaining demo from the landing cards. Spend about 15 seconds on each. Read the step title. Do not invent a noun that is not on the chip.
 
-- Origami. Yogendra Singh, Pexels. Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding beside the crane". Highlights: paper and hands, then heart, then crane.
+- Origami. Yogendra Singh, Pexels. Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding the paper". Highlights: paper, then heart. Step 3 has no recorded highlight.
 - Seed planting. Tima Miroshnichenko, Pexels. Read: "Poke cells in the seed tray", "Work across the tray beside the pot", "Finish with the jar in view". Highlights: gloves and tray, then pot and gloves, then jar and gloves.
-- Latte art. franklandgrave, Mixkit. Read: "Start filling the cup", "Build a foam circle in the cup", "Finish the foam on the cup". Each step highlights the cup. The second still is the retimed frame.
+- Latte art. franklandgrave, Mixkit. Read: "Tilt the milk jug", "Build a foam circle in the cup", "Finish the pour from the jug". Highlights: jug, then cup, then jug. The second still is the retimed frame.
 - Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Read: "Pour powder into the flask", "Watch the colour change", "Set the flask and rod in view". Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. Highlights: flask and bottle, then flask and bottle, then rod and flask. Do not name a chemical.
 
 Every one of these steps has a recorded hit. Read the title on the glass. If a future step ever has no mask, the title stays and you do not draw a box. That is not this set.
@@ -104,7 +104,7 @@ If the coach says a noun is not highlighted, stop and reframe.
 | --- | --- | --- |
 | masala-chai | One kitchen, mortar and pestle, spices, herbs | Pexels contributor, Pexels License, https://www.pexels.com/video/5480225/ |
 | flask-colour | Flask, bottle, then a rod with the flask. No chemical names | AlexKopeykin, Pixabay Content License. Source and licence links are on the card |
-| origami | Paper and hands, then a heart, then a crane | Yogendra Singh, Pexels License, Pexels 6364305 |
+| origami | Paper, then a heart. Step 3 has no recorded highlight | Yogendra Singh, Pexels License, Pexels 6364305 |
 | seed-planting | Gloves with a tray, a pot, then a jar | Tima Miroshnichenko, Pexels License, Pexels 6508485 |
 | latte-art | A cup, including the retimed second still | franklandgrave, Mixkit Stock Video Free License, Mixkit 810 |
 

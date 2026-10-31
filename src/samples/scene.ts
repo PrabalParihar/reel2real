@@ -91,6 +91,11 @@ export function sceneByDemo(id: string | null | undefined): SampleScene | undefi
   return SAMPLE_SCENES.find((scene) => scene.demo === id);
 }
 
+/** Still SAM actually saw for this step. Outlines must sit on this file, not a moving loop. */
+export function recordedFrameFile(scene: SampleScene, stepIndex: number): string {
+  return scene.steps[stepIndex]?.keyframe ?? scene.hero.image;
+}
+
 export function sceneAsset(scene: SampleScene, file: string): string {
   const clean = file.replace(/^\/+/, "");
   return `/samples/${scene.demo}/${clean}`;

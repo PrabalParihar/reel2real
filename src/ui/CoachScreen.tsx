@@ -6,7 +6,7 @@ import { sampleByPublishedId } from "@/src/domains/catalog";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { presentNouns, RECORDED_SAM_LABEL, sceneAsset } from "@/src/samples/scene";
+import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell } from "./chrome";
@@ -113,7 +113,7 @@ function CoachBody() {
             {showRecorded && scene && sceneStep ? (
               <PhotoFrame
                 className="is-fill"
-                src={sceneAsset(scene, sceneStep.keyframe)}
+                src={sceneAsset(scene, recordedFrameFile(scene, stepIndex))}
                 alt={sceneStep.title}
                 sizes="(max-width: 1023px) 100vw, 60vw"
                 objectPosition={stepCrop}
@@ -198,7 +198,7 @@ function CoachBody() {
                     sampleChip
                   />
                 ) : null}
-                <p className="mono">{step.sourceTimeRange.startSec}s – {step.sourceTimeRange.endSec}s</p>
+                <p className="mono">{step.sourceTimeRange.startSec}s to {step.sourceTimeRange.endSec}s</p>
               </div>
             ) : null}
             {scene ? <SceneCredit scene={scene} /> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
