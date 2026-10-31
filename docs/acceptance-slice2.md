@@ -9,5 +9,5 @@ Checked against `main` after the slice 2 merge. The second domain stays a config
 - The SAM poll cap: one call in flight, 2s interval, paused when hidden, done, or in error, and capped at 60 per session with a Highlights paused chip.
 - The Upload Framing card is aligned with the dropzone top at 1440.
 - Sample thumbnails fill their frames (cover) at 1440 and 390.
-- The second domain is the generic bike-chain Sample in the SECOND_DOMAIN slot.
+- Published Sample reels come from `src/samples/demos.ts`. Masala chai is the current entry.
 - Node 22 is pinned.

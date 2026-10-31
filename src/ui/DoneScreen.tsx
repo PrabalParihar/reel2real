@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { sceneForPublishedId } from "@/src/domains/catalog";
+import { sampleByPublishedId } from "@/src/domains/catalog";
 import { coachHonesty } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { sceneAsset } from "@/src/samples/scene";
@@ -15,9 +15,10 @@ export function DoneScreen() {
   const summary = session.summary;
   const tutorial = session.tutorial;
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
-  const scene = !session.prepare?.hasClip
-    ? sceneForPublishedId(session.prepare?.sampleId) ?? sceneForPublishedId(tutorial?.tutorialId)
+  const published = !session.prepare?.hasClip
+    ? sampleByPublishedId(session.prepare?.sampleId) ?? sampleByPublishedId(tutorial?.tutorialId)
     : undefined;
+  const scene = published?.scene;
   const showTiming = !session.runtime.mock && session.stepsSource === "clip" && session.sparkLatencyMs != null && session.sparkLatencyMs > 0;
   return (
     <AppShell>
@@ -27,33 +28,36 @@ export function DoneScreen() {
             <Chip tone="match">{coachHonesty(tutorial?.runtimeHints?.preferredLiveMode ?? "keyframe_still", tutorial?.runtimeHints?.preferredLiveMode === "stills_only", sampleSteps)}</Chip>
           </div>
           <h1>{summary?.title ?? tutorial?.title ?? "Session complete"}</h1>
-          <ul className="counts">
-            <li><strong>{summary?.steps ?? tutorial?.steps.length ?? 0}</strong><span>steps</span></li>
-            <li><strong>{summary?.skips ?? 0}</strong><span>skips</span></li>
-            <li><strong>{summary?.safetyHits ?? 0}</strong><span>safety hits</span></li>
-          </ul>
           {tutorial ? (
-            <ol className="recap">
+            <ol className="recap-reel">
               {tutorial.steps.map((step, index) => {
                 const skipped = summary?.skippedStepIds?.includes(`index:${index}`) ?? false;
+                const crop = published?.stepCrops[index] ?? published?.crop;
                 return (
                   <li key={step.id}>
-                    {scene?.steps[index] ? (
-                      <PhotoFrame
-                        src={sceneAsset(scene, scene.steps[index].keyframe)}
-                        alt={scene.steps[index].title}
-                        sizes="84px"
-                      />
-                    ) : <span className="photo-frame" />}
-                    <div>
-                      <p>{step.instructionText}</p>
-                      <span>{skipped ? "Skipped" : "Done"}</span>
+                    <div className="reel-tile">
+                      {scene?.steps[index] ? (
+                        <PhotoFrame
+                          className="is-fill"
+                          src={sceneAsset(scene, scene.steps[index].keyframe)}
+                          alt={scene.steps[index].title}
+                          sizes="140px"
+                          objectPosition={crop}
+                        />
+                      ) : null}
                     </div>
+                    <p>{step.instructionText}</p>
+                    <span>{skipped ? "Skipped" : "Done"}</span>
                   </li>
                 );
               })}
             </ol>
           ) : null}
+          <ul className="counts counts-quiet">
+            <li><strong>{summary?.steps ?? tutorial?.steps.length ?? 0}</strong><span>steps</span></li>
+            <li><strong>{summary?.skips ?? 0}</strong><span>skips</span></li>
+            <li><strong>{summary?.safetyHits ?? 0}</strong><span>safety hits</span></li>
+          </ul>
           {scene ? <SceneCredit scene={scene} /> : <p className="credit">{tutorial ? formatCredit(tutorial.attribution) : "Credit · Sample cook · self-filmed"}</p>}
           {scene ? <SampleCredit /> : null}
           <div className="cta-row">

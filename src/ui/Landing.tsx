@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Camera, Clapperboard, ScanLine } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
-import { heroNouns, heroSamFile, heroStep, sceneAsset, type SampleScene } from "@/src/samples/scene";
-import { Chip } from "./chrome";
+import { heroNouns, heroSamFile, heroStep, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
-import { useSession } from "./session";
 
 const CHAI = PUBLISHED_SAMPLES[0];
 const HERO_STEPS = CHAI.tutorial.steps.map((step) => step.instructionText);
@@ -20,7 +18,6 @@ function frameSrc(scene: SampleScene, file: string): string {
 }
 
 export function Landing() {
-  const { runtime } = useSession();
   const chai = CHAI.scene;
   return (
     <div className="landing">
@@ -42,53 +39,59 @@ export function Landing() {
       <header className="hero-bleed mesh section hero">
         <div className="hero-copy">
           <p className="kicker">Phone stand · Upload · Coach</p>
-          <h1>Upload a tutorial. Follow it with your camera.</h1>
-          <p className="lead">Muse Spark turns your clip into steps. SAM checks 2–4 objects on keyframes from a phone on a stand.</p>
+          <h1>Follow a tutorial on camera.</h1>
+          <p className="lead">Put the phone on a stand. The objects in each step light up as you match the lesson.</p>
           <div className="cta-row">
             <Link className="btn btn-primary" href="/upload">Try the coach <ArrowRight size={18} strokeWidth={1.5} /></Link>
             <a className="btn btn-ghost" href="#demos">Watch the demos</a>
           </div>
         </div>
-        <HeroStage mock={runtime.mock} scene={chai} />
+            <HeroStage scene={chai} />
       </header>
 
       <section className="section wrap" id="how">
         <p className="kicker">How it works</p>
         <h2>Three moves. The clip stays yours.</h2>
-        <div className="bento">
-          <article className="panel bento-feature">
+        <div className="how-reels">
+          <article>
             <span className="index">01</span>
-            <Camera strokeWidth={1.5} />
             <h3>Upload a clip you own</h3>
-            <p>MP4 or WebM you filmed, or a creator clip with written permission. You enter the creator name and the licence. The file stays in this browser.</p>
-            <PhotoFrame
-              src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
-              alt="Kitchen mortar and pestle, first sample frame"
-              sampleChip
-            />
-          </article>
-          <article className="panel">
-            <span className="index">02</span>
-            <Clapperboard strokeWidth={1.5} />
-            <h3>Spark writes the steps</h3>
-            <p>Muse Spark reads the clip once and returns steps JSON. A short clip goes as a 2 second chunk. A longer one uses the files upload.</p>
-            <div className="mini-visual">
-              <span>{CHAI.tutorial.title.replace(/^Sample · /, "")} · {HERO_STEPS.length} steps</span>
-              <ol className="step-list">
-                {HERO_STEPS.map((line) => <li key={line}>{line}</li>)}
-              </ol>
+            <div className="reel-phone">
+              <PhotoFrame
+                className="is-fill"
+                src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
+                alt="Kitchen mortar and pestle, first sample frame"
+                loopSrc={frameSrc(chai, CHAI.clip)}
+                objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
+                sampleChip
+                showProgress
+              />
             </div>
           </article>
-          <article className="panel">
+          <article>
+            <span className="index">02</span>
+            <h3>Steps from the lesson</h3>
+            <div className="reel-phone">
+              <PhotoFrame
+                className="is-fill"
+                src={frameSrc(chai, chai.steps[1]?.keyframe ?? chai.hero.image)}
+                alt="Hands crushing spices in the same mortar"
+                objectPosition={CHAI.stepCrops[1] ?? CHAI.crop}
+              />
+            </div>
+          </article>
+          <article>
             <span className="index">03</span>
-            <ScanLine strokeWidth={1.5} />
-            <h3>Coach with SAM</h3>
-            <p>SAM 3.1 checks 2–4 objects about every 2 seconds on a keyframe. Advance, skip, out of order, one safety rule.</p>
-            <PhotoFrame
-              src={frameSrc(chai, chai.steps[1]?.keyframe ?? chai.hero.image)}
-              alt="Hands crushing spices in the same mortar"
-              sampleChip
-            />
+            <h3>Highlights on the objects</h3>
+            <div className="reel-phone">
+              <PhotoFrame
+                className="is-fill"
+                src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
+                alt="Recorded highlight on the mortar"
+                objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
+                overlay={heroSamFile(chai) ? { samUrl: sceneAsset(chai, heroSamFile(chai)!), nouns: heroNouns(chai) } : null}
+              />
+            </div>
           </article>
         </div>
       </section>
@@ -117,18 +120,22 @@ export function Landing() {
 
       <section className="section wrap" id="demos">
         <p className="kicker">Demos</p>
-        <h2>Two Sample tutorials</h2>
+        <h2>Sample tutorials</h2>
         <div className="demo-grid">
           {PUBLISHED_SAMPLES.map((sample) => (
             <article className="panel demo-card" key={sample.id}>
-              <PhotoFrame
-                className="tall"
-                src={frameSrc(sample.scene, sample.scene.hero.image)}
-                alt={`${sample.tutorial.title} sample frame`}
-                sampleChip
-              />
+              <div className="reel-phone">
+                <PhotoFrame
+                  className="is-fill"
+                  src={frameSrc(sample.scene, sample.poster)}
+                  alt={`${sample.tutorial.title} sample frame`}
+                  loopSrc={frameSrc(sample.scene, sample.clip)}
+                  objectPosition={sample.crop}
+                  sampleChip
+                  showProgress
+                />
+              </div>
               <div className="demo-body">
-                <Chip tone="neutral">Sample</Chip>
                 <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
                 <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
                 <ol className="step-list">
@@ -183,10 +190,9 @@ export function Landing() {
   );
 }
 
-function HeroStage({ mock, scene }: { mock: boolean; scene: SampleScene }) {
+function HeroStage({ scene }: { scene: SampleScene }) {
   const [index, setIndex] = useState(0);
   const [motion, setMotion] = useState(true);
-  const samFile = heroSamFile(scene);
   const heroStill = heroStep(scene)?.keyframe ?? scene.hero.image;
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -202,19 +208,17 @@ function HeroStage({ mock, scene }: { mock: boolean; scene: SampleScene }) {
   }, [motion]);
   return (
     <div className="hero-media">
-      <div className="hero-chip-stack">
-        <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
-        <Chip tone="running">Checking…</Chip>
-      </div>
-      <div className="hero-stage">
+      <div className="reel-phone hero-reel">
         <PhotoFrame
           className="is-fill"
           src={frameSrc(scene, heroStill)}
           alt="Stone mortar and pestle in one kitchen, sample hero frame"
-          sizes="(max-width: 800px) 100vw, 720px"
+          sizes="(max-width: 800px) 100vw, 420px"
+          loopSrc={frameSrc(scene, CHAI.clip)}
+          objectPosition={CHAI.crop}
           priority
-          recordedLabel
-          overlay={samFile ? { samUrl: sceneAsset(scene, samFile), nouns: heroNouns(scene) } : null}
+          status={RECORDED_SAM_LABEL}
+          showProgress
         />
       </div>
       <article className="mock-card is-below" key={HERO_STEPS[index]}>

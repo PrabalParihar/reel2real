@@ -26,8 +26,27 @@ export interface MaskDraw {
   centroid: Point | null;
 }
 
-/** object-fit: cover, centered. Maps a native frame onto a viewport. */
-export function coverTransform(frameW: number, frameH: number, viewW: number, viewH: number): CoverTransform {
+export interface ObjectPosition {
+  x: number;
+  y: number;
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0.5;
+  return Math.min(1, Math.max(0, value));
+}
+
+/**
+ * object-fit: cover plus object-position.
+ * Position is 0–1, matching CSS: 0 shows the start edge, 1 the end edge, 0.5 the center.
+ */
+export function coverTransform(
+  frameW: number,
+  frameH: number,
+  viewW: number,
+  viewH: number,
+  position: ObjectPosition = { x: 0.5, y: 0.5 },
+): CoverTransform {
   if (frameW <= 0 || frameH <= 0 || viewW <= 0 || viewH <= 0) {
     return { scale: 1, left: 0, top: 0, width: Math.max(viewW, 0), height: Math.max(viewH, 0) };
   }
@@ -36,10 +55,31 @@ export function coverTransform(frameW: number, frameH: number, viewW: number, vi
   const height = frameH * scale;
   return {
     scale,
-    left: (viewW - width) / 2,
-    top: (viewH - height) / 2,
     width,
     height,
+    left: (viewW - width) * clamp01(position.x),
+    top: (viewH - height) * clamp01(position.y),
+  };
+}
+
+/** object-position that places a frame point at the center of a cover crop, when the crop allows it. */
+export function objectPositionForPoint(
+  focalX: number,
+  focalY: number,
+  frameW: number,
+  frameH: number,
+  viewW: number,
+  viewH: number,
+): ObjectPosition {
+  const scale = Math.max(viewW / frameW, viewH / frameH);
+  const axis = (view: number, scaled: number, frame: number, focal: number) => {
+    const spare = view - scaled;
+    if (Math.abs(spare) < 0.5 || frame <= 0) return 0.5;
+    return clamp01((view / 2 - (focal / frame) * scaled) / spare);
+  };
+  return {
+    x: axis(viewW, frameW * scale, frameW, focalX),
+    y: axis(viewH, frameH * scale, frameH, focalY),
   };
 }
 

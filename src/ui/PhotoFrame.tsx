@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { coverTransform, framePathFromPayload, type CoverTransform, type MaskDraw } from "@/src/samples/mask-geometry";
+import { coverTransform, framePathFromPayload, frameToView, type CoverTransform, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -24,6 +24,11 @@ interface DrawItem {
   frameH: number;
 }
 
+function formatClock(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(total / 60)}:${(total % 60).toString().padStart(2, "0")}`;
+}
+
 export function PhotoFrame({
   src,
   alt,
@@ -33,6 +38,10 @@ export function PhotoFrame({
   sampleChip = false,
   priority = false,
   className = "",
+  loopSrc,
+  objectPosition = { x: 0.5, y: 0.5 },
+  status,
+  showProgress = false,
 }: {
   src: string;
   alt: string;
@@ -42,14 +51,29 @@ export function PhotoFrame({
   sampleChip?: boolean;
   priority?: boolean;
   className?: string;
+  loopSrc?: string;
+  objectPosition?: ObjectPosition;
+  status?: string | null;
+  showProgress?: boolean;
 }) {
   const glowId = useId().replace(/:/g, "");
   const [view, setView] = useState({ w: 0, h: 0 });
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [items, setItems] = useState<DrawItem[]>([]);
+  const [reduced, setReduced] = useState(false);
+  const [ratio, setRatio] = useState(0);
+  const [clock, setClock] = useState("0:00");
   const nounKey = (overlay?.nouns ?? []).map((noun) => `${noun.objectId}:${noun.requestId ?? ""}:${noun.present ? 1 : 0}`).join("|");
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduced(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
 
   useLayoutEffect(() => {
     if (!host) return;
@@ -107,9 +131,10 @@ export function PhotoFrame({
   const frameW = items[0]?.frameW || SAM_FRAME.width;
   const frameH = items[0]?.frameH || SAM_FRAME.height;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
-    ? coverTransform(frameW, frameH, view.w, view.h)
+    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition)
     : null;
-  const showRecorded = recordedLabel && items.length > 0;
+  const showRecorded = recordedLabel && !status;
+  const playLoop = Boolean(loopSrc) && !reduced;
 
   return (
     <div className={`photo-frame${className ? ` ${className}` : ""}`} ref={setHost}>
@@ -119,49 +144,78 @@ export function PhotoFrame({
           ? { left: cover.left, top: cover.top, width: cover.width, height: cover.height }
           : undefined}
       >
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={priority}
-          loading={priority ? undefined : "eager"}
-          unoptimized
-          style={{ objectFit: "fill" }}
-        />
+        {playLoop ? (
+          <video
+            className="reel-media"
+            src={loopSrc}
+            poster={src}
+            muted
+            loop
+            playsInline
+            autoPlay
+            onTimeUpdate={(event) => {
+              const video = event.currentTarget;
+              if (!video.duration) return;
+              setRatio(video.currentTime / video.duration);
+              setClock(formatClock(video.currentTime));
+            }}
+          />
+        ) : (
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            priority={priority}
+            loading={priority ? undefined : "eager"}
+            unoptimized
+            style={{ objectFit: "fill" }}
+          />
+        )}
         {items.length ? (
           <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" aria-hidden="true">
             <defs>
-              <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="3.5" />
+              <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="6" />
               </filter>
             </defs>
             {items.map((item) => (
               <g key={item.noun}>
-                <path d={item.draw.d} fill={item.color} fillOpacity={0.28} stroke="none" />
-                <path d={item.draw.d} fill="none" stroke={item.color} strokeWidth={7} strokeOpacity={0.45} filter={`url(#${glowId})`} />
-                <path d={item.draw.d} fill="none" stroke={item.color} strokeWidth={2} />
+                <path d={item.draw.d} fill={item.color} fillOpacity={0.2} stroke="none" />
+                <path d={item.draw.d} fill="none" stroke={item.color} strokeWidth={14} strokeOpacity={0.55} filter={`url(#${glowId})`} />
+                <path d={item.draw.d} fill="none" stroke={item.color} strokeWidth={4.5} />
               </g>
             ))}
           </svg>
         ) : null}
-        {items.map((item) => item.draw.centroid ? (
+      </div>
+      {cover ? items.map((item) => {
+        if (!item.draw.centroid) return null;
+        const point = frameToView(item.draw.centroid.x, item.draw.centroid.y, frameW, frameH, cover);
+        return (
           <span
             key={item.noun}
             className="noun-chip"
             style={{
-              left: `${Math.min(86, Math.max(14, (item.draw.centroid.x / frameW) * 100))}%`,
-              top: `${Math.min(82, Math.max(18, (item.draw.centroid.y / frameH) * 100))}%`,
+              left: Math.min(view.w - 36, Math.max(36, point.x)),
+              top: Math.min(view.h - 40, Math.max(28, point.y)),
               borderColor: item.color,
               color: item.color,
             }}
           >
             {item.noun}
           </span>
-        ) : null)}
-      </div>
-      {showRecorded ? <span className="chip recorded-label">{RECORDED_SAM_LABEL}</span> : null}
-      {!showRecorded && sampleChip ? <span className="chip recorded-label">Sample</span> : null}
+        );
+      }) : null}
+      {status ? <span className="reel-status">{status}</span> : null}
+      {showRecorded ? <span className="reel-status">{RECORDED_SAM_LABEL}</span> : null}
+      {!status && !showRecorded && sampleChip ? <span className="reel-status">Sample</span> : null}
+      {showProgress && playLoop ? (
+        <div className="reel-progress">
+          <span style={{ width: `${Math.min(100, ratio * 100)}%` }} />
+          <em>{clock}</em>
+        </div>
+      ) : null}
     </div>
   );
 }

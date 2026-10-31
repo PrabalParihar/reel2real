@@ -1,20 +1,23 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { PUBLISHED_SAMPLES, SECOND_DOMAIN } from "./catalog";
+import { DEMOS } from "@/src/samples/demos";
+import { PUBLISHED_SAMPLES } from "./catalog";
 
 const UI_COPY = ["src/ui/Landing.tsx", "src/fsm/ui.ts", "src/ui/CoachScreen.tsx", "src/ui/UploadScreen.tsx", "src/ui/chrome.tsx"];
 
 describe("published samples", () => {
-  it("keeps the second domain as one swappable slot", () => {
-    expect(PUBLISHED_SAMPLES).toHaveLength(2);
-    expect(PUBLISHED_SAMPLES[1]).toBe(SECOND_DOMAIN);
-    expect(SECOND_DOMAIN.creatorName).toBe(SECOND_DOMAIN.scene.sourceClip.author);
-    expect(SECOND_DOMAIN.scene.hero.image).toBeTruthy();
-    expect(SECOND_DOMAIN.scene.steps.map((step) => step.title)).toEqual(
-      SECOND_DOMAIN.tutorial.steps.map((step) => step.instructionText),
-    );
-    expect(SECOND_DOMAIN.tutorial.sampleLabel).toBe(true);
-    expect(SECOND_DOMAIN.tutorial.steps).toHaveLength(3);
+  it("publishes demos only from the catalog data", () => {
+    expect(DEMOS.length).toBeGreaterThanOrEqual(1);
+    expect(DEMOS.length).toBeLessThanOrEqual(5);
+    expect(PUBLISHED_SAMPLES).toHaveLength(DEMOS.length);
+    expect(PUBLISHED_SAMPLES.map((item) => item.id)).toEqual(DEMOS.map((demo) => demo.slug));
+    expect(PUBLISHED_SAMPLES.some((item) => item.id === "bike-chain")).toBe(false);
+    for (const sample of PUBLISHED_SAMPLES) {
+      expect(sample.stepCrops.length).toBe(sample.scene.steps.length);
+      expect(sample.creatorName.length).toBeGreaterThan(0);
+      expect(sample.clip.length).toBeGreaterThan(0);
+      expect(sample.tutorial.sampleLabel).toBe(true);
+    }
   });
 
   it("does not tell the user that boxes are pixel masks", () => {

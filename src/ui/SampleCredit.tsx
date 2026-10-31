@@ -1,4 +1,5 @@
-import { SAMPLE_SCENES, sceneByDemo, type SampleScene } from "@/src/samples/scene";
+import { DEMOS } from "@/src/samples/demos";
+import { type SampleScene } from "@/src/samples/scene";
 
 function shortAuthor(author: string): string {
   return author.replace(/\s*\([^)]*\)\s*$/, "").trim();
@@ -21,14 +22,18 @@ export function SceneCredit({ scene }: { scene: SampleScene }) {
   );
 }
 
-/** Pexels line for the two Sample clips. Author names come from each steps.json. */
+/** Credits for every demo in the catalog. */
 export function SampleCredit({ className = "sample-credits" }: { className?: string }) {
-  const chai = sceneByDemo("masala-chai") ?? SAMPLE_SCENES[0];
-  const bike = sceneByDemo("bike-chain") ?? SAMPLE_SCENES[1];
-  if (!chai || !bike) return null;
+  if (!DEMOS.length) return null;
   return (
     <p className={className}>
-      Sample footage: mortar kitchen clip on <a href={chai.sourceClip.page}>Pexels</a> ({shortAuthor(chai.sourceClip.author)}); bike chain clean by <a href={bike.sourceClip.page}>{bike.sourceClip.author}</a>. <a href="https://www.pexels.com/license/">Pexels License</a>. Overlays labelled Sample · recorded SAM output.
+      Sample footage: {DEMOS.map((demo, index) => (
+        <span key={demo.slug}>
+          {index > 0 ? "; " : null}
+          <a href={demo.credit.href}>{shortAuthor(demo.credit.name)}</a>
+          {" "}({demo.credit.license})
+        </span>
+      ))}. Overlays labelled Sample · recorded SAM output.
     </p>
   );
 }

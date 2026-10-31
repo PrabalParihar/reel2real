@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { decodeMaskToRaster } from "@meta-sam/parser";
-import { contourLoops, coverTransform, framePathFromPayload, framePathFromRaster, frameToView, smoothMask } from "./mask-geometry";
+import { contourLoops, coverTransform, framePathFromPayload, framePathFromRaster, frameToView, objectPositionForPoint, smoothMask } from "./mask-geometry";
 import { heroNouns, SAMPLE_SCENES, selectMaskRecord, tutorialFromScene, type SamStepFile, type SceneNoun } from "./scene";
 
 function loadSam(demo: string, file: string): SamStepFile {
@@ -69,22 +69,28 @@ describe("mask to path", () => {
     expect(draw.d).not.toMatch(/rect/i);
   });
 
-  it("uses the bicycle-chain hit and ignores the miss on the same object id", () => {
-    const scene = SAMPLE_SCENES.find((item) => item.demo === "bike-chain");
-    expect(scene).toBeTruthy();
-    const noun = scene!.steps[0].nouns[0];
-    expect(noun.noun).toBe("chain");
-    expect(noun.samPrompt).toBe("bicycle chain");
-    const file = loadSam(scene!.demo, scene!.steps[0].samFile);
-    const miss = file.calls?.find((call) => call.present === false);
-    expect(miss?.requestId).not.toBe(noun.requestId);
-    const selected = selectMaskRecord(file.calls, noun);
-    expect(selected?.call.requestId).toBe("24e94893-d87b-44d2-bf2e-da6292074e32");
-    expect(selected?.call.present).toBe(true);
-    const draw = framePathFromPayload(selected!.mask, selected!.box);
-    expect(draw.d.includes("M ")).toBe(true);
-    const absent: SceneNoun = { ...noun, present: false };
-    expect(selectMaskRecord(file.calls, absent)).toBeNull();
+  it("ignores a recorded miss when the noun is marked absent", () => {
+    const scene = SAMPLE_SCENES[0];
+    const noun = { ...scene.steps[0].nouns[0], present: false };
+    const file = loadSam(scene.demo, scene.steps[0].samFile);
+    expect(selectMaskRecord(file.calls, noun)).toBeNull();
+  });
+});
+
+describe("vertical crop", () => {
+  it("keeps a focal point centered after a 9:16 cover crop", () => {
+    const focal = { x: 398, y: 245 };
+    const position = objectPositionForPoint(focal.x, focal.y, 720, 405, 360, 640);
+    const cover = coverTransform(720, 405, 360, 640, position);
+    const view = frameToView(focal.x, focal.y, 720, 405, cover);
+    expect(view.x).toBeCloseTo(180, 0);
+    expect(view.y).toBeGreaterThanOrEqual(-1);
+    expect(view.y).toBeLessThanOrEqual(641);
+    expect(cover.left).toBeLessThanOrEqual(0);
+    const pinned = coverTransform(720, 405, 360, 640, { x: 0, y: 0.5 });
+    expect(pinned.left).toBeCloseTo(0);
+    const end = coverTransform(720, 405, 360, 640, { x: 1, y: 0.5 });
+    expect(end.left).toBeCloseTo(360 - end.width);
   });
 });
 
@@ -104,7 +110,6 @@ describe("scene tutorials", () => {
     }
     const chai = SAMPLE_SCENES.find((scene) => scene.demo === "masala-chai");
     expect(heroNouns(chai!).map((noun) => noun.noun)).toEqual(["mortar"]);
-    const bike = tutorialFromScene(SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain")!);
-    expect(bike.steps.map((step) => step.objects.map((object) => object.noun))).toEqual([["chain"], ["brush"], ["hand"]]);
+    expect(SAMPLE_SCENES.some((scene) => scene.demo === "bike-chain")).toBe(false);
   });
 });
