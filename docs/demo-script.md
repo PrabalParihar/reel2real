@@ -2,7 +2,7 @@
 
 Target 2:30. Hard stop before 3:00. The official video length is not stated on the public event pages, so this limit is unverified. If a beat runs long, cut a later Sample before you pass 2:50.
 
-Prabal films this on his laptop. Use only https://web-production-d1454.up.railway.app. Do not film localhost. Do not open anything in clips/. Do not show a camera feed of anyone else. Props and your own hands on the desk are fine. Do not put the basic-auth password, the model key, or any secret on screen. When the browser asks for a password, type it off camera.
+Prabal films this on his laptop. Use only https://web-production-d1454.up.railway.app. Do not film localhost. Do not show a camera feed of anyone else. Props and your own hands on the desk are fine. Do not put the basic-auth password, the model key, or any secret on screen. When the browser asks for a password, type it off camera.
 
 Say the words below, or stay close to them. Read the step titles that are actually on screen. Do not rename a flask step, and do not name a chemical.
 
