@@ -1,4 +1,5 @@
 import { API_ORIGIN, SAM_MODEL_ID } from "@/src/models";
+import { META_USER_AGENT } from "./meta-log";
 
 /** Documented Responses base. Railway does not set a base-URL variable. */
 export const DEFAULT_API_BASE = `${API_ORIGIN}/v1`;
@@ -18,6 +19,7 @@ export function samRequestHeaders(key: string): Record<string, string> {
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
     Accept: "text/event-stream",
+    "User-Agent": META_USER_AGENT,
   };
 }
 

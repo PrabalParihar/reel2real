@@ -6,7 +6,7 @@ import { SAM_MODEL_ID, SPARK_MODEL_ID, API_ORIGIN } from "@/src/models";
 import { tutorialFromSparkPayload, type UserAttribution } from "@/src/schema/attribution";
 import { parseSamBoxes } from "./sam-parse";
 import { buildSamResponsesBody, responsesUrl, samMaskPresent, samOutputText, samRequestHeaders } from "./sam-request";
-import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, samFailureLog, sparkFailureLog } from "./meta-log";
+import { META_USER_AGENT, metaJsonHeaders, metaUpstreamLog, pathnameOf, readUpstreamHeaders, samFailureLog, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { buildSparkResponsesBody, chooseSparkMediaPlan, SPARK_STEPS_INSTRUCTION } from "./spark-request";
 import { sampleById } from "./fixtures";
@@ -34,7 +34,7 @@ async function postResponses(
   key: string,
   body: unknown,
   timeoutMs: number,
-  headers: Record<string, string> = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+  headers: Record<string, string> = metaJsonHeaders(key),
 ): Promise<{ status: number; text: string; url: string; requestId: string; route: string; latencyMs: number }> {
   reserveMetaCall();
   const controller = new AbortController();
@@ -193,7 +193,7 @@ async function uploadClipFile(key: string, base64: string, mime: string): Promis
   form.append("file", new Blob([new Uint8Array(bytes)], { type: mime }), mime.includes("webm") ? "clip.webm" : "clip.mp4");
   const response = await fetch(FILES_URL, {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}` },
+    headers: { Authorization: `Bearer ${key}`, "User-Agent": META_USER_AGENT },
     body: form,
   });
   const ids = readUpstreamHeaders(response.headers);

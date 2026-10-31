@@ -17,6 +17,7 @@ describe("SAM request builder", () => {
     expect(headers.Accept).toBe("text/event-stream");
     expect(headers["Content-Type"]).toBe("application/json");
     expect(headers.Authorization).toBe("Bearer test-key");
+    expect(headers["User-Agent"]).toBe("reel2real/0.1 (+server)");
     expect(body).toEqual({
       model: SAM_MODEL_ID,
       stream: true,
