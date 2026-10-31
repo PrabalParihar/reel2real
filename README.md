@@ -24,6 +24,9 @@ Names only. Never commit values, and never print them.
 - `META_API_BASE` (optional, default `https://api.meta.ai/v1`)
 - `NEXT_PUBLIC_SAM_MIN_INTERVAL_MS` (optional, default 2000). The coach will not start a second SAM call until this gap has passed, and it keeps at most one call in flight.
 - `NEXT_PUBLIC_SAM_SESSION_CAP` (optional, default 60). After that many coach calls, polling stops and the stage shows Highlights paused. Next still moves the step.
+- `SAM_FORWARD_ENABLED` (optional, default off). Set to `1` only on prod `web` to forward SAM. Any other value leaves the direct path.
+- `SAM_FORWARD_URL` (optional). Where that forward goes. See `docs/SAM-FORWARD.md`.
+- `SAM_FORWARD_SECRET` (optional shared secret). Never print it.
 
 Node 22 is pinned with `.nvmrc` (`22`) and `package.json` `engines.node` `>=22 <23`. Railpack reads `engines.node` before `.nvmrc`.
 
@@ -32,6 +35,8 @@ If neither model key is set, Spark and SAM use the mock clients. The UI shows a 
 The real client calls `POST https://api.meta.ai/v1/responses` with `muse-spark-1.3` and `sam-3.1`. SAM sends `stream: true`, `metadata.mask_encoding` `one_bit`, and `Accept: text/event-stream`, which is the still request in the [segmenting guide](https://dev.meta.ai/docs/sam/segmenting). A missing `META_API_BASE` stays on `https://api.meta.ai/v1`. A failed SAM call logs the upstream status and path only. If highlights never arrive, Next and Skip still move the step and the stage shows Highlights unavailable. A clip of about 10 seconds or less is sent as a 2 second `input_video` data URL. A longer clip, or a payload over 8 MB, is uploaded with `POST https://api.meta.ai/v1/files` (`purpose=user_data`) and referenced as an `input_file` `file_id`, which is the shape in the file-handling guide. If both fail, the API returns an error and does not invent steps. A transcript is only the fallback when no clip is sent. Muse Image is not used.
 
 `/api/spark` and `/api/segment` allow 20 requests per minute per IP. That limit is ours, not a Meta quota. The daily cap counts outbound Meta calls in process memory and answers 429 when it is spent. The UI then shows cached steps for that file, or a Sample tutorial, with a chip that says the cap was reached.
+
+`POST /api/segment` can forward to `web-preview` when `SAM_FORWARD_ENABLED=1`. The default is off, and the direct SAM path is unchanged until then. Setup for both Railway services is in `docs/SAM-FORWARD.md`. Values for the forward secret and the model key are never logged.
 
 ## Models
 

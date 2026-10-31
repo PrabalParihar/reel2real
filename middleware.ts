@@ -13,6 +13,7 @@ export const config = {
 };
 
 export function middleware(request: NextRequest) {
+  // /api/internal/segment is the only path that skips this gate. It checks its own secret.
   if (!previewPathIsGated(request.nextUrl.pathname)) return NextResponse.next();
   const decision = previewDecision({
     password: process.env.PREVIEW_PASSWORD,

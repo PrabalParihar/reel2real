@@ -1,6 +1,6 @@
-import { TIMEOUTS } from "@/src/fsm/types";
-import { createModelClients } from "@/src/server/factory";
-import { dailyCapResponse, guardMetaRoute } from "@/src/server/meta-guard";
+import { guardMetaRoute } from "@/src/server/meta-guard";
+import { forwardSamRequest, samForwardEnabled } from "@/src/server/sam-forward";
+import { executeSegment } from "@/src/server/segment-run";
 import type { SegmentRequest } from "@/src/server/types";
 
 export const dynamic = "force-dynamic";
@@ -8,22 +8,16 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
-  const body = (await request.json()) as SegmentRequest;
-  const clients = createModelClients(process.env);
-  try {
-  const result = await clients.segmentation.segment({
-    inputKind: body.inputKind === "video_chunk" ? "video_chunk" : "image",
-    mediaBase64: body.mediaBase64,
-    mimeType: body.mimeType,
-    prompts: (body.prompts ?? []).slice(0, 4),
-    timeoutMs: Math.min(body.timeoutMs || TIMEOUTS.SAM_TIMEOUT_MS, TIMEOUTS.SAM_TIMEOUT_MS),
-    scenario: clients.mode === "mock" ? body.scenario : undefined,
-    phase: clients.mode === "mock" ? body.phase : undefined,
-  });
-  return Response.json(result);
-  } catch (error) {
-    const capped = dailyCapResponse(error);
-    if (capped) return capped;
-    throw error;
+  if (samForwardEnabled(process.env)) {
+    const rawBody = await request.text();
+    return forwardSamRequest({
+      rawBody,
+      env: process.env,
+      contentType: request.headers.get("content-type"),
+      forwardedFor: request.headers.get("x-forwarded-for"),
+      realIp: request.headers.get("x-real-ip"),
+    });
   }
+  const body = (await request.json()) as SegmentRequest;
+  return executeSegment(body);
 }
