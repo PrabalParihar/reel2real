@@ -179,7 +179,7 @@ export function usesSourceEdgeException(boxes: FrameBox[], frameW = 720, frameH 
 }
 
 export function requiredAspect(boxes: FrameBox[], frameW = 720, frameH = 405): number {
-  if (!boxes.length) return FRAME_SHAPES[0].aspect;
+  if (!boxes.length) return 0;
   let lo = 0.5;
   let hi = FRAME_SHAPES[FRAME_SHAPES.length - 1].aspect;
   if (!placementFor(boxes, hi, 1, frameW, frameH)) return hi + 1;
@@ -192,7 +192,7 @@ export function requiredAspect(boxes: FrameBox[], frameW = 720, frameH = 405): n
 }
 
 /** Narrowest chain shape that holds every step. Zoom stays 1 unless a later pass needs more. */
-export function fitDemo(steps: FrameBox[][], frameW = 720, frameH = 405): DemoFrameFit {
+export function fitDemo(steps: FrameBox[][], frameW = 720, frameH = 405, cardStep = 0): DemoFrameFit {
   const exception = steps.map((boxes) => usesSourceEdgeException(boxes, frameW, frameH));
   const needs = steps.map((boxes) => requiredAspect(boxes, frameW, frameH));
   let forcedByStep = exception.findIndex((flag) => !flag);
@@ -223,9 +223,10 @@ export function fitDemo(steps: FrameBox[][], frameW = 720, frameH = 405): DemoFr
     frameW,
     frameH,
   ));
-  const cardBoxes = steps[0] ?? [];
+  const cardIndex = Math.min(Math.max(0, cardStep), Math.max(0, steps.length - 1));
+  const cardBoxes = steps[cardIndex] ?? [];
   const cardAspect = FRAME_SHAPES.find((shape) => shape.id === CARD_SHAPE)?.aspect ?? 4 / 5;
-  const cardPlaced = placementFor(cardBoxes, cardAspect, 1, frameW, frameH);
+  const cardPlaced = cardBoxes.length ? placementFor(cardBoxes, cardAspect, 1, frameW, frameH) : null;
   return {
     shape: chosen.id,
     aspect: chosen.aspect,

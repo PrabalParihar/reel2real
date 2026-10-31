@@ -100,9 +100,13 @@ function CoachBody() {
           ? RECORDED_SAM_LABEL
           : chip;
   const recordedNouns = presentNouns(sceneStep);
-  const hint = showRecorded && sceneStep && !recordedNouns.length
-    ? "No highlight on this frame. Press Next when the step looks right."
-    : missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
+  const verifiedNouns = recordedNouns.filter((noun) => noun.verified !== false);
+  const noVerifiedMask = showRecorded && recordedNouns.length > 0 && verifiedNouns.length === 0;
+  const hint = noVerifiedMask
+    ? "No verified mask on this frame."
+    : showRecorded && sceneStep && !recordedNouns.length
+      ? "No highlight on this frame. Press Next when the step looks right."
+      : missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
 
   return (
     <AppShell backHref="/upload">
@@ -119,7 +123,7 @@ function CoachBody() {
                 objectPosition={stepCrop}
                 zoom={stepZoom}
                 status={onVideoStatus}
-                overlay={{ samUrl: sceneAsset(scene, sceneStep.samFile), nouns: recordedNouns }}
+                overlay={verifiedNouns.length ? { samUrl: sceneAsset(scene, sceneStep.samFile), nouns: verifiedNouns } : null}
               />
             ) : null}
             {!showRecorded && onVideoStatus ? <span className="reel-status">{onVideoStatus}</span> : null}

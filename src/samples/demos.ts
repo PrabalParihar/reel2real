@@ -70,7 +70,8 @@ export function defineDemo(input: DemoInput): DemoDefinition {
     throw new Error(`${input.slug} steps.json says demo ${input.scene.demo}`);
   }
   const boxes = boxesFor(input.slug);
-  const fit = fitDemo(boxes);
+  const cardStep = Math.max(0, (input.scene.hero.samStep ?? 1) - 1);
+  const fit = fitDemo(boxes, 720, 405, cardStep);
   return {
     slug: input.slug,
     title: input.scene.title,

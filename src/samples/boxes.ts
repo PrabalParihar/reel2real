@@ -37,7 +37,7 @@ export function highlightedBoxes(scene: SampleScene, files: Record<string, unkno
     const file = asSamFile(files[step.samFile]);
     const boxes: FrameBox[] = [];
     for (const noun of step.nouns) {
-      if (!noun.present) continue;
+      if (!noun.present || noun.verified === false) continue;
       const call = matchingCall(file, noun);
       if (!call || call.present === false) continue;
       for (const record of call.records ?? []) {

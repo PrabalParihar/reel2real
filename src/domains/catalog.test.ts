@@ -18,9 +18,9 @@ const HIT_NOUNS: Record<string, string[][]> = {
     ["rod", "flask"],
   ],
   origami: [
-    ["paper"],
+    ["paper", "hands"],
     ["heart"],
-    [],
+    ["crane"],
   ],
   "seed-planting": [
     ["gloves", "tray"],
@@ -28,9 +28,9 @@ const HIT_NOUNS: Record<string, string[][]> = {
     ["jar", "gloves"],
   ],
   "latte-art": [
-    ["jug"],
     ["cup"],
-    ["jug"],
+    ["cup"],
+    ["cup"],
   ],
 };
 
@@ -93,7 +93,8 @@ describe("catalog frame shapes", () => {
       expect(boxes.map((step) => step.map((box) => `${box.x1},${box.y1},${box.x2},${box.y2}`))).toEqual(
         demo.boxes.map((step) => step.map((box) => `${box.x1},${box.y1},${box.x2},${box.y2}`)),
       );
-      const fit = fitDemo(boxes);
+      const cardStep = Math.max(0, (demo.scene.hero.samStep ?? 1) - 1);
+      const fit = fitDemo(boxes, 720, 405, cardStep);
       const widest = FRAME_SHAPES[FRAME_SHAPES.length - 1];
       const forced = demo.scene.steps[fit.forcedByStep];
       const needs = boxes.map((stepBoxes, index) => `step ${index + 1} needs ${requiredAspect(stepBoxes).toFixed(3)}`);
@@ -136,14 +137,16 @@ describe("catalog frame shapes", () => {
         }
       }
       const cardAspect = FRAME_SHAPES.find((item) => item.id === CARD_SHAPE)?.aspect ?? 4 / 5;
-      const card = placementFor(boxes[0] ?? [], cardAspect, demo.cardZoom);
+      const cardBoxes = boxes[cardStep] ?? [];
+      const card = placementFor(cardBoxes, cardAspect, demo.cardZoom);
       if (demo.cardOutlines) {
+        expect(cardBoxes.length, `${demo.slug} card outlines need a verified mask`).toBeGreaterThan(0);
         expect(card, `${demo.slug} card outlines need a 4:5 crop`).not.toBeNull();
-        for (const box of boxes[0] ?? []) {
+        for (const box of cardBoxes) {
           expect(boxInsideCrop(box, card!.window, 720, 405), `${demo.slug} card outline is cut`).toBe(true);
         }
       } else {
-        expect(card).toBeNull();
+        expect(card == null || cardBoxes.length === 0).toBe(true);
       }
     }
     expect(DEMOS.find((demo) => demo.slug === "masala-chai")?.shape).toBe("5:4");
@@ -230,7 +233,8 @@ describe("catalog frame shapes", () => {
         expect(step.instruction.trim().length).toBeGreaterThan(0);
         const listed = (step as { keepFullyInFrame?: string[] }).keepFullyInFrame;
         expect(listed ?? []).toEqual(nouns);
-        if (!nouns.length) {
+        const drawable = step.nouns.filter((noun) => noun.present && noun.verified !== false);
+        if (!drawable.length) {
           expect(boxes[index]).toEqual([]);
           return;
         }
@@ -250,5 +254,16 @@ describe("catalog frame shapes", () => {
     expect(visible).not.toMatch(FLASK_CHEMICAL);
     expect(visible).not.toContain("\u2014");
     expect(DEMOS.filter((demo) => demo.slug !== "flask-colour").every((demo) => !demo.safetyNote)).toBe(true);
+    const latte = DEMOS.find((demo) => demo.slug === "latte-art");
+    expect(latte?.scene.hero.samStep).toBe(2);
+    expect(latte?.cardOutlines).toBe(true);
+    expect(latte?.boxes[0]).toEqual([]);
+    expect(latte?.boxes[2]).toEqual([]);
+    expect(latte?.boxes[1].length).toBeGreaterThan(0);
+    expect(latte?.scene.steps[0].nouns[0].verified).toBe(false);
+    expect(latte?.scene.steps[2].nouns[0].verified).toBe(false);
+    const origami = DEMOS.find((demo) => demo.slug === "origami");
+    expect(origami?.scene.steps[0].nouns.find((noun) => noun.noun === "paper")?.maskOrdinal).toBe("6");
+    expect(origami?.stepFullFrame[0]).toBe(true);
   });
 });

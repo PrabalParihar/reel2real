@@ -69,6 +69,60 @@ describe("mask to path", () => {
     expect(draw.d).not.toMatch(/rect/i);
   });
 
+  it("draws the recorded instance named by maskOrdinal and hides an unverified box", () => {
+    const noun = {
+      objectId: "obj_paper",
+      noun: "paper",
+      samPrompt: "paper",
+      color: "#E88C30",
+      present: true,
+      requestId: "req",
+      maskOrdinal: "6",
+    };
+    const calls = [{
+      requestId: "req",
+      noun: "paper",
+      present: true,
+      records: [
+        { ordinal: "0", box: { x1: 1, y1: 1, x2: 4, y2: 4, frameW: 720, frameH: 405 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } },
+        { ordinal: "6", box: { x1: 10, y1: 10, x2: 20, y2: 20, frameW: 720, frameH: 405 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } },
+      ],
+    }];
+    expect(selectMaskRecord(calls, noun)?.record.ordinal).toBe("6");
+    const unverified = { ...noun, maskOrdinal: undefined, verified: false as const };
+    expect(selectMaskRecord([{
+      requestId: "req",
+      present: true,
+      records: [{ ordinal: "0", boxRecovered: true, box: { x1: 1, y1: 1, x2: 4, y2: 4 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } }],
+    }], unverified)).toBeNull();
+    const matched = { ...noun, maskOrdinal: undefined };
+    expect(selectMaskRecord([{
+      requestId: "req",
+      present: true,
+      records: [{ ordinal: "0", boxRecovered: true, box: { x1: 1, y1: 1, x2: 4, y2: 4, frameW: 720, frameH: 405 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } }],
+    }], matched)?.box).toEqual({ x1: 1, y1: 1, x2: 4, y2: 4, frameW: 720, frameH: 405 });
+  });
+
+  it("uses origami paper instance 6 and leaves unverified latte cups blank", () => {
+    const origami = SAMPLE_SCENES.find((scene) => scene.demo === "origami");
+    const paper = origami!.steps[0].nouns.find((noun) => noun.noun === "paper");
+    const paperFile = loadSam("origami", origami!.steps[0].samFile);
+    expect(selectMaskRecord(paperFile.calls, paper!)?.record.ordinal).toBe("6");
+    const crane = origami!.steps[2].nouns[0];
+    const craneFile = loadSam("origami", origami!.steps[2].samFile);
+    expect(selectMaskRecord(craneFile.calls, crane)?.box.x1).toBeGreaterThan(0);
+    const latte = SAMPLE_SCENES.find((scene) => scene.demo === "latte-art");
+    for (const index of [0, 2]) {
+      const cup = latte!.steps[index].nouns[0];
+      const file = loadSam("latte-art", latte!.steps[index].samFile);
+      expect(cup.verified).toBe(false);
+      expect(selectMaskRecord(file.calls, cup)).toBeNull();
+    }
+    const verifiedCup = latte!.steps[1].nouns[0];
+    const step2 = loadSam("latte-art", latte!.steps[1].samFile);
+    expect(selectMaskRecord(step2.calls, verifiedCup)?.box.x1).toBeGreaterThan(200);
+  });
+
   it("does not invent a mask when the sam file is empty", () => {
     const scene = SAMPLE_SCENES[0];
     const noun = scene.steps[0].nouns[0];

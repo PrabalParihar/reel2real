@@ -11,6 +11,10 @@ export interface SceneNoun {
   color: string;
   present: boolean;
   requestId?: string;
+  /** Which recorded instance to draw. Origami paper uses 6, the sheet being folded. */
+  maskOrdinal?: string;
+  /** False when the recorded box is unverified, for example a failed boxRecovered. */
+  verified?: boolean;
 }
 
 export interface SceneStep {
@@ -66,8 +70,15 @@ export interface SamMaskPayload {
 }
 
 export interface SamRecord {
+  ordinal?: string | number;
   box?: SamBox;
   maskPayload?: SamMaskPayload;
+  /**
+   * The box was rebuilt after the original bounds were dropped.
+   * Some rebuilt boxes still sit on the object (origami hands and crane).
+   * A step sets noun.verified false when the rebuilt box is the wrong object.
+   */
+  boxRecovered?: boolean;
 }
 
 export interface SamCall {
@@ -255,7 +266,7 @@ export function selectMaskRecord(calls: SamCall[] | undefined, noun: SceneNoun):
   box: NonNullable<ReturnType<typeof placementBox>>;
   mask: SamMaskPayload;
 } | null {
-  if (!noun.present) return null;
+  if (!noun.present || noun.verified === false) return null;
   const list = calls ?? [];
   const ranked = [
     ...list.filter((call) => noun.requestId && call.requestId === noun.requestId),
@@ -267,6 +278,7 @@ export function selectMaskRecord(calls: SamCall[] | undefined, noun: SceneNoun):
     seen.add(call);
     if (call.present === false) continue;
     for (const record of call.records ?? []) {
+      if (noun.maskOrdinal != null && String(record.ordinal) !== String(noun.maskOrdinal)) continue;
       const mask = record.maskPayload;
       if (!mask?.payload || !mask.width || !mask.height) continue;
       const box = placementBox(record, call);

@@ -19,7 +19,7 @@
       "ms": 1451,
       "requestId": "e8a6e9b7-206b-4651-8ab8-5e2d82be14b3",
       "route": "model-api-rust",
-      "present": false,
+      "present": true,
       "records": [
         {
           "ordinal": "0",

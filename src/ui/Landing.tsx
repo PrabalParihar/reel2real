@@ -212,7 +212,10 @@ function heroOverlay(scene: SampleScene) {
   const file = heroSamFile(scene);
   const step = heroStep(scene);
   if (!file || !step) return null;
-  return { samUrl: sceneAsset(scene, file), nouns: presentNouns(step) };
+  return {
+    samUrl: sceneAsset(scene, file),
+    nouns: presentNouns(step).filter((noun) => noun.verified !== false),
+  };
 }
 
 function HeroStage({ scene }: { scene: SampleScene }) {

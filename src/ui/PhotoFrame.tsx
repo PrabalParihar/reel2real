@@ -297,7 +297,7 @@ export function PhotoFrame({
             priority={priority}
             loading={priority ? undefined : "eager"}
             unoptimized
-            style={{ objectFit: "cover", maxWidth: "none" }}
+            style={{ objectFit: "fill", maxWidth: "none" }}
           />
         )}
         {items.length ? (

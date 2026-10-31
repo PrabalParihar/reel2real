@@ -20,6 +20,23 @@ function imageBox(box: FrameBox): FrameBox {
 }
 
 describe("recorded mask alignment", () => {
+  it("divides 720-space pixels by frameW and frameH, not by the jpg size", () => {
+    const frameW = 720;
+    const frameH = 405;
+    const imageW = 1280;
+    const box = { x1: 310, y1: 199, x2: 372, y2: 322 };
+    const unitX = box.x1 / frameW;
+    const jpgX = unitX * imageW;
+    expect(jpgX).toBeCloseTo((310 * 1280) / 720, 5);
+    expect(Math.abs(box.x1 - jpgX)).toBeGreaterThan(100);
+    const viewW = 1440;
+    const viewH = viewW * (frameH / frameW);
+    const cover = coverTransform(frameW, frameH, viewW, viewH, { x: 0.5, y: 0.5 }, 1);
+    const view = frameToView(box.x1, box.y1, frameW, frameH, cover);
+    expect(view.x).toBeCloseTo(unitX * viewW, 4);
+    expect(view.x).not.toBeCloseTo((box.x1 / imageW) * viewW, 1);
+  });
+
   it("keeps every mask box inside its SAM frame", () => {
     for (const demo of DEMOS) {
       demo.boxes.forEach((step, index) => {
