@@ -6,7 +6,7 @@ import { sampleByPublishedId } from "@/src/domains/catalog";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset } from "@/src/samples/scene";
+import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, UNVERIFIED_STEP_HINT, unverifiedStep } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell } from "./chrome";
@@ -90,20 +90,22 @@ function CoachBody() {
   const stepZoom = fullFrame ? 1 : published?.stepZooms[stepIndex] ?? published?.zoom ?? 1;
   const liveCamera = coach.cameraPhase === "live";
   const titleBelow = showRecorded && (published?.stepTitle[coach.machine.context.stepIndex] ?? "below") === "below";
-  const onVideoStatus = highlights
-    ? highlights
-    : coach.highlightsPaused
-      ? "Highlights paused"
-      : checking
-        ? "Checking…"
-        : showRecorded
-          ? RECORDED_SAM_LABEL
-          : chip;
   const recordedNouns = presentNouns(sceneStep);
   const verifiedNouns = recordedNouns.filter((noun) => noun.verified !== false);
-  const noVerifiedMask = showRecorded && recordedNouns.length > 0 && verifiedNouns.length === 0;
+  const noVerifiedMask = showRecorded && unverifiedStep(recordedNouns);
+  const onVideoStatus = noVerifiedMask
+    ? null
+    : highlights
+      ? highlights
+      : coach.highlightsPaused
+        ? "Highlights paused"
+        : checking
+          ? "Checking…"
+          : showRecorded
+            ? RECORDED_SAM_LABEL
+            : chip;
   const hint = noVerifiedMask
-    ? "No verified mask on this frame."
+    ? UNVERIFIED_STEP_HINT
     : showRecorded && sceneStep && !recordedNouns.length
       ? "No highlight on this frame. Press Next when the step looks right."
       : missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
@@ -199,7 +201,7 @@ function CoachBody() {
                   <PhotoFrame
                     src={sceneAsset(scene, sceneStep.keyframe)}
                     alt={sceneStep.title}
-                    sampleChip
+                    sampleChip={!noVerifiedMask}
                   />
                 ) : null}
                 <p className="mono">{step.sourceTimeRange.startSec}s to {step.sourceTimeRange.endSec}s</p>

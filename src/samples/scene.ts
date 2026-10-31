@@ -2,6 +2,13 @@ import type { TutorialSteps } from "@/src/schema/types";
 import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
+/** Latte steps whose recovered box is not a cup. No outline and no Sample chip. */
+export const UNVERIFIED_STEP_HINT = "Keep the cup fully in frame";
+
+export function unverifiedStep(nouns: SceneNoun[] | undefined): boolean {
+  const present = (nouns ?? []).filter((noun) => noun.present !== false && noun.noun.trim());
+  return present.length > 0 && present.every((noun) => noun.verified === false);
+}
 export const SAM_FRAME = { width: 720, height: 405 } as const;
 
 export interface SceneNoun {

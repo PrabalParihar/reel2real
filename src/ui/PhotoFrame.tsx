@@ -4,7 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { readableChipColor } from "@/src/ui/chip-color";
 import { chooseLabelPosition, LABEL_CLEARANCE, type LabelRect } from "@/src/ui/label-place";
-import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
+import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -89,12 +89,13 @@ function placeLabels(
   cover: CoverTransform,
   view: { w: number; h: number },
   status: LabelRect | null,
+  strokeWidth = OUTLINE_STROKE,
 ): Array<{ noun: string; color: string; x: number; y: number }> {
   const labels: Array<{ noun: string; color: string; x: number; y: number }> = [];
   const blocked: LabelRect[] = status ? [status] : [];
   const strokes = items.flatMap((item) => outlineSegments(item.draw.d, frameW, frameH, cover));
   const strokeScale = Math.max(cover.width / frameW, cover.height / frameH);
-  const strokeRadius = (OUTLINE_STROKE / 2) * strokeScale;
+  const strokeRadius = (strokeWidth / 2) * strokeScale;
   for (const item of items) {
     const outline = outlineSegments(item.draw.d, frameW, frameH, cover);
     if (!outline.length) continue;
@@ -221,15 +222,18 @@ export function PhotoFrame({
           const selected = selectMaskRecord(file.calls, noun);
           if (!selected) continue;
           try {
-            const draw = framePathFromPayload(selected.mask, selected.box);
+            const frameW = selected.box.frameW || SAM_FRAME.width;
+            const frameH = selected.box.frameH || SAM_FRAME.height;
+            const imageBox = scaleFrameBox(selected.box, frameW, frameH, SAMPLE_STILL.width, SAMPLE_STILL.height);
+            const draw = framePathFromPayload(selected.mask, imageBox);
             if (!draw.d) continue;
             next.push({
               noun: noun.noun,
               color: noun.color || "#2dd4bf",
               draw,
-              frameW: selected.box.frameW || SAM_FRAME.width,
-              frameH: selected.box.frameH || SAM_FRAME.height,
-              box: selected.box,
+              frameW: SAMPLE_STILL.width,
+              frameH: SAMPLE_STILL.height,
+              box: imageBox,
             });
           } catch {
             // A bad payload stays empty. Never fall back to a box.
@@ -243,8 +247,9 @@ export function PhotoFrame({
     return () => controller.abort();
   }, [nounKey, overlay?.samUrl]);
 
-  const frameW = items[0]?.frameW || SAM_FRAME.width;
-  const frameH = items[0]?.frameH || SAM_FRAME.height;
+  const frameW = SAMPLE_STILL.width;
+  const frameH = SAMPLE_STILL.height;
+  const stillScale = frameW / MASK_FRAME.width;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
     ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
     : null;
@@ -254,12 +259,13 @@ export function PhotoFrame({
   const gapBelow = cover ? view.h - (cover.top + cover.height) : 0;
   const mediaBottom = gapBelow > 8 ? gapBelow + 14 : 16;
   const visible = cover ? visibleFrameRect(frameW, frameH, view.w, view.h, cover) : null;
+  const strokeInset = EDGE_STROKE_INSET * stillScale;
   const clipRect = visible
     ? {
-        x1: visible.x1 + EDGE_STROKE_INSET,
-        y1: visible.y1 + EDGE_STROKE_INSET,
-        x2: visible.x2 - EDGE_STROKE_INSET,
-        y2: visible.y2 - EDGE_STROKE_INSET,
+        x1: visible.x1 + strokeInset,
+        y1: visible.y1 + strokeInset,
+        x2: visible.x2 - strokeInset,
+        y2: visible.y2 - strokeInset,
       }
     : null;
 
@@ -304,7 +310,7 @@ export function PhotoFrame({
           <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="6" />
+                <feGaussianBlur stdDeviation={6 * stillScale} />
               </filter>
             </defs>
             {items.map((item) => {
@@ -314,8 +320,8 @@ export function PhotoFrame({
               return (
                 <g key={item.noun} data-noun={item.noun}>
                   <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
-                  <path d={d} fill="none" stroke={item.color} strokeWidth={14} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
-                  <path d={d} fill="none" stroke={item.color} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round" />
+                  <path d={d} fill="none" stroke={item.color} strokeWidth={14 * stillScale} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
+                  <path d={d} fill="none" stroke={item.color} strokeWidth={4.5 * stillScale} strokeLinejoin="round" strokeLinecap="round" />
                 </g>
               );
             })}
@@ -328,7 +334,7 @@ export function PhotoFrame({
             <span key={noun.noun} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
           ))}
         </div>
-      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null).map((label) => (
+      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null, OUTLINE_STROKE * stillScale).map((label) => (
           <span
             key={label.noun}
             className="noun-chip"

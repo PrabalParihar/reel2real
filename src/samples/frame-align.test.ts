@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { DEMOS } from "@/src/samples/demos";
-import { coverTransform, frameToView, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
-import { recordedFrameFile, type SampleScene } from "@/src/samples/scene";
+import { coverTransform, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
+import { recordedFrameFile, selectMaskRecord, UNVERIFIED_STEP_HINT, unverifiedStep, type SampleScene, type SamStepFile } from "@/src/samples/scene";
 
-const FRAME = { w: 720, h: 405 };
-const IMAGE = { w: 1280, h: 720 };
+const FRAME = { w: MASK_FRAME.width, h: MASK_FRAME.height };
+const IMAGE = { w: SAMPLE_STILL.width, h: SAMPLE_STILL.height };
+
+function loadSam(demo: string, file: string): SamStepFile {
+  return JSON.parse(readFileSync(`public/samples/${demo}/${file}`, "utf8")) as SamStepFile;
+}
+
+function shapeAspect(shape: string): number {
+  if (shape === "4:5") return 4 / 5;
+  if (shape === "1:1") return 1;
+  return 5 / 4;
+}
 
 function windowAt(viewW: number, aspect: number, position: { x: number; y: number }, zoom: number): FrameBox {
   const viewH = viewW / aspect;
@@ -85,6 +95,99 @@ describe("recorded mask alignment", () => {
         expect(cardNarrow.y1).toBeCloseTo(cardWide.y1, 4);
         expect(cardNarrow.x2).toBeCloseTo(cardWide.x2, 4);
         expect(cardNarrow.y2).toBeCloseTo(cardWide.y2, 4);
+      }
+    }
+  });
+
+  it("scales every overlay to the still, then applies the fitDemo crop", () => {
+    const coach = readFileSync("src/ui/CoachScreen.tsx", "utf8");
+    const frame = readFileSync("src/ui/PhotoFrame.tsx", "utf8");
+    expect(frame).toContain("scaleFrameBox");
+    expect(frame).toContain("SAMPLE_STILL");
+    expect(coach).toContain("UNVERIFIED_STEP_HINT");
+    expect(coach).toContain("noVerifiedMask\n    ? null");
+    expect(coach).toContain("sampleChip={!noVerifiedMask}");
+    for (const demo of DEMOS) {
+      demo.scene.steps.forEach((step, index) => {
+        const file = loadSam(demo.slug, step.samFile);
+        const unverified = unverifiedStep(step.nouns);
+        const drawn = step.nouns.flatMap((noun) => {
+          const selected = selectMaskRecord(file.calls, noun);
+          return selected ? [selected] : [];
+        });
+        if (unverified) {
+          expect(drawn, `${demo.slug} step ${index + 1}`).toEqual([]);
+          expect(demo.boxes[index]).toEqual([]);
+          return;
+        }
+        expect(drawn.length, `${demo.slug} step ${index + 1}`).toBeGreaterThan(0);
+        if (demo.slug === "origami" && index === 0) {
+          const paper = drawn.find((item) => item.call.noun === "paper");
+          expect(paper?.record.ordinal).toBe("6");
+        }
+        const full = demo.stepFullFrame[index] === true;
+        const aspect = full ? IMAGE.w / IMAGE.h : shapeAspect(demo.shape);
+        const position = full ? { x: 0.5, y: 0.5 } : demo.stepCrops[index];
+        const zoom = full ? 1 : demo.stepZooms[index];
+        const views = [390, 1440].map((viewW) => {
+          const viewH = viewW / aspect;
+          const cover = coverTransform(IMAGE.w, IMAGE.h, viewW, viewH, position, zoom);
+          return { viewW, viewH, cover, visible: visibleFrameRect(IMAGE.w, IMAGE.h, viewW, viewH, cover) };
+        });
+        if (full) {
+          expect(views[1].visible.x1).toBeCloseTo(0, 1);
+          expect(views[1].visible.y1).toBeCloseTo(0, 1);
+          expect(views[1].visible.x2).toBeCloseTo(IMAGE.w, 1);
+          expect(views[1].visible.y2).toBeCloseTo(IMAGE.h, 1);
+        }
+        for (const selected of drawn) {
+          const image = scaleFrameBox(selected.box, selected.box.frameW, selected.box.frameH);
+          expect(image.x1).toBeCloseTo(selected.box.x1 * (IMAGE.w / FRAME.w), 4);
+          expect(image.y1).toBeCloseTo(selected.box.y1 * (IMAGE.h / FRAME.h), 4);
+          const rawOnStill = frameToView(selected.box.x1, selected.box.y1, IMAGE.w, IMAGE.h, views[1].cover);
+          const scaled = frameToView(image.x1, image.y1, IMAGE.w, IMAGE.h, views[1].cover);
+          expect(Math.abs(scaled.x - rawOnStill.x)).toBeGreaterThan(1);
+          views.forEach((view) => {
+            expect(image.x1, `${demo.slug} step ${index + 1}`).toBeGreaterThanOrEqual(view.visible.x1 - 1);
+            expect(image.y1).toBeGreaterThanOrEqual(view.visible.y1 - 1);
+            expect(image.x2).toBeLessThanOrEqual(view.visible.x2 + 1);
+            expect(image.y2).toBeLessThanOrEqual(view.visible.y2 + 1);
+          });
+          const narrow = frameToView(image.x1, image.y1, IMAGE.w, IMAGE.h, views[0].cover);
+          const wide = frameToView(image.x1, image.y1, IMAGE.w, IMAGE.h, views[1].cover);
+          expect(narrow.x / views[0].viewW).toBeCloseTo(wide.x / views[1].viewW, 4);
+          expect(narrow.y / views[0].viewH).toBeCloseTo(wide.y / views[1].viewH, 4);
+        }
+      });
+      if (demo.slug === "latte-art") {
+        expect(demo.cardOutlines).toBe(true);
+        expect(demo.scene.hero.samStep).toBe(2);
+        const step = demo.scene.steps[1];
+        const file = loadSam(demo.slug, step.samFile);
+        const cup = selectMaskRecord(file.calls, step.nouns[0]);
+        expect(cup).not.toBeNull();
+        const image = scaleFrameBox(cup!.box, cup!.box.frameW, cup!.box.frameH);
+        for (const viewW of [390, 1440]) {
+          const viewH = viewW / (4 / 5);
+          const cover = coverTransform(IMAGE.w, IMAGE.h, viewW, viewH, demo.cardCrop, demo.cardZoom);
+          const visible = visibleFrameRect(IMAGE.w, IMAGE.h, viewW, viewH, cover);
+          expect(image.x1).toBeGreaterThanOrEqual(visible.x1 - 1);
+          expect(image.y1).toBeGreaterThanOrEqual(visible.y1 - 1);
+          expect(image.x2).toBeLessThanOrEqual(visible.x2 + 1);
+          expect(image.y2).toBeLessThanOrEqual(visible.y2 + 1);
+          const point = frameToView(image.x1, image.y1, IMAGE.w, IMAGE.h, cover);
+          expect(point.x).toBeGreaterThanOrEqual(-1);
+          expect(point.x).toBeLessThanOrEqual(viewW + 1);
+          expect(point.y).toBeGreaterThanOrEqual(-1);
+          expect(point.y).toBeLessThanOrEqual(viewH + 1);
+        }
+        for (const index of [0, 2]) {
+          expect(unverifiedStep(demo.scene.steps[index].nouns)).toBe(true);
+          expect(demo.boxes[index]).toEqual([]);
+        }
+        expect(UNVERIFIED_STEP_HINT).toBe("Keep the cup fully in frame");
+        expect(UNVERIFIED_STEP_HINT.toLowerCase()).not.toContain("sample");
+        expect(UNVERIFIED_STEP_HINT.toLowerCase()).not.toContain("highlight");
       }
     }
   });

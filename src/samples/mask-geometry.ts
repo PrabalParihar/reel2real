@@ -31,6 +31,24 @@ export interface ObjectPosition {
   y: number;
 }
 
+/** Recorded SAM boxes use this frame. Stills are the same picture at SAMPLE_STILL. */
+export const MASK_FRAME = { width: 720, height: 405 } as const;
+/** step-N.jpg size. Scale a mask into this space before any fitDemo crop. */
+export const SAMPLE_STILL = { width: 1280, height: 720 } as const;
+
+/** 720x405 box to 1280x720 still pixels. Crop comes after this, never before. */
+export function scaleFrameBox(
+  box: FrameBox,
+  frameW: number = MASK_FRAME.width,
+  frameH: number = MASK_FRAME.height,
+  imageW: number = SAMPLE_STILL.width,
+  imageH: number = SAMPLE_STILL.height,
+): FrameBox {
+  const sx = imageW / frameW;
+  const sy = imageH / frameH;
+  return { x1: box.x1 * sx, y1: box.y1 * sy, x2: box.x2 * sx, y2: box.y2 * sy };
+}
+
 function clamp01(value: number): number {
   if (!Number.isFinite(value)) return 0.5;
   return Math.min(1, Math.max(0, value));

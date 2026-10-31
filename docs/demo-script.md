@@ -84,7 +84,7 @@ Open each remaining demo from the landing cards. Spend about 15 seconds on each.
 - Latte art. franklandgrave, Mixkit. Read: "Start filling the cup", "Build a foam circle in the cup", "Finish the foam on the cup". Step 2 shows the cup. Steps 1 and 3 have no verified mask, so they show the step text and no outline. The second still is the retimed frame.
 - Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Read: "Pour powder into the flask", "Watch the colour change", "Set the flask and rod in view". Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. Highlights: flask and bottle, then flask and bottle, then rod and flask. Do not name a chemical.
 
-Read the title on the glass. Latte steps 1 and 3 keep that title and show "No verified mask on this frame." with no outline. Do not draw a box for them.
+Read the title on the glass. Latte steps 1 and 3 keep that title, show no outline, and show no Sample chip. The only hint is "Keep the cup fully in frame." Do not draw a box for them.
 
 ### 5. Done (2:25 to 2:45)
 
