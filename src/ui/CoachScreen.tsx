@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { honestyChip, missingObjectHint, stateChip } from "@/src/fsm/ui";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell, Chip } from "./chrome";
-import { StandScene } from "./StandScene";
+import { StandScene, StillFrame } from "./StandScene";
 import { useSession } from "./session";
 import { useCoach } from "./useCoach";
 
@@ -67,6 +67,11 @@ function CoachBody() {
   }, [coach.machine.context.safetyHits, coach.machine.context.skippedStepIds.length, coach.machine.state, router, session, tutorial.steps.length, tutorial.title]);
 
   const clip = session.videoUrl;
+  const [controlsOpen, setControlsOpen] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("debug")) setControlsOpen(true);
+  }, []);
+  const stillKind = tutorial.domain === "non_cooking_diy" ? "bike" : "chai";
 
   return (
     <AppShell backHref="/upload" mock={session.runtime.mock}>
@@ -74,8 +79,12 @@ function CoachBody() {
         <section className="stage-wrap mesh">
           <div className="stage">
             <div className="stage-chips">
-              <Chip tone={coach.machine.context.stillsArmed ? "wait" : "wait"}>{modeChip}</Chip>
-              {tutorial.sampleLabel ? <Chip>Sample</Chip> : null}
+              <Chip tone="wait">{modeChip}</Chip>
+              {session.stepsSource === "clip" && !session.runtime.mock ? <Chip>Steps from clip · muse-spark-1.3</Chip> : null}
+              {session.stepsSource === "cache" ? <Chip>Cached</Chip> : null}
+              {session.stepsSource === "cap_cache" ? <Chip tone="wait">Daily cap reached · Cached</Chip> : null}
+              {session.stepsSource === "cap_sample" ? <Chip tone="wait">Daily cap reached · Sample</Chip> : null}
+              {session.stepsSource === "transcript" || session.stepsSource === "sample" ? <Chip>Steps from transcript (Sample)</Chip> : tutorial.sampleLabel ? <Chip>Sample</Chip> : null}
               {session.runtime.mock ? <Chip tone="mock">Mock</Chip> : null}
             </div>
             <video ref={videoRef} className={coach.preview === "camera" ? "camera" : "camera is-hidden"} playsInline muted />
@@ -115,7 +124,7 @@ function CoachBody() {
               {clip ? (
                 <video src={clip} muted playsInline preload="metadata" />
               ) : (
-                <div className="filmstrip" />
+                <StillFrame kind={stillKind} />
               )}
               <p className="mono">{step.sourceTimeRange.startSec}s – {step.sourceTimeRange.endSec}s</p>
             </div>
@@ -131,30 +140,37 @@ function CoachBody() {
             <button type="button" className="btn btn-ghost" disabled={coach.machine.state === "safety_halt"} onClick={() => coach.dispatch({ type: "USER_SKIP" })}>Skip</button>
             <button type="button" className="btn btn-primary" disabled={coach.machine.state === "safety_halt"} onClick={() => coach.dispatch({ type: "USER_ADVANCE" })}>Next</button>
           </div>
-          <div className="mode-row" role="group" aria-label="Coaching mode">
-            {MODES.map((mode) => (
-              <button
-                key={mode.id}
-                type="button"
-                className={coach.machine.context.liveMode === mode.id ? "chip tone-saffron" : "chip tone-neutral"}
-                onClick={() => coach.dispatch({ type: "SET_LIVE_MODE", mode: mode.id })}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
-          {coach.machine.context.liveMode === "chunk_video_1_2s" ? (
-            <p className="quiet">Optional. Gate 0 measured 2213 ms to the first mask on a 2s chunk.</p>
-          ) : null}
-          {session.runtime.mock ? (
-            <div className="mode-row" role="group" aria-label="Mock signals">
-              {SCENARIOS.map((item) => (
-                <button key={item.id} type="button" className={coach.scenario === item.id ? "chip tone-mask" : "chip tone-neutral"} onClick={() => coach.setScenario(item.id)}>
-                  {item.label}
+          <details
+            className="demo-controls"
+            open={controlsOpen}
+            onToggle={(event) => setControlsOpen(event.currentTarget.open)}
+          >
+            <summary>Demo controls</summary>
+            <div className="mode-row" role="group" aria-label="Coaching mode">
+              {MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  className={coach.machine.context.liveMode === mode.id ? "chip tone-saffron" : "chip tone-neutral"}
+                  onClick={() => coach.dispatch({ type: "SET_LIVE_MODE", mode: mode.id })}
+                >
+                  {mode.label}
                 </button>
               ))}
             </div>
-          ) : null}
+            {coach.machine.context.liveMode === "chunk_video_1_2s" ? (
+              <p className="quiet">Optional. Gate 0 measured 2213 ms to the first mask on a 2s chunk.</p>
+            ) : null}
+            {session.runtime.mock ? (
+              <div className="mode-row" role="group" aria-label="Mock signals">
+                {SCENARIOS.map((item) => (
+                  <button key={item.id} type="button" className={coach.scenario === item.id ? "chip tone-mask" : "chip tone-neutral"} onClick={() => coach.setScenario(item.id)}>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </details>
           <div className="voice-row">
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => coach.setVoiceOn((value) => !value)}>
               {coach.voiceOn ? "Voice on" : "Voice off"}

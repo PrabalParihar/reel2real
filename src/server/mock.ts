@@ -1,4 +1,5 @@
 import { SPARK_MODEL_ID, SAM_MODEL_ID } from "@/src/models";
+import { applyUserAttribution } from "@/src/schema/attribution";
 import type { SparkClient, SparkRequest, SparkResult, SegmentationClient, SegmentRequest, SegmentResult, MaskHit, MockScenario } from "./types";
 import { sampleById, sampleForTranscript } from "./fixtures";
 
@@ -48,22 +49,26 @@ export function createMockSparkClient(options?: { delayMs?: number }): SparkClie
     async generateSteps(input: SparkRequest): Promise<SparkResult> {
       const started = performance.now();
       if (delayMs > 0) await wait(delayMs);
-      const tutorial = input.sampleId
+      let tutorial = input.sampleId
         ? sampleById(input.sampleId)
         : sampleForTranscript(input.transcript, input.domain);
       if (input.title) tutorial.title = input.title;
-      if (input.creditLine) {
-        tutorial.attribution.creditLine = input.creditLine;
-        for (const step of tutorial.steps) step.credit.creditLine = input.creditLine;
-      }
       if (input.filename) tutorial.sourceClip.localUri = `local-upload/${input.filename}`;
+      if (input.creatorName?.trim() && input.licenceChoice) {
+        tutorial = applyUserAttribution(tutorial, {
+          creatorName: input.creatorName,
+          licence: input.licenceChoice,
+          creditLink: input.creditLink,
+        });
+      }
       const latencyMs = Math.round(performance.now() - started);
+      const inputKind = input.videoBase64 ? "clip" : input.sampleId ? "sample" : "transcript";
       const toolCalls = [
         {
           tool: "muse_spark" as const,
           modelId: SPARK_MODEL_ID,
           purpose: "mock_curated_sample_no_live_call",
-          inputKind: "transcript" as const,
+          inputKind: inputKind === "clip" ? "clip" as const : "transcript" as const,
           latencyMs,
         },
       ];
@@ -76,6 +81,7 @@ export function createMockSparkClient(options?: { delayMs?: number }): SparkClie
         errors: [],
         tutorial,
         toolCalls,
+        inputKind,
       };
     },
   };

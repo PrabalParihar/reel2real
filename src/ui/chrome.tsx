@@ -27,14 +27,11 @@ export function AppShell({
       <header className="app-bar">
         {backHref ? <Link className="back" href={backHref}>Back</Link> : <span />}
         <Link href="/" className="wordmark"><SparkMark /> Reel2Real</Link>
-        <span className="model-chip">sam-3.1</span>
+        <span className="bar-end">
+          {mock ? <Chip tone="mock">Mock</Chip> : null}
+          <span className="model-chip">sam-3.1</span>
+        </span>
       </header>
-      <p className="honesty-strip">
-        <span>Sample data</span>
-        <span>Keyframe mode labelled</span>
-        {mock ? <Chip tone="mock">Mock</Chip> : null}
-        <span>No secrets in the UI</span>
-      </p>
       {children}
     </div>
   );

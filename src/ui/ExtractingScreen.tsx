@@ -3,12 +3,37 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { GATE0_REPORT } from "@/src/models";
 import { AppShell, Chip } from "./chrome";
-import { useSession, type PrepareRequest } from "./session";
-import { sparkOnce } from "./sparkOnce";
+import { useSession, type PrepareRequest, type StepsSource } from "./session";
+import type { ToolCall, TutorialSteps } from "@/src/schema/types";
+import { postSpark, type ExtractStage } from "./sparkOnce";
+import { applyUserAttribution } from "@/src/schema/attribution";
+import { validateTutorialSteps } from "@/src/schema/validate";
+import chaiFixture from "@/src/fixtures/sample-masala-chai.steps.json";
+import bikeFixture from "@/src/fixtures/sample-bike-chain.steps.json";
+import { readStepsCache, writeStepsCache } from "./steps-cache";
 
-const PHASES = ["Spark · reading clip", "Spark · writing steps", "Curating objects"];
+async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: TutorialSteps; toolCalls: ToolCall[]; source: StepsSource } | null> {
+  if (!prepare.creatorName || !prepare.licenceChoice) return null;
+  const meta = { creatorName: prepare.creatorName, licence: prepare.licenceChoice, creditLink: prepare.creditLink };
+  if (prepare.clipHash) {
+    const cached = await readStepsCache(prepare.clipHash);
+    if (cached) {
+      return { tutorial: applyUserAttribution(cached.tutorial, meta), toolCalls: cached.toolCalls, source: "cap_cache" };
+    }
+  }
+  const raw = prepare.domain === "non_cooking_diy" ? bikeFixture : chaiFixture;
+  const validated = validateTutorialSteps(raw);
+  if (!validated.ok) return null;
+  return { tutorial: applyUserAttribution(validated.value, meta), toolCalls: [], source: "cap_sample" };
+}
+
+const STAGE_LABEL: Record<ExtractStage, string> = {
+  upload: "Uploading clip",
+  reading: "Spark reading video",
+  validating: "Validating steps",
+  preparing: "Preparing coach",
+};
 
 export function ExtractingScreen() {
   const params = useSearchParams();
@@ -17,6 +42,7 @@ export function ExtractingScreen() {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [stage, setStage] = useState<ExtractStage>("reading");
   const demo = params.get("demo");
 
   useEffect(() => {
@@ -25,7 +51,9 @@ export function ExtractingScreen() {
     const prepare: PrepareRequest = {
       key: `demo:${sampleId}`,
       sampleId,
-      creditLine: "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+      hasClip: false,
+      creatorName: sampleId === "bike-chain" ? "Sample maker (self-filmed)" : "Sample cook (self-filmed)",
+      licenceChoice: "self_filmed",
       domain: sampleId === "bike-chain" ? "non_cooking_diy" : "indian_recipe",
       title: sampleId === "bike-chain" ? "Sample · Bike chain wipe" : sampleId === "aloo-jeera" ? "Sample · Aloo jeera — onion prep" : "Sample · Masala chai",
     };
@@ -48,8 +76,11 @@ export function ExtractingScreen() {
     if (!prepare || error) return;
     const request = attempt ? { ...prepare, key: `${prepare.key}:retry${attempt}` } : prepare;
     let cancelled = false;
-    sparkOnce(request).then((result) => {
+    postSpark(request, (next) => {
+      if (!cancelled) setStage(next);
+    }).then(async (result) => {
       if (cancelled) return;
+      setStage("validating");
       if (!result.schemaValid || !result.tutorial) {
         if (attempt < 1) {
           setAttempt(1);
@@ -58,43 +89,68 @@ export function ExtractingScreen() {
         setError(result.errors[0] || "The steps JSON did not validate.");
         return;
       }
-      session.setTutorial(result.tutorial, result.latencyMs, result.toolCalls);
+      if (request.clipHash) {
+        await writeStepsCache(request.clipHash, {
+          tutorial: result.tutorial,
+          toolCalls: result.toolCalls,
+          inputKind: result.inputKind,
+        });
+      }
+      if (cancelled) return;
+      setStage("preparing");
+      session.setTutorial(result.tutorial, result.latencyMs, result.toolCalls, result.inputKind);
       router.push("/coach");
-    }).catch(() => {
-      if (!cancelled) setError("Spark did not return steps.");
+    }).catch(async (error: Error & { code?: string }) => {
+      if (cancelled) return;
+      if (error.code === "daily_cap") {
+        const saved = await useCapFallback(request);
+        if (saved) {
+          setStage("preparing");
+          session.setTutorial(saved.tutorial, 0, saved.toolCalls, saved.source);
+          router.push("/coach");
+          return;
+        }
+      }
+      setError(error.message || "Spark did not return steps.");
     });
     return () => {
       cancelled = true;
     };
   }, [attempt, error, router, session, session.prepare]);
 
-  const phase = elapsed < 900 ? 0 : elapsed < 1900 ? 1 : 2;
-  const progress = Math.min(92, (elapsed / 9000) * 92);
+  const order: ExtractStage[] = session.prepare?.hasClip
+    ? ["upload", "reading", "validating", "preparing"]
+    : ["reading", "validating", "preparing"];
+  const active = order.indexOf(stage);
 
   return (
     <AppShell backHref="/upload" mock={session.runtime.mock}>
       <main className="screen extract">
         <section className="extract-stage panel">
-          <div className="ring" style={{ ["--progress" as string]: progress }}>
+          <div className="ring is-idle">
             <strong className="mono">{(elapsed / 1000).toFixed(1)}s</strong>
             <span>this run</span>
           </div>
           <p className="mono">{session.runtime.sparkModelId}</p>
-          {session.runtime.mock ? <Chip tone="mock">Mock</Chip> : <Chip tone="running">Spark</Chip>}
+          <div className="chip-row">
+            {session.runtime.mock ? <Chip tone="mock">Mock</Chip> : null}
+            {session.prepare?.hasClip && !session.runtime.mock ? <Chip>Steps from clip · muse-spark-1.3</Chip> : <Chip>Steps from transcript (Sample)</Chip>}
+            {session.runtime.mock || !session.prepare?.hasClip ? <Chip>Sample</Chip> : null}
+          </div>
           <p className="quiet">
             {session.runtime.mock
               ? "Mock client. This is not a live Spark call."
-              : `Gate 0 reported Spark at ${GATE0_REPORT.sparkLatencyNote}. The clock above is this run.`}
+              : "A clip often takes 15–20 seconds. This clock is this run."}
           </p>
         </section>
         <section>
           <ol className="capsules">
-            {PHASES.map((label, index) => {
-              const state = index < phase ? "done" : index === phase ? "running" : "wait";
+            {order.map((id, index) => {
+              const state = index < active ? "done" : index === active ? "running" : "wait";
               return (
-                <li key={label} className={`capsule is-${state}`} style={{ animationDelay: `${index * 30}ms` }}>
+                <li key={id} className={`capsule is-${state}`}>
                   <Chip tone={state === "done" ? "match" : state === "running" ? "running" : "neutral"} pulse={state === "running"}>{state === "running" ? "Running" : state === "done" ? "Done" : "Wait"}</Chip>
-                  {label}
+                  {STAGE_LABEL[id]}
                 </li>
               );
             })}

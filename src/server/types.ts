@@ -1,13 +1,20 @@
 import type { PreferredLiveMode, ToolCall, TutorialSteps } from "@/src/schema/types";
 
+export type StepsInputKind = "clip" | "transcript" | "sample";
+export type LicenceChoice = "self_filmed" | "permission_granted";
+
 export interface SparkRequest {
   transcript?: string;
   title?: string;
   domain?: TutorialSteps["domain"];
   filename?: string;
-  creditLine?: string;
   durationSec?: number;
   sampleId?: string;
+  videoBase64?: string;
+  mimeType?: string;
+  creatorName?: string;
+  licenceChoice?: LicenceChoice;
+  creditLink?: string;
 }
 
 export interface SparkResult {
@@ -19,6 +26,7 @@ export interface SparkResult {
   errors: string[];
   tutorial: TutorialSteps | null;
   toolCalls: ToolCall[];
+  inputKind: StepsInputKind;
 }
 
 export interface SegmentPromptInput {

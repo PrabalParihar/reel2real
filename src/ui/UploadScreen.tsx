@@ -3,19 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
+import type { LicenceChoice } from "@/src/schema/attribution";
+import { applyUserAttribution } from "@/src/schema/attribution";
 import { AppShell, Chip } from "./chrome";
 import { useSession } from "./session";
+import { readStepsCache, sha256Hex } from "./steps-cache";
 
 const SAMPLES = [
-  { id: "masala-chai", title: "Sample · Masala chai", domain: "indian_recipe" as const },
-  { id: "bike-chain", title: "Sample · Bike chain wipe", domain: "non_cooking_diy" as const },
+  { id: "masala-chai", title: "Sample · Masala chai", domain: "indian_recipe" as const, creatorName: "Sample cook (self-filmed)" },
+  { id: "bike-chain", title: "Sample · Bike chain wipe", domain: "non_cooking_diy" as const, creatorName: "Sample maker (self-filmed)" },
 ];
 
 export function UploadScreen() {
   const router = useRouter();
   const session = useSession();
   const [file, setFile] = useState<File | null>(null);
-  const [credit, setCredit] = useState("Sample · self-filmed");
+  const [creatorName, setCreatorName] = useState("");
+  const [licence, setLicence] = useState<LicenceChoice | "">("");
+  const [creditLink, setCreditLink] = useState("");
   const [title, setTitle] = useState("");
   const [transcript, setTranscript] = useState("");
   const [domain, setDomain] = useState<"indian_recipe" | "non_cooking_diy" | "other">("indian_recipe");
@@ -26,7 +31,7 @@ export function UploadScreen() {
   function takeFile(next: File | null) {
     if (!next) return;
     if (!["video/mp4", "video/webm"].includes(next.type) && !/\.(mp4|webm)$/i.test(next.name)) {
-      setNote("Use an MP4 or WebM file you filmed.");
+      setNote("Use an MP4 or WebM file.");
       return;
     }
     setNote(null);
@@ -35,28 +40,68 @@ export function UploadScreen() {
   }
 
   async function extract() {
+    if (!licence) {
+      setNote("Choose a licence before extracting steps.");
+      return;
+    }
+    if (!creatorName.trim()) {
+      setNote("Enter the creator name.");
+      return;
+    }
     if (!file && !sampleId) return;
+    const sample = SAMPLES.find((item) => item.id === sampleId);
     let durationSec: number | undefined;
     let url: string | null = null;
+    let videoBase64: string | undefined;
+    let clipHash: string | undefined;
     if (file) {
       url = URL.createObjectURL(file);
       durationSec = await readDuration(url);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      clipHash = await sha256Hex(bytes);
+      const cached = await readStepsCache(clipHash).catch(() => null);
+      if (cached) {
+        const tutorial = applyUserAttribution(cached.tutorial, { creatorName, licence, creditLink });
+        session.setPrepare({
+          key: `cache:${clipHash}`,
+          hasClip: true,
+          clipHash,
+          filename: file.name,
+          mimeType: file.type || "video/mp4",
+          durationSec,
+          creatorName,
+          licenceChoice: licence,
+          creditLink: creditLink.trim() || undefined,
+          title: title.trim() || undefined,
+          domain,
+          transcript: transcript.trim() || undefined,
+        }, url);
+        session.setTutorial(tutorial, 0, cached.toolCalls, "cache");
+        router.push("/coach");
+        return;
+      }
+      videoBase64 = bytesToBase64(bytes);
     }
-    const sample = SAMPLES.find((item) => item.id === sampleId);
     session.setPrepare({
-      key: file ? `file:${file.name}:${file.size}:${credit}` : `demo:${sampleId}:${credit}`,
+      key: file ? `file:${clipHash}:${licence}` : `demo:${sampleId}:${creatorName}:${licence}`,
       sampleId: sampleId ?? undefined,
       transcript: transcript.trim() || undefined,
       title: title.trim() || sample?.title,
       domain: sample?.domain ?? domain,
       filename: file?.name,
-      creditLine: credit.trim() || "Sample · self-filmed",
       durationSec,
+      videoBase64,
+      mimeType: file ? file.type || "video/mp4" : undefined,
+      creatorName,
+      licenceChoice: licence,
+      creditLink: creditLink.trim() || undefined,
+      clipHash,
+      hasClip: Boolean(file),
     }, url);
     router.push("/extracting");
   }
 
-  const ready = Boolean(file || sampleId);
+  const ready = Boolean((file || sampleId) && licence && creatorName.trim());
 
   return (
     <AppShell mock={session.runtime.mock}>
@@ -64,7 +109,7 @@ export function UploadScreen() {
         <div className="upload-grid">
           <section>
             <h1>Upload a tutorial</h1>
-            <p className="lead">A clip you filmed, or one you are allowed to use.</p>
+            <p className="lead">A clip you filmed, or one you have permission to use.</p>
             <label
               className={`drop${over ? " is-over" : ""}`}
               onDragOver={(event) => { event.preventDefault(); setOver(true); }}
@@ -77,7 +122,7 @@ export function UploadScreen() {
             >
               <Upload strokeWidth={1.5} />
               <span>{file ? file.name : "Choose MP4 / WebM"}</span>
-              <small>Short clip. It stays in this browser until you close the tab.</small>
+              <small>The file stays in this browser. Spark receives a short chunk, or a file upload when the clip is longer.</small>
               <input
                 type="file"
                 accept="video/mp4,video/webm,.mp4,.webm"
@@ -86,8 +131,17 @@ export function UploadScreen() {
             </label>
             {note ? <p className="form-note">{note}</p> : null}
             <label className="field-label">
-              Credit label
-              <input className="field" value={credit} onChange={(event) => setCredit(event.target.value)} />
+              Creator name
+              <input className="field" value={creatorName} onChange={(event) => setCreatorName(event.target.value)} />
+            </label>
+            <fieldset className="licence-set">
+              <legend>Licence</legend>
+              <button type="button" className={licence === "self_filmed" ? "chip tone-saffron" : "chip tone-neutral"} onClick={() => setLicence("self_filmed")}>Self-filmed</button>
+              <button type="button" className={licence === "permission_granted" ? "chip tone-saffron" : "chip tone-neutral"} onClick={() => setLicence("permission_granted")}>Permission granted</button>
+            </fieldset>
+            <label className="field-label">
+              Credit link
+              <input className="field" value={creditLink} placeholder="Optional" onChange={(event) => setCreditLink(event.target.value)} />
             </label>
             <label className="field-label">
               Title
@@ -103,8 +157,8 @@ export function UploadScreen() {
               ))}
             </div>
             <label className="field-label">
-              Transcript for Spark
-              <textarea className="field" rows={4} value={transcript} placeholder="Optional. Spark reads this once." onChange={(event) => setTranscript(event.target.value)} />
+              Transcript fallback
+              <textarea className="field" rows={3} value={transcript} placeholder="Used only if no clip is sent." onChange={(event) => setTranscript(event.target.value)} />
             </label>
             <div className="sample-pick">
               <p className="mono">Or start from a Sample</p>
@@ -113,7 +167,13 @@ export function UploadScreen() {
                   key={sample.id}
                   type="button"
                   className={sampleId === sample.id ? "sample-row is-on" : "sample-row"}
-                  onClick={() => { setSampleId(sample.id); setFile(null); }}
+                  onClick={() => {
+                    setSampleId(sample.id);
+                    setFile(null);
+                    setLicence("self_filmed");
+                    setCreatorName(sample.creatorName);
+                    setDomain(sample.domain);
+                  }}
                 >
                   <Chip tone="neutral">Sample</Chip>
                   {sample.title}
@@ -128,9 +188,9 @@ export function UploadScreen() {
           </section>
           <aside className="panel tips">
             <h2>Framing</h2>
-            <p>2–4 objects work best. Good light. Hands can enter, but each tracked object stays fully inside the frame.</p>
+            <p>2–4 objects work best. Good light. Each tracked object stays fully inside the frame.</p>
             <p>Gate 0 missed the cup because it sat outside the shot. If a noun is not masked, move it in before you continue.</p>
-            <p className="mono">muse-spark-1.3 runs once here. sam-3.1 runs later, on keyframes.</p>
+            <p className="mono">Credit and licence come from this form. Spark does not choose them.</p>
           </aside>
         </div>
       </main>
@@ -146,4 +206,13 @@ function readDuration(url: string): Promise<number | undefined> {
     video.onerror = () => resolve(undefined);
     video.src = url;
   });
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const size = 0x8000;
+  for (let index = 0; index < bytes.length; index += size) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + size));
+  }
+  return btoa(binary);
 }

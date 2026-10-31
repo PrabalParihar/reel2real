@@ -1,15 +1,27 @@
-import { readFile } from "node:fs/promises";
-import { SAM_MODEL_ID, SPARK_MODEL_ID, RESPONSES_URL } from "@/src/models";
-import { normalizeSparkPayload } from "@/src/schema/normalize";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { SAM_MODEL_ID, SPARK_MODEL_ID, RESPONSES_URL, API_ORIGIN } from "@/src/models";
+import { tutorialFromSparkPayload, type UserAttribution } from "@/src/schema/attribution";
 import { parseSamBoxes } from "./sam-parse";
 import { redactSecrets } from "./redact";
+import { buildSparkResponsesBody, chooseSparkMediaPlan, SPARK_STEPS_INSTRUCTION } from "./spark-request";
+import { sampleById } from "./fixtures";
+import { consumeMetaCalls, DailyCapError } from "./daily-cap";
 import type { SegmentRequest, SegmentResult, SegmentationClient, SparkClient, SparkRequest, SparkResult, MaskHit } from "./types";
 
 function assertServer() {
   if (typeof window !== "undefined") throw new Error("Model clients are server-only");
 }
 
+function reserveMetaCall() {
+  const result = consumeMetaCalls();
+  if (!result.ok) throw new DailyCapError(result.message);
+}
+
 async function postResponses(key: string, body: unknown, timeoutMs: number): Promise<{ status: number; text: string }> {
+  reserveMetaCall();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -55,12 +67,114 @@ function jsonFromText(text: string): unknown {
   return JSON.parse(text.slice(start, end + 1));
 }
 
-const SPARK_PROMPT = `Convert this tutorial into JSON only. No markdown.
-Use schemaVersion "1.0.0". Include title, sampleLabel true, attribution with creditLine, sourceClip, generation.modelId "muse-spark-1.3", generation.toolCalls, runtimeHints.preferredLiveMode "keyframe_still", and steps.
-Each step needs id, index, instructionText, sourceTimeRange, credit.creditLine, 2 to 4 objects (objectId, noun, role, samPrompt), and successCheck.
-Visually checkable objects only. Do not use Muse Image. Do not fetch Instagram.
-Tutorial:
-`;
+const FILES_URL = `${API_ORIGIN}/v1/files`;
+const SPARK_TIMEOUT_MS = 45000;
+
+function userMeta(input: SparkRequest): UserAttribution | null {
+  if (!input.creatorName?.trim() || !input.licenceChoice) return null;
+  return { creatorName: input.creatorName, licence: input.licenceChoice, creditLink: input.creditLink };
+}
+
+function fail(latencyMs: number, errors: string[], inputKind: SparkResult["inputKind"]): SparkResult {
+  return {
+    mode: "live",
+    modelId: SPARK_MODEL_ID,
+    latencyMs,
+    schemaValid: false,
+    parseOk: false,
+    errors,
+    tutorial: null,
+    toolCalls: [],
+    inputKind,
+  };
+}
+
+async function finishPayload(
+  payload: unknown,
+  meta: UserAttribution,
+  input: SparkRequest,
+  latencyMs: number,
+  inputKind: SparkResult["inputKind"],
+): Promise<SparkResult> {
+  const toolCalls = [
+    {
+      tool: "muse_spark" as const,
+      modelId: SPARK_MODEL_ID,
+      purpose: inputKind === "clip" ? "tutorial_clip_to_steps_json" : "tutorial_transcript_to_steps_json",
+      inputKind: inputKind === "clip" ? "clip" as const : "transcript" as const,
+      latencyMs,
+    },
+  ];
+  const normalized = tutorialFromSparkPayload(payload, meta, {
+    title: input.title,
+    domain: input.domain,
+    filename: input.filename,
+    durationSec: input.durationSec,
+    mode: "muse_spark_live",
+  });
+  if (!normalized.ok) {
+    return {
+      mode: "live",
+      modelId: SPARK_MODEL_ID,
+      latencyMs,
+      schemaValid: false,
+      parseOk: true,
+      errors: normalized.errors.map((error) => error.message),
+      tutorial: null,
+      toolCalls,
+      inputKind,
+    };
+  }
+  normalized.value.generation.toolCalls = toolCalls;
+  return {
+    mode: "live",
+    modelId: SPARK_MODEL_ID,
+    latencyMs,
+    schemaValid: true,
+    parseOk: true,
+    errors: [],
+    tutorial: normalized.value,
+    toolCalls,
+    inputKind,
+  };
+}
+
+async function twoSecondChunk(base64: string): Promise<string> {
+  const probe = spawnSync("ffmpeg", ["-version"], { stdio: "ignore" });
+  if (probe.status !== 0) return base64;
+  const dir = await mkdtemp(path.join(tmpdir(), "reel2real-spark-"));
+  try {
+    const source = path.join(dir, "in.mp4");
+    const target = path.join(dir, "chunk.mp4");
+    await writeFile(source, Buffer.from(base64, "base64"));
+    const copied = spawnSync("ffmpeg", ["-y", "-i", source, "-t", "2", "-c", "copy", target], { stdio: "ignore" });
+    if (copied.status !== 0) {
+      spawnSync("ffmpeg", ["-y", "-i", source, "-t", "2", "-c:v", "libx264", "-preset", "veryfast", "-an", target], { stdio: "ignore" });
+    }
+    const chunk = await readFile(target);
+    return chunk.length > 0 ? chunk.toString("base64") : base64;
+  } catch {
+    return base64;
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+async function uploadClipFile(key: string, base64: string, mime: string): Promise<{ id?: string; status: number }> {
+  reserveMetaCall();
+  const bytes = Buffer.from(base64, "base64");
+  const form = new FormData();
+  form.append("purpose", "user_data");
+  form.append("file", new Blob([new Uint8Array(bytes)], { type: mime }), mime.includes("webm") ? "clip.webm" : "clip.mp4");
+  const response = await fetch(FILES_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}` },
+    body: form,
+  });
+  if (!response.ok) return { status: response.status };
+  const payload = (await response.json()) as { id?: string };
+  return { id: payload.id, status: response.status };
+}
 
 export function createLiveSparkClient(key: string): SparkClient {
   assertServer();
@@ -69,103 +183,88 @@ export function createLiveSparkClient(key: string): SparkClient {
     modelId: SPARK_MODEL_ID,
     async generateSteps(input: SparkRequest): Promise<SparkResult> {
       const started = performance.now();
-      const transcript = input.transcript?.trim() || `${input.title ?? "Tutorial"} (${input.domain ?? "other"})`;
+      const meta = userMeta(input);
       try {
+        if (!input.videoBase64) {
+          if (input.sampleId && !input.transcript) {
+            const curated = sampleById(input.sampleId);
+            const owned = meta
+              ? (await finishPayload(curated, meta, input, 0, "sample")).tutorial
+              : curated;
+            return {
+              mode: "live",
+              modelId: SPARK_MODEL_ID,
+              latencyMs: Math.round(performance.now() - started),
+              schemaValid: true,
+              parseOk: true,
+              errors: [],
+              tutorial: owned,
+              toolCalls: curated.generation.toolCalls,
+              inputKind: "sample",
+            };
+          }
+          if (!meta) return fail(0, ["Creator name and licence are required."], "transcript");
+          const response = await postResponses(key, buildSparkResponsesBody({ transcript: input.transcript || input.title || "Tutorial" }), SPARK_TIMEOUT_MS);
+          const latencyMs = Math.round(performance.now() - started);
+          if (response.status < 200 || response.status >= 300) {
+            return fail(latencyMs, [`Spark failed (HTTP ${response.status}).`], "transcript");
+          }
+          try {
+            return await finishPayload(jsonFromText(outputText(response.text)), meta, input, latencyMs, "transcript");
+          } catch {
+            return fail(latencyMs, ["Spark JSON could not be parsed."], "transcript");
+          }
+        }
+        if (!meta) return fail(0, ["Creator name and licence are required."], "clip");
+        const mime = input.mimeType || "video/mp4";
+        const bytes = Buffer.from(input.videoBase64, "base64").length;
+        const plan = chooseSparkMediaPlan({ durationSec: input.durationSec, byteLength: bytes });
+        let dataUrlError = "";
+        if (plan === "chunk_data_url") {
+          const chunk = await twoSecondChunk(input.videoBase64);
+          const response = await postResponses(
+            key,
+            buildSparkResponsesBody({ instruction: SPARK_STEPS_INSTRUCTION, videoBase64: chunk, mimeType: mime }),
+            SPARK_TIMEOUT_MS,
+          );
+          const latencyMs = Math.round(performance.now() - started);
+          if (response.status >= 200 && response.status < 300) {
+            try {
+              return await finishPayload(jsonFromText(outputText(response.text)), meta, input, latencyMs, "clip");
+            } catch {
+              return fail(latencyMs, ["Spark JSON could not be parsed."], "clip");
+            }
+          }
+          if (response.status !== 413 && response.status !== 400) {
+            return fail(latencyMs, [`Spark failed (HTTP ${response.status}).`], "clip");
+          }
+          dataUrlError = `HTTP ${response.status}`;
+        }
+        const uploaded = await uploadClipFile(key, input.videoBase64, mime);
+        if (!uploaded.id) {
+          const latencyMs = Math.round(performance.now() - started);
+          const both = dataUrlError ? "The short upload and the files upload both failed." : `Files upload failed (HTTP ${uploaded.status}).`;
+          return fail(latencyMs, [both], "clip");
+        }
         const response = await postResponses(
           key,
-          {
-            model: SPARK_MODEL_ID,
-            input: [
-              {
-                type: "message",
-                role: "user",
-                content: [{ type: "input_text", text: SPARK_PROMPT + transcript }],
-              },
-            ],
-          },
-          30000,
+          buildSparkResponsesBody({ instruction: SPARK_STEPS_INSTRUCTION, fileId: uploaded.id }),
+          SPARK_TIMEOUT_MS,
         );
         const latencyMs = Math.round(performance.now() - started);
         if (response.status < 200 || response.status >= 300) {
-          return {
-            mode: "live",
-            modelId: SPARK_MODEL_ID,
-            latencyMs,
-            schemaValid: false,
-            parseOk: false,
-            errors: [`Spark failed (HTTP ${response.status}).`],
-            tutorial: null,
-            toolCalls: [],
-          };
+          return fail(latencyMs, [dataUrlError ? "The short upload and the files upload both failed." : `Spark failed (HTTP ${response.status}).`], "clip");
         }
-        let parsed: unknown;
         try {
-          parsed = jsonFromText(outputText(response.text));
+          return await finishPayload(jsonFromText(outputText(response.text)), meta, input, latencyMs, "clip");
         } catch {
-          return {
-            mode: "live",
-            modelId: SPARK_MODEL_ID,
-            latencyMs,
-            schemaValid: false,
-            parseOk: false,
-            errors: ["Spark JSON could not be parsed."],
-            tutorial: null,
-            toolCalls: [],
-          };
+          return fail(latencyMs, ["Spark JSON could not be parsed."], "clip");
         }
-        const normalized = normalizeSparkPayload(parsed, {
-          title: input.title,
-          domain: input.domain,
-          creditLine: input.creditLine,
-          filename: input.filename,
-          durationSec: input.durationSec,
-          mode: "muse_spark_live",
-        });
-        const toolCalls = [
-          {
-            tool: "muse_spark" as const,
-            modelId: SPARK_MODEL_ID,
-            purpose: "tutorial_transcript_to_steps_json",
-            inputKind: "transcript" as const,
-            latencyMs,
-          },
-        ];
-        if (!normalized.ok) {
-          return {
-            mode: "live",
-            modelId: SPARK_MODEL_ID,
-            latencyMs,
-            schemaValid: false,
-            parseOk: true,
-            errors: normalized.errors.map((error) => error.message),
-            tutorial: null,
-            toolCalls,
-          };
-        }
-        normalized.value.generation.toolCalls = toolCalls;
-        return {
-          mode: "live",
-          modelId: SPARK_MODEL_ID,
-          latencyMs,
-          schemaValid: true,
-          parseOk: true,
-          errors: [],
-          tutorial: normalized.value,
-          toolCalls,
-        };
       } catch (error) {
+        if (error instanceof DailyCapError) throw error;
         const latencyMs = Math.round(performance.now() - started);
         const message = error instanceof Error ? error.message : "Spark request failed";
-        return {
-          mode: "live",
-          modelId: SPARK_MODEL_ID,
-          latencyMs,
-          schemaValid: false,
-          parseOk: false,
-          errors: [redactSecrets(message, [key]) || "Spark request failed"],
-          tutorial: null,
-          toolCalls: [],
-        };
+        return fail(latencyMs, [redactSecrets(message, [key]) || "Spark request failed"], input.videoBase64 ? "clip" : "transcript");
       }
     },
   };
@@ -252,6 +351,7 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
           },
         };
       } catch (error) {
+        if (error instanceof DailyCapError) throw error;
         const latencyMs = Math.round(performance.now() - started);
         const aborted = error instanceof Error && error.name === "AbortError";
         const message = aborted ? "SAM timed out." : redactSecrets(error instanceof Error ? error.message : "SAM request failed", [key]);

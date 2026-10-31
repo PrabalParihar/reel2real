@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ToolCall, TutorialSteps } from "@/src/schema/types";
 import { SPARK_MODEL_ID, SAM_MODEL_ID } from "@/src/models";
 
+export type StepsSource = "clip" | "transcript" | "sample" | "cache" | "cap_cache" | "cap_sample";
+
 export interface PrepareRequest {
   key: string;
   sampleId?: string;
@@ -11,8 +13,14 @@ export interface PrepareRequest {
   title?: string;
   domain?: TutorialSteps["domain"];
   filename?: string;
-  creditLine: string;
   durationSec?: number;
+  videoBase64?: string;
+  mimeType?: string;
+  creatorName?: string;
+  licenceChoice?: "self_filmed" | "permission_granted";
+  creditLink?: string;
+  clipHash?: string;
+  hasClip: boolean;
 }
 
 export interface RuntimeInfo {
@@ -35,9 +43,10 @@ interface SessionValue {
   videoUrl: string | null;
   toolLog: ToolCall[];
   sparkLatencyMs: number | null;
+  stepsSource: StepsSource | null;
   summary: SessionSummary | null;
   setPrepare: (prepare: PrepareRequest, videoUrl: string | null) => void;
-  setTutorial: (tutorial: TutorialSteps, latencyMs: number, toolCalls: ToolCall[]) => void;
+  setTutorial: (tutorial: TutorialSteps, latencyMs: number, toolCalls: ToolCall[], source: StepsSource) => void;
   addTools: (toolCalls: ToolCall[]) => void;
   setSummary: (summary: SessionSummary) => void;
   reset: () => void;
@@ -52,6 +61,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [toolLog, setToolLog] = useState<ToolCall[]>([]);
   const [sparkLatencyMs, setSparkLatencyMs] = useState<number | null>(null);
+  const [stepsSource, setStepsSource] = useState<StepsSource | null>(null);
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
   useEffect(() => {
@@ -76,18 +86,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     videoUrl,
     toolLog,
     sparkLatencyMs,
+    stepsSource,
     summary,
     setPrepare: (next, url) => {
       if (videoUrl && videoUrl !== url) URL.revokeObjectURL(videoUrl);
       setPrepareState(next);
       setVideoUrl(url);
       setTutorialState(null);
+      setStepsSource(null);
       setSummary(null);
     },
-    setTutorial: (next, latencyMs, toolCalls) => {
+    setTutorial: (next, latencyMs, toolCalls, source) => {
       setTutorialState(next);
       setSparkLatencyMs(latencyMs);
       setToolLog(toolCalls);
+      setStepsSource(source);
     },
     addTools: (toolCalls) => setToolLog((current) => [...current, ...toolCalls]),
     setSummary,
@@ -98,9 +111,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setVideoUrl(null);
       setToolLog([]);
       setSparkLatencyMs(null);
+      setStepsSource(null);
       setSummary(null);
     },
-  }), [prepare, runtime, sparkLatencyMs, summary, toolLog, tutorial, videoUrl]);
+  }), [prepare, runtime, sparkLatencyMs, stepsSource, summary, toolLog, tutorial, videoUrl]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
