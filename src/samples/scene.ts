@@ -2,12 +2,18 @@ import type { TutorialSteps } from "@/src/schema/types";
 import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
-/** Latte steps whose recovered box is not a cup. No outline and no Sample chip. */
-export const UNVERIFIED_STEP_HINT = "Keep the cup fully in frame";
 
 export function unverifiedStep(nouns: SceneNoun[] | undefined): boolean {
   const present = (nouns ?? []).filter((noun) => noun.present !== false && noun.noun.trim());
   return present.length > 0 && present.every((noun) => noun.verified === false);
+}
+
+/** Plain hint for a step whose masks are not verified. No Sample chip and no highlight wording. */
+export function unverifiedStepHint(nouns: SceneNoun[] | undefined): string {
+  const names = (nouns ?? []).filter((noun) => noun.present !== false && noun.verified === false).map((noun) => noun.noun);
+  if (names.length === 1) return `Keep the ${names[0]} fully in frame`;
+  if (names.length > 1) return `Keep the ${names.join(" and ")} fully in frame`;
+  return "Keep the cup fully in frame";
 }
 export const SAM_FRAME = { width: 720, height: 405 } as const;
 
@@ -273,7 +279,7 @@ export function selectMaskRecord(calls: SamCall[] | undefined, noun: SceneNoun):
   box: NonNullable<ReturnType<typeof placementBox>>;
   mask: SamMaskPayload;
 } | null {
-  if (!noun.present || noun.verified === false) return null;
+  if (!noun.present || noun.verified !== true) return null;
   const list = calls ?? [];
   const ranked = [
     ...list.filter((call) => noun.requestId && call.requestId === noun.requestId),

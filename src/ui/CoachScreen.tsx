@@ -6,7 +6,7 @@ import { sampleByPublishedId } from "@/src/domains/catalog";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, UNVERIFIED_STEP_HINT, unverifiedStep } from "@/src/samples/scene";
+import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, unverifiedStep, unverifiedStepHint } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell } from "./chrome";
@@ -105,7 +105,7 @@ function CoachBody() {
             ? RECORDED_SAM_LABEL
             : chip;
   const hint = noVerifiedMask
-    ? UNVERIFIED_STEP_HINT
+    ? unverifiedStepHint(recordedNouns)
     : showRecorded && sceneStep && !recordedNouns.length
       ? "No highlight on this frame. Press Next when the step looks right."
       : missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);

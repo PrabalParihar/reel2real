@@ -52,7 +52,8 @@
           "samPrompt": "cup",
           "color": "#E88C30",
           "present": true,
-          "requestId": "5aa4009f-4637-4249-bb06-40d943b36ced"
+          "requestId": "5aa4009f-4637-4249-bb06-40d943b36ced",
+          "verified": true
         }
       ],
       "keepFullyInFrame": [

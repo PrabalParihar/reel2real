@@ -18,13 +18,13 @@ const HIT_NOUNS: Record<string, string[][]> = {
     ["rod", "flask"],
   ],
   origami: [
-    ["paper", "hands"],
+    ["paper"],
     ["heart"],
     ["crane"],
   ],
   "seed-planting": [
     ["gloves", "tray"],
-    ["pot", "gloves"],
+    ["gloves"],
     ["jar", "gloves"],
   ],
   "latte-art": [

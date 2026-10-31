@@ -76,6 +76,7 @@ describe("mask to path", () => {
       samPrompt: "paper",
       color: "#E88C30",
       present: true,
+      verified: true,
       requestId: "req",
       maskOrdinal: "6",
     };
@@ -95,7 +96,7 @@ describe("mask to path", () => {
       present: true,
       records: [{ ordinal: "0", boxRecovered: true, box: { x1: 1, y1: 1, x2: 4, y2: 4 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } }],
     }], unverified)).toBeNull();
-    const matched = { ...noun, maskOrdinal: undefined };
+    const matched = { ...noun, maskOrdinal: undefined, verified: true as const };
     expect(selectMaskRecord([{
       requestId: "req",
       present: true,
@@ -110,7 +111,8 @@ describe("mask to path", () => {
     expect(selectMaskRecord(paperFile.calls, paper!)?.record.ordinal).toBe("6");
     const crane = origami!.steps[2].nouns[0];
     const craneFile = loadSam("origami", origami!.steps[2].samFile);
-    expect(selectMaskRecord(craneFile.calls, crane)?.box.x1).toBeGreaterThan(0);
+    expect(crane.verified).toBe(false);
+    expect(selectMaskRecord(craneFile.calls, crane)).toBeNull();
     const latte = SAMPLE_SCENES.find((scene) => scene.demo === "latte-art");
     for (const index of [0, 2]) {
       const cup = latte!.steps[index].nouns[0];

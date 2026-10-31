@@ -36,6 +36,16 @@ export const MASK_FRAME = { width: 720, height: 405 } as const;
 /** step-N.jpg size. Scale a mask into this space before any fitDemo crop. */
 export const SAMPLE_STILL = { width: 1280, height: 720 } as const;
 
+/** One cover rect for the still and the outline. Both live in this box. */
+export function sharedStillRect(
+  viewW: number,
+  viewH: number,
+  position: ObjectPosition = { x: 0.5, y: 0.5 },
+  zoom = 1,
+): CoverTransform {
+  return coverTransform(SAMPLE_STILL.width, SAMPLE_STILL.height, viewW, viewH, position, zoom);
+}
+
 /** 720x405 box to 1280x720 still pixels. Crop comes after this, never before. */
 export function scaleFrameBox(
   box: FrameBox,

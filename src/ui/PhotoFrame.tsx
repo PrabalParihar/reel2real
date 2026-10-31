@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { readableChipColor } from "@/src/ui/chip-color";
 import { chooseLabelPosition, LABEL_CLEARANCE, type LabelRect } from "@/src/ui/label-place";
-import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
+import { clipPathToRect, framePathFromPayload, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, sharedStillRect, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -139,11 +138,11 @@ function formatClock(seconds: number): string {
 export function PhotoFrame({
   src,
   alt,
-  sizes = "(max-width: 800px) 100vw, 640px",
+  sizes: _sizes = "(max-width: 800px) 100vw, 640px",
   overlay,
   recordedLabel = false,
   sampleChip = false,
-  priority = false,
+  priority: _priority = false,
   className = "",
   loopSrc,
   objectPosition = { x: 0.5, y: 0.5 },
@@ -251,7 +250,7 @@ export function PhotoFrame({
   const frameH = SAMPLE_STILL.height;
   const stillScale = frameW / MASK_FRAME.width;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
-    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
+    ? sharedStillRect(view.w, view.h, objectPosition, zoom)
     : null;
   const showRecorded = recordedLabel && !status;
   const statusText = status ? status : showRecorded ? RECORDED_SAM_LABEL : sampleChip ? "Sample" : null;
@@ -286,7 +285,7 @@ export function PhotoFrame({
             loop
             playsInline
             autoPlay
-            style={{ objectFit: "cover", maxWidth: "none" }}
+            style={{ objectFit: "fill", maxWidth: "none" }}
             onTimeUpdate={(event) => {
               const video = event.currentTarget;
               if (!video.duration) return;
@@ -294,39 +293,29 @@ export function PhotoFrame({
               setClock(formatClock(video.currentTime));
             }}
           />
-        ) : (
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            sizes={sizes}
-            priority={priority}
-            loading={priority ? undefined : "eager"}
-            unoptimized
-            style={{ objectFit: "fill", maxWidth: "none" }}
-          />
-        )}
-        {items.length ? (
-          <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation={6 * stillScale} />
-              </filter>
-            </defs>
-            {items.map((item) => {
-              if (!drawOutlines || (visible && !boxFullyInside(item.box, visible))) return null;
-              const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
-              if (!d) return null;
-              return (
-                <g key={item.noun} data-noun={item.noun}>
-                  <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
-                  <path d={d} fill="none" stroke={item.color} strokeWidth={14 * stillScale} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
-                  <path d={d} fill="none" stroke={item.color} strokeWidth={4.5 * stillScale} strokeLinejoin="round" strokeLinecap="round" />
-                </g>
-              );
-            })}
-          </svg>
         ) : null}
+        <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" role="img" aria-label={playLoop ? undefined : alt}>
+          <defs>
+            <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation={6 * stillScale} />
+            </filter>
+          </defs>
+          {playLoop ? null : (
+            <image href={src} x="0" y="0" width={frameW} height={frameH} preserveAspectRatio="none" />
+          )}
+          {items.map((item) => {
+            if (!drawOutlines || (visible && !boxFullyInside(item.box, visible))) return null;
+            const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
+            if (!d) return null;
+            return (
+              <g key={item.noun} data-noun={item.noun}>
+                <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
+                <path d={d} fill="none" stroke={item.color} strokeWidth={14 * stillScale} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
+                <path d={d} fill="none" stroke={item.color} strokeWidth={4.5 * stillScale} strokeLinejoin="round" strokeLinecap="round" />
+              </g>
+            );
+          })}
+        </svg>
       </div>
       {labelMode === "tags" ? (
         <div className="noun-tags">

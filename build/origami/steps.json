@@ -18,8 +18,8 @@
       "index": 0,
       "id": "step_01_fold",
       "title": "Fold the patterned paper",
-      "instruction": "Crease the green patterned paper with both hands. Keep the paper and hands fully in frame.",
-      "hinglishPrompt": "Paper aur hands dikhao.",
+      "instruction": "Crease the green patterned paper with both hands. Keep the paper fully in frame.",
+      "hinglishPrompt": "Paper dikhao.",
       "keyframe": "step-1.jpg",
       "samFile": "sam/step-1.json",
       "nouns": [
@@ -30,20 +30,12 @@
           "color": "#E88C30",
           "present": true,
           "maskOrdinal": "6",
-          "requestId": "22246bfd-82ab-4e8e-b2b7-bca8e730895c"
-        },
-        {
-          "objectId": "obj_hands",
-          "noun": "hands",
-          "samPrompt": "hands",
-          "color": "#2DB4AA",
-          "present": true,
-          "requestId": "fd879ed1-f00f-45b9-b5c7-d9198e433953"
+          "requestId": "22246bfd-82ab-4e8e-b2b7-bca8e730895c",
+          "verified": true
         }
       ],
       "keepFullyInFrame": [
-        "paper",
-        "hands"
+        "paper"
       ]
     },
     {
@@ -61,7 +53,8 @@
           "samPrompt": "paper heart",
           "color": "#B450A0",
           "present": true,
-          "requestId": "ddd9b238-bdf3-4e08-88ba-38248bb406ca"
+          "requestId": "ddd9b238-bdf3-4e08-88ba-38248bb406ca",
+          "verified": true
         }
       ],
       "keepFullyInFrame": [
@@ -83,6 +76,7 @@
           "samPrompt": "origami crane",
           "color": "#50A0E6",
           "present": true,
+          "verified": false,
           "requestId": "e8a6e9b7-206b-4651-8ab8-5e2d82be14b3"
         }
       ],

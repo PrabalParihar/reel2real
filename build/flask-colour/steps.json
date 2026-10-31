@@ -29,7 +29,8 @@
           "samPrompt": "flask",
           "color": "#E88C30",
           "present": true,
-          "requestId": "9baffec5-6e6f-4a3b-9e1a-82cca92727fb"
+          "requestId": "9baffec5-6e6f-4a3b-9e1a-82cca92727fb",
+          "verified": true
         },
         {
           "objectId": "obj_bottle",
@@ -37,7 +38,8 @@
           "samPrompt": "bottle",
           "color": "#2DB4AA",
           "present": true,
-          "requestId": "17e3459b-89bc-4f50-aa6e-570a292dda9d"
+          "requestId": "17e3459b-89bc-4f50-aa6e-570a292dda9d",
+          "verified": true
         }
       ],
       "keepFullyInFrame": [
@@ -60,7 +62,8 @@
           "samPrompt": "flask",
           "color": "#E88C30",
           "present": true,
-          "requestId": "0cd78863-9093-4408-bed2-b47753779be4"
+          "requestId": "0cd78863-9093-4408-bed2-b47753779be4",
+          "verified": true
         },
         {
           "objectId": "obj_bottle",
@@ -68,7 +71,8 @@
           "samPrompt": "bottle",
           "color": "#2DB4AA",
           "present": true,
-          "requestId": "ab23c68a-f7ad-4114-9720-c98771d8a864"
+          "requestId": "ab23c68a-f7ad-4114-9720-c98771d8a864",
+          "verified": true
         }
       ],
       "keepFullyInFrame": [
@@ -91,7 +95,8 @@
           "samPrompt": "stirring rod",
           "color": "#B450A0",
           "present": true,
-          "requestId": "dfc45833-29c0-4db3-b541-6b3a7bd0b3c2"
+          "requestId": "dfc45833-29c0-4db3-b541-6b3a7bd0b3c2",
+          "verified": true
         },
         {
           "objectId": "obj_flask",
@@ -99,7 +104,8 @@
           "samPrompt": "flask",
           "color": "#E88C30",
           "present": true,
-          "requestId": "3e963e25-6b53-4155-950a-059ab4a00058"
+          "requestId": "3e963e25-6b53-4155-950a-059ab4a00058",
+          "verified": true
         }
       ],
       "keepFullyInFrame": [

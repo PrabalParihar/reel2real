@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { DEMOS } from "@/src/samples/demos";
-import { coverTransform, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
-import { recordedFrameFile, selectMaskRecord, UNVERIFIED_STEP_HINT, unverifiedStep, type SampleScene, type SamStepFile } from "@/src/samples/scene";
+import { coverTransform, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, sharedStillRect, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
+import { recordedFrameFile, selectMaskRecord, unverifiedStep, unverifiedStepHint, type SampleScene, type SamStepFile } from "@/src/samples/scene";
 
 const FRAME = { w: MASK_FRAME.width, h: MASK_FRAME.height };
 const IMAGE = { w: SAMPLE_STILL.width, h: SAMPLE_STILL.height };
@@ -104,7 +104,7 @@ describe("recorded mask alignment", () => {
     const frame = readFileSync("src/ui/PhotoFrame.tsx", "utf8");
     expect(frame).toContain("scaleFrameBox");
     expect(frame).toContain("SAMPLE_STILL");
-    expect(coach).toContain("UNVERIFIED_STEP_HINT");
+    expect(coach).toContain("unverifiedStepHint");
     expect(coach).toContain("noVerifiedMask\n    ? null");
     expect(coach).toContain("sampleChip={!noVerifiedMask}");
     for (const demo of DEMOS) {
@@ -185,10 +185,47 @@ describe("recorded mask alignment", () => {
           expect(unverifiedStep(demo.scene.steps[index].nouns)).toBe(true);
           expect(demo.boxes[index]).toEqual([]);
         }
-        expect(UNVERIFIED_STEP_HINT).toBe("Keep the cup fully in frame");
-        expect(UNVERIFIED_STEP_HINT.toLowerCase()).not.toContain("sample");
-        expect(UNVERIFIED_STEP_HINT.toLowerCase()).not.toContain("highlight");
+        const hint = unverifiedStepHint(demo.scene.steps[0].nouns);
+        expect(hint).toBe("Keep the cup fully in frame");
+        expect(hint.toLowerCase()).not.toContain("sample");
+        expect(hint.toLowerCase()).not.toContain("highlight");
+        expect(unverifiedStepHint(DEMOS.find((item) => item.slug === "origami")!.scene.steps[2].nouns)).toBe("Keep the crane fully in frame");
       }
+    }
+  });
+
+  it("puts the still and the outline on one rect at the natural image fraction", () => {
+    const frame = readFileSync("src/ui/PhotoFrame.tsx", "utf8");
+    expect(frame).toContain("sharedStillRect");
+    expect(frame).toContain("<image");
+    expect(frame).not.toContain("next/image");
+    for (const demo of DEMOS) {
+      demo.scene.steps.forEach((step, index) => {
+        const file = loadSam(demo.slug, step.samFile);
+        const full = demo.stepFullFrame[index] === true;
+        const aspect = full ? IMAGE.w / IMAGE.h : shapeAspect(demo.shape);
+        const position = full ? { x: 0.5, y: 0.5 } : demo.stepCrops[index];
+        const zoom = full ? 1 : demo.stepZooms[index];
+        for (const noun of step.nouns) {
+          const selected = selectMaskRecord(file.calls, noun);
+          if (!selected) {
+            expect(noun.verified === true && noun.present).toBe(false);
+            continue;
+          }
+          expect(noun.verified).toBe(true);
+          const image = scaleFrameBox(selected.box, selected.box.frameW, selected.box.frameH);
+          for (const viewW of [390, 1440]) {
+            const viewH = viewW / aspect;
+            const cover = sharedStillRect(viewW, viewH, position, zoom);
+            const stillBox = { x: cover.left, y: cover.top, width: cover.width, height: cover.height };
+            const point = frameToView(image.x1, image.y1, IMAGE.w, IMAGE.h, cover);
+            expect((point.x - stillBox.x) / stillBox.width).toBeCloseTo(image.x1 / IMAGE.w, 5);
+            expect((point.y - stillBox.y) / stillBox.height).toBeCloseTo(image.y1 / IMAGE.h, 5);
+            const wrong = frameToView(selected.box.x1, selected.box.y1, IMAGE.w, IMAGE.h, cover);
+            expect(Math.abs(point.x - wrong.x)).toBeGreaterThan(1);
+          }
+        }
+      });
     }
   });
 
