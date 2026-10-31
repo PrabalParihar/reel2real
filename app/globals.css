@@ -159,6 +159,9 @@ p { margin: 0; color: var(--ink-2); }
 .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .honesty { margin-top: 14px; }
 .hero-media { display: grid; gap: 10px; min-width: 0; max-width: 100%; }
+.hero-proof { display: flex; align-items: center; justify-content: flex-start; gap: 14px; min-width: 0; }
+.hero-source { display: none; }
+.reel-title { display: none; }
 .hero-chip-stack { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
 .hero-chip-stack .chip { max-width: 100%; white-space: normal; }
 .hero-chip-stack .checking { position: static; }
@@ -336,10 +339,11 @@ p { margin: 0; color: var(--ink-2); }
 .filmstrip li { flex: 0 0 72px; min-width: 0; }
 .filmstrip .photo-frame { aspect-ratio: 9 / 16; height: auto; width: 100%; max-height: 112px; }
 .filmstrip li.is-current .photo-frame { box-shadow: 0 0 0 2px var(--saffron), 0 0 24px -4px rgba(245, 165, 36, 0.85); }
-.filmstrip span { display: block; margin-top: 6px; font-size: 12px; color: var(--ink-2); }
-.filmstrip li.is-current span { color: var(--saffron-hi); }
-.recap-reel { display: flex; gap: 12px; overflow-x: auto; width: 100%; margin: 0; padding: 0; list-style: none; }
-.recap-reel li { flex: 0 0 132px; min-width: 0; }
+.film-num { display: block; margin-top: 6px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
+.film-title { display: block; margin-top: 2px; font-size: 13px; line-height: 1.3; color: var(--saffron-hi); white-space: normal; }
+.filmstrip li.is-current .film-num { color: var(--saffron-hi); }
+.recap-reel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; margin: 0; padding: 0; list-style: none; }
+.recap-reel li { min-width: 0; }
 .reel-tile { position: relative; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; background: #000; }
 .recap-reel p { color: var(--ink); margin-top: 8px; }
 .recap-reel span { color: var(--ink-2); font-size: 12px; }
@@ -644,7 +648,14 @@ p { margin: 0; color: var(--ink-2); }
   .credit-panel, .demo-grid, .model-grid { grid-template-columns: 1.1fr 0.9fr; align-items: center; }
   .demo-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 260px)); justify-content: start; align-items: start; }
   .model-grid { align-items: stretch; }
-  .hero { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 28px 28px; gap: 24px; }
+  .hero {
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 0.95fr);
+    align-items: center;
+    min-height: calc(100vh - 88px);
+    padding: 20px 32px;
+    gap: 28px;
+  }
+  .hero-copy h1 { font-size: clamp(56px, 5.4vw, 80px); }
   .hero-stage { min-height: 0; aspect-ratio: 16 / 9; }
   .bento { align-items: stretch; }
   .bento article { min-height: 0; }
@@ -701,14 +712,39 @@ p { margin: 0; color: var(--ink-2); }
     height: min(78vw * 16 / 9, calc(100dvh - 320px));
   }
   .screen.coach .filmstrip { margin-top: 8px; }
-  .screen.coach .filmstrip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 @media (min-width: 1024px) {
   .upload-grid { grid-template-columns: 1.3fr 0.7fr; align-items: start; }
   .upload-dock, .dock { position: static; padding: 0; background: transparent; }
   .upload-screen, .screen { padding-bottom: 32px; }
-  .coach { grid-template-columns: 1fr; justify-items: center; }
-  .coach .step-card, .coach .stage-wrap, .coach .dock { width: min(480px, 100%); }
+  .hero-source {
+    display: block;
+    position: relative;
+    flex: 1 1 46%;
+    min-width: 0;
+    aspect-ratio: 16 / 9;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #000;
+  }
+  .hero-reel { width: min(280px, 38%); flex: none; }
+  .screen.coach {
+    display: grid;
+    grid-template-columns: auto minmax(280px, 460px);
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    width: min(1080px, calc(100% - 48px));
+    min-height: calc(100vh - 72px);
+    padding-bottom: 12px;
+  }
+  .screen.coach .reel-phone {
+    height: min(720px, calc(100vh - 120px));
+    width: auto;
+    aspect-ratio: 9 / 16;
+  }
+  .screen.coach .stage-wrap { width: auto; }
+  .screen.coach .coach-side { width: min(460px, 100%); }
   .stage { height: auto; aspect-ratio: 16 / 9; }
   .rail { display: none; }
   .extract { grid-template-columns: 0.8fr 1.1fr; align-items: center; }
@@ -735,36 +771,54 @@ p { margin: 0; color: var(--ink-2); }
     flex-direction: column;
     padding-bottom: 0;
     overflow: hidden;
+    gap: 8px;
   }
-  .app-shell:has(.screen.coach) .stage-wrap {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  .app-shell:has(.screen.coach) .stage-wrap,
+  .app-shell:has(.screen.coach) .coach-side { flex: none; min-height: 0; width: 100%; }
   .app-shell:has(.screen.coach) .reel-phone {
     flex: 1 1 auto;
-    min-height: 0;
     width: 100%;
+    min-height: 62dvh;
     height: auto;
     max-height: none;
     aspect-ratio: auto;
+    border-radius: 0;
   }
-  .app-shell:has(.screen.coach) .stage-note,
-  .app-shell:has(.screen.coach) .filmstrip,
-  .app-shell:has(.screen.coach) .coach-side,
-  .app-shell:has(.screen.coach) .step-card { flex: none; }
+  .app-shell:has(.screen.coach) .stage-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
   .app-shell:has(.screen.coach) .dock {
     position: static;
-    flex: none;
     width: 100%;
     margin: 0;
     padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
     background: rgba(9, 10, 12, 0.96);
     border-top: 1px solid var(--line-strong);
   }
+  .reel-title {
+    display: block;
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 72px;
+    z-index: 5;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(8, 10, 14, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    pointer-events: none;
+  }
+  .reel-title h1 { color: #fff; font-size: 26px; line-height: 1.05; }
+  .reel-title .mono { color: rgba(255, 255, 255, 0.78); }
+  .step-card { padding: 0 12px; background: transparent; border: 0; box-shadow: none; }
+  .step-card .step-meta,
+  .step-card h1,
+  .step-card .hint,
+  .step-card > p:not(.credit) { display: none; }
 }
 
 @keyframes pulse { 50% { opacity: 0.5; } }

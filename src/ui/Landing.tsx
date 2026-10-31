@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
-import { heroNouns, heroSamFile, heroStep, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
+import { heroSamFile, heroStep, presentNouns, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
@@ -63,6 +63,7 @@ export function Landing() {
                 alt="Kitchen mortar and pestle, first sample frame"
                 loopSrc={frameSrc(chai, CHAI.clip)}
                 objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
+                zoom={CHAI.zoom}
                 sampleChip
                 showProgress
               />
@@ -77,6 +78,7 @@ export function Landing() {
                 src={frameSrc(chai, chai.steps[1]?.keyframe ?? chai.hero.image)}
                 alt="Hands crushing spices in the same mortar"
                 objectPosition={CHAI.stepCrops[1] ?? CHAI.crop}
+                zoom={CHAI.zoom}
               />
             </div>
           </article>
@@ -89,7 +91,8 @@ export function Landing() {
                 src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
                 alt="Recorded highlight on the mortar"
                 objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
-                overlay={heroSamFile(chai) ? { samUrl: sceneAsset(chai, heroSamFile(chai)!), nouns: heroNouns(chai) } : null}
+                zoom={CHAI.zoom}
+                overlay={heroOverlay(chai)}
               />
             </div>
           </article>
@@ -131,8 +134,10 @@ export function Landing() {
                   alt={`${sample.tutorial.title} sample frame`}
                   loopSrc={frameSrc(sample.scene, sample.clip)}
                   objectPosition={sample.crop}
+                  zoom={sample.zoom}
                   sampleChip
                   showProgress
+                  overlay={heroOverlay(sample.scene)}
                 />
               </div>
               <div className="demo-body">
@@ -190,10 +195,18 @@ export function Landing() {
   );
 }
 
+function heroOverlay(scene: SampleScene) {
+  const file = heroSamFile(scene);
+  const step = heroStep(scene);
+  if (!file || !step) return null;
+  return { samUrl: sceneAsset(scene, file), nouns: presentNouns(step) };
+}
+
 function HeroStage({ scene }: { scene: SampleScene }) {
   const [index, setIndex] = useState(0);
   const [motion, setMotion] = useState(true);
-  const heroStill = heroStep(scene)?.keyframe ?? scene.hero.image;
+  const heroStill = scene.hero.image;
+  const overlay = heroOverlay(scene);
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => setMotion(!media.matches);
@@ -208,18 +221,35 @@ function HeroStage({ scene }: { scene: SampleScene }) {
   }, [motion]);
   return (
     <div className="hero-media">
-      <div className="reel-phone hero-reel">
-        <PhotoFrame
-          className="is-fill"
-          src={frameSrc(scene, heroStill)}
-          alt="Stone mortar and pestle in one kitchen, sample hero frame"
-          sizes="(max-width: 800px) 100vw, 420px"
-          loopSrc={frameSrc(scene, CHAI.clip)}
-          objectPosition={CHAI.crop}
-          priority
-          status={RECORDED_SAM_LABEL}
-          showProgress
-        />
+      <div className="hero-proof">
+        <div className="hero-source">
+          <PhotoFrame
+            className="is-fill"
+            src={frameSrc(scene, heroStill)}
+            alt="Full 16:9 source of the sample kitchen clip"
+            sizes="(max-width: 800px) 100vw, 520px"
+            loopSrc={frameSrc(scene, CHAI.clip)}
+            objectPosition={{ x: 0.5, y: 0.5 }}
+            zoom={1}
+            priority
+            overlay={overlay}
+          />
+        </div>
+        <div className="reel-phone hero-reel">
+          <PhotoFrame
+            className="is-fill"
+            src={frameSrc(scene, heroStill)}
+            alt="Stone mortar and pestle in one kitchen, sample hero frame"
+            sizes="(max-width: 800px) 100vw, 360px"
+            loopSrc={frameSrc(scene, CHAI.clip)}
+            objectPosition={CHAI.crop}
+            zoom={CHAI.zoom}
+            priority
+            status={RECORDED_SAM_LABEL}
+            showProgress
+            overlay={overlay}
+          />
+        </div>
       </div>
       <article className="mock-card is-below" key={HERO_STEPS[index]}>
         <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>

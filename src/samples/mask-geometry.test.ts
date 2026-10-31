@@ -87,6 +87,9 @@ describe("vertical crop", () => {
     expect(view.y).toBeGreaterThanOrEqual(-1);
     expect(view.y).toBeLessThanOrEqual(641);
     expect(cover.left).toBeLessThanOrEqual(0);
+    const wide = coverTransform(720, 405, 360, 640, { x: 0.5, y: 0.5 }, 0.5);
+    expect(wide.height).toBeLessThan(640);
+    expect(wide.top).toBeGreaterThan(0);
     const pinned = coverTransform(720, 405, 360, 640, { x: 0, y: 0.5 });
     expect(pinned.left).toBeCloseTo(0);
     const end = coverTransform(720, 405, 360, 640, { x: 1, y: 0.5 });

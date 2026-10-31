@@ -1,5 +1,5 @@
-import { objectPositionForPoint, type ObjectPosition } from "@/src/samples/mask-geometry";
-import { SAM_FRAME, sceneByDemo, type SampleScene } from "@/src/samples/scene";
+import { type ObjectPosition } from "@/src/samples/mask-geometry";
+import { sceneByDemo, type SampleScene } from "@/src/samples/scene";
 import type { TutorialSteps } from "@/src/schema/types";
 
 /**
@@ -22,18 +22,18 @@ export interface DemoDefinition {
   scene: SampleScene;
   /** Cover position for the hero loop inside a 9:16 stage. */
   crop: ObjectPosition;
+  /** 1 is a full cover crop. Below 1 zooms out so more of the 16:9 frame stays in the phone. */
+  zoom: number;
   /** Cover position per step index, same 9:16 stage. */
   stepCrops: ObjectPosition[];
 }
 
-const PHONE = { width: 360, height: 640 };
-
-function cropAt(focalX: number, focalY: number): ObjectPosition {
-  return objectPositionForPoint(focalX, focalY, SAM_FRAME.width, SAM_FRAME.height, PHONE.width, PHONE.height);
-}
-
 const chai = sceneByDemo("masala-chai");
 if (!chai) throw new Error("masala-chai steps.json is missing");
+
+/** Wide enough that the pestle, mortar, and hand all stay inside the 9:16 phone. */
+const CHAI_CROP: ObjectPosition = { x: 0.02, y: 0.42 };
+const CHAI_ZOOM = 0.52;
 
 export const DEMOS: DemoDefinition[] = [
   {
@@ -48,12 +48,9 @@ export const DEMOS: DemoDefinition[] = [
       href: "https://www.pexels.com/video/5480225/",
     },
     scene: chai,
-    crop: cropAt(260, 220),
-    stepCrops: [
-      cropAt(260, 220),
-      cropAt(340, 250),
-      cropAt(400, 260),
-    ],
+    crop: CHAI_CROP,
+    zoom: CHAI_ZOOM,
+    stepCrops: [CHAI_CROP, CHAI_CROP, CHAI_CROP],
   },
 ];
 

@@ -40,6 +40,7 @@ export function PhotoFrame({
   className = "",
   loopSrc,
   objectPosition = { x: 0.5, y: 0.5 },
+  zoom = 1,
   status,
   showProgress = false,
 }: {
@@ -53,6 +54,7 @@ export function PhotoFrame({
   className?: string;
   loopSrc?: string;
   objectPosition?: ObjectPosition;
+  zoom?: number;
   status?: string | null;
   showProgress?: boolean;
 }) {
@@ -131,10 +133,11 @@ export function PhotoFrame({
   const frameW = items[0]?.frameW || SAM_FRAME.width;
   const frameH = items[0]?.frameH || SAM_FRAME.height;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
-    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition)
+    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
     : null;
   const showRecorded = recordedLabel && !status;
   const playLoop = Boolean(loopSrc) && !reduced;
+  const mediaBottom = cover ? Math.max(16, view.h - (cover.top + cover.height) + 36) : 28;
 
   return (
     <div className={`photo-frame${className ? ` ${className}` : ""}`} ref={setHost}>
@@ -207,11 +210,11 @@ export function PhotoFrame({
           </span>
         );
       }) : null}
-      {status ? <span className="reel-status">{status}</span> : null}
-      {showRecorded ? <span className="reel-status">{RECORDED_SAM_LABEL}</span> : null}
-      {!status && !showRecorded && sampleChip ? <span className="reel-status">Sample</span> : null}
+      {status ? <span className="reel-status" style={{ bottom: mediaBottom }}>{status}</span> : null}
+      {showRecorded ? <span className="reel-status" style={{ bottom: mediaBottom }}>{RECORDED_SAM_LABEL}</span> : null}
+      {!status && !showRecorded && sampleChip ? <span className="reel-status" style={{ bottom: mediaBottom }}>Sample</span> : null}
       {showProgress && playLoop ? (
-        <div className="reel-progress">
+        <div className="reel-progress" style={{ bottom: Math.max(0, mediaBottom - 28) }}>
           <span style={{ width: `${Math.min(100, ratio * 100)}%` }} />
           <em>{clock}</em>
         </div>

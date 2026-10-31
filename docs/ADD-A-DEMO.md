@@ -9,7 +9,7 @@ The landing, demos section, coach, and done screen read `DEMOS` in `src/samples/
    - `title`, `domain`, `clip`, `poster`
    - `credit` with the creator name, licence, and source URL
    - `scene` imported from that `steps.json`
-   - `crop` and `stepCrops`: object-position (`x` and `y` from 0 to 1) for the 9:16 cover so the recorded nouns stay in frame
+   - `crop`, `zoom`, and `stepCrops`: object-position (`x` and `y` from 0 to 1) and a zoom (1 is full cover, lower shows more of the frame) so the recorded nouns stay inside the 9:16 phone
 4. Mention the clip in `public/samples/CREDITS.md`.
 
 `objectPositionForPoint` in `src/samples/mask-geometry.ts` turns a frame focal point into that crop for a 9:16 stage. The mask overlay uses the same cover math, so the contour follows the crop.

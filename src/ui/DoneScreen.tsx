@@ -43,6 +43,7 @@ export function DoneScreen() {
                           alt={scene.steps[index].title}
                           sizes="140px"
                           objectPosition={crop}
+                          zoom={published?.zoom ?? 1}
                         />
                       ) : null}
                     </div>

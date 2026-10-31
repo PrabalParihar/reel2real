@@ -15,6 +15,7 @@ export interface PublishedSample {
   clip: string;
   poster: string;
   crop: ObjectPosition;
+  zoom: number;
   stepCrops: ObjectPosition[];
   demo: DemoDefinition;
 }
@@ -30,6 +31,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     clip: demo.clip,
     poster: demo.poster,
     crop: demo.crop,
+    zoom: demo.zoom,
     stepCrops: demo.stepCrops,
     demo,
   };

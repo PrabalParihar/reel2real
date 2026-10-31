@@ -8,7 +8,7 @@ import { formatCredit } from "@/src/schema/attribution";
 import { presentNouns, RECORDED_SAM_LABEL, sceneAsset } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
-import { AppShell, Chip } from "./chrome";
+import { AppShell } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
 import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
@@ -55,7 +55,6 @@ function CoachBody() {
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
   const highlights = highlightsChip(coach.machine.context.lastError);
   const checking = !cameraBlocked && (coach.machine.state === "tracking" || coach.machine.state === "evaluating");
-  const tone = coach.machine.state === "safety_halt" ? "danger" : coach.machine.state === "skip_detected" || coach.machine.state === "out_of_order" ? "skip" : coach.machine.state === "success" ? "match" : checking ? "running" : "wait";
 
   const finished = useRef(false);
   useEffect(() => {
@@ -92,7 +91,7 @@ function CoachBody() {
         ? "Checking…"
         : showRecorded
           ? RECORDED_SAM_LABEL
-          : null;
+          : chip;
   const recordedNouns = presentNouns(sceneStep);
   const hint = showRecorded && sceneStep && !recordedNouns.length
     ? "No highlight on this frame. Press Next when the step looks right."
@@ -111,10 +110,16 @@ function CoachBody() {
                 alt={sceneStep.title}
                 sizes="(max-width: 1023px) 100vw, 60vw"
                 objectPosition={stepCrop}
+                zoom={published?.zoom ?? 1}
+                status={onVideoStatus}
                 overlay={{ samUrl: sceneAsset(scene, sceneStep.samFile), nouns: recordedNouns }}
               />
             ) : null}
-            {onVideoStatus ? <span className="reel-status">{onVideoStatus}</span> : null}
+            {!showRecorded && onVideoStatus ? <span className="reel-status">{onVideoStatus}</span> : null}
+            <div className="reel-title">
+              <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
+              <h1>{step.instructionText}</h1>
+            </div>
             {coach.cameraPhase === "live" ? (
               <div className={`mask-layer${checking ? " is-dim" : ""}`}>
                 {coach.masks.filter((mask) => mask.present && mask.box).map((mask) => (
@@ -130,24 +135,26 @@ function CoachBody() {
             ) : null}
           </div>
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
+        </section>
+
+        <section className="coach-side">
           {published ? (
             <ol className="filmstrip">
               {tutorial.steps.map((item, index) => (
                 <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
                   <PhotoFrame
                     src={sceneAsset(published.scene, published.scene.steps[index]?.keyframe ?? published.poster)}
-                    alt={item.instructionText}
-                    objectPosition={published.stepCrops[index] ?? published.crop}
+                    alt=""
+                    objectPosition={{ x: 0.35, y: 0.4 }}
+                    zoom={1}
                     sizes="96px"
                   />
-                  <span>{item.instructionText}</span>
+                  <span className="film-num">{index + 1}</span>
+                  {index === coach.machine.context.stepIndex ? <span className="film-title">{item.instructionText}</span> : null}
                 </li>
               ))}
             </ol>
           ) : null}
-        </section>
-
-        <section className="coach-side">
           <ol className="rail">
             {tutorial.steps.map((item, index) => (
               <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
@@ -159,12 +166,11 @@ function CoachBody() {
           <article className="panel step-card" key={step.id}>
             <div className="step-meta">
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-              {chip ? <Chip tone={tone} pulse={checking}>{chip}</Chip> : null}
             </div>
             <h1>{step.instructionText}</h1>
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
-            {showStepPanelFrame(showRecorded) ? (
+            {showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
                 {clip ? (
                   <video src={clip} muted playsInline preload="metadata" />

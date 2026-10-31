@@ -46,11 +46,13 @@ export function coverTransform(
   viewW: number,
   viewH: number,
   position: ObjectPosition = { x: 0.5, y: 0.5 },
+  zoom = 1,
 ): CoverTransform {
   if (frameW <= 0 || frameH <= 0 || viewW <= 0 || viewH <= 0) {
     return { scale: 1, left: 0, top: 0, width: Math.max(viewW, 0), height: Math.max(viewH, 0) };
   }
-  const scale = Math.max(viewW / frameW, viewH / frameH);
+  const fit = Math.max(viewW / frameW, viewH / frameH);
+  const scale = fit * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
   const width = frameW * scale;
   const height = frameH * scale;
   return {
