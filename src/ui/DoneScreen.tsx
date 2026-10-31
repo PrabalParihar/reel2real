@@ -4,6 +4,7 @@ import Link from "next/link";
 import { sampleByPublishedId } from "@/src/domains/catalog";
 import { coachHonesty } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
+import { shapeClass } from "@/src/samples/frame-fit";
 import { sceneAsset } from "@/src/samples/scene";
 import { AppShell, Chip } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
@@ -35,7 +36,7 @@ export function DoneScreen() {
                 const crop = published?.stepCrops[index] ?? published?.crop;
                 return (
                   <li key={step.id}>
-                    <div className="reel-tile">
+                    <div className={`reel-tile${published ? ` ${shapeClass(published.shape)}` : ""}`}>
                       {scene?.steps[index] ? (
                         <PhotoFrame
                           className="is-fill"
@@ -43,7 +44,7 @@ export function DoneScreen() {
                           alt={scene.steps[index].title}
                           sizes="140px"
                           objectPosition={crop}
-                          zoom={published?.zoom ?? 1}
+                          zoom={published?.stepZooms[index] ?? published?.zoom ?? 1}
                         />
                       ) : null}
                     </div>

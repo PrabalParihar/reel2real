@@ -1,10 +1,11 @@
-import { type ObjectPosition } from "@/src/samples/mask-geometry";
+import { fitDemo, type FrameShapeId } from "@/src/samples/frame-fit";
+import type { FrameBox, ObjectPosition } from "@/src/samples/mask-geometry";
 import { sceneByDemo, type SampleScene } from "@/src/samples/scene";
 import type { TutorialSteps } from "@/src/schema/types";
 
 /**
  * One record per Sample reel. Adding a demo is a new entry here plus files under public/samples/<slug>/.
- * See docs/ADD-A-DEMO.md.
+ * See docs/ADD-A-DEMO.md. Shape and crops come from fitDemo, not from hand-tuned numbers.
  */
 export interface DemoCredit {
   name: string;
@@ -20,25 +21,43 @@ export interface DemoDefinition {
   poster: string;
   credit: DemoCredit;
   scene: SampleScene;
-  /** object-position for a cover crop inside the 5:4 stage. 0 shows the left edge, 1 the right. */
+  /** Highlighted mask boxes per step, in sam/step-*.json order. The fit reads these. */
+  boxes: FrameBox[][];
+  shape: FrameShapeId;
+  /** object-position for the hero, which uses step 1's crop. */
   crop: ObjectPosition;
-  /** Always 1. Cover fills the frame. A value below 1 letterboxes. */
   zoom: number;
-  /** Cover position per step index, same 5:4 stage. */
   stepCrops: ObjectPosition[];
+  stepZooms: number[];
+  /** Demo grid cards are always 4:5. Outlines are omitted when they would be cut. */
+  cardCrop: ObjectPosition;
+  cardZoom: number;
+  cardOutlines: boolean;
 }
 
 const chai = sceneByDemo("masala-chai");
 if (!chai) throw new Error("masala-chai steps.json is missing");
 
-/**
- * 5:4 cover of the 720×405 frame. 9:16 shows ~228px of width and 4:5 shows ~324px.
- * The pestle and mortar together span x 100–568, so only 5:4 (about 506px) holds both,
- * plus the hand on the crush step. Zoom stays 1 so the frame never letterboxes.
- */
-const CHAI_LAYOUT: ObjectPosition = { x: 0.3784, y: 0.5 };
-const CHAI_CRUSH: ObjectPosition = { x: 1, y: 0.5 };
-const CHAI_ZOOM = 1;
+/** Present-noun boxes from public/samples/masala-chai/sam/step-*.json. The catalog test checks this list. */
+const CHAI_BOXES: FrameBox[][] = [
+  [
+    { x1: 221, y1: 85, x2: 568, y2: 380 },
+    { x1: 100, y1: 0, x2: 217, y2: 250 },
+  ],
+  [
+    { x1: 286, y1: 287, x2: 303, y2: 304 },
+    { x1: 297, y1: 185, x2: 491, y2: 341 },
+    { x1: 424, y1: 343, x2: 438, y2: 372 },
+    { x1: 553, y1: 0, x2: 720, y2: 129 },
+    { x1: 265, y1: 15, x2: 451, y2: 195 },
+  ],
+  [
+    { x1: 395, y1: 309, x2: 408, y2: 336 },
+    { x1: 389, y1: 197, x2: 467, y2: 306 },
+  ],
+];
+
+const chaiFit = fitDemo(CHAI_BOXES);
 
 export const DEMOS: DemoDefinition[] = [
   {
@@ -53,9 +72,15 @@ export const DEMOS: DemoDefinition[] = [
       href: "https://www.pexels.com/video/5480225/",
     },
     scene: chai,
-    crop: CHAI_LAYOUT,
-    zoom: CHAI_ZOOM,
-    stepCrops: [CHAI_LAYOUT, CHAI_CRUSH, CHAI_LAYOUT],
+    boxes: CHAI_BOXES,
+    shape: chaiFit.shape,
+    crop: chaiFit.steps[0]?.position ?? { x: 0.5, y: 0.5 },
+    zoom: chaiFit.steps[0]?.zoom ?? 1,
+    stepCrops: chaiFit.steps.map((step) => step.position),
+    stepZooms: chaiFit.steps.map((step) => step.zoom),
+    cardCrop: chaiFit.card.position,
+    cardZoom: chaiFit.card.zoom,
+    cardOutlines: chaiFit.card.outlines,
   },
 ];
 

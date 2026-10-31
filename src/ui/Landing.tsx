@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
+import { shapeClass } from "@/src/samples/frame-fit";
 import { heroSamFile, heroStep, presentNouns, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
@@ -56,14 +57,14 @@ export function Landing() {
           <article>
             <span className="index">01</span>
             <h3>Upload a clip you own</h3>
-            <div className="reel-phone">
+            <div className={`reel-phone ${shapeClass(CHAI.shape)}`}>
               <PhotoFrame
                 className="is-fill"
                 src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
                 alt="Kitchen mortar and pestle, first sample frame"
                 loopSrc={frameSrc(chai, CHAI.clip)}
                 objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
-                zoom={CHAI.zoom}
+                zoom={CHAI.stepZooms[0] ?? CHAI.zoom}
                 sampleChip
                 showProgress
               />
@@ -72,26 +73,26 @@ export function Landing() {
           <article>
             <span className="index">02</span>
             <h3>Steps from the lesson</h3>
-            <div className="reel-phone">
+            <div className={`reel-phone ${shapeClass(CHAI.shape)}`}>
               <PhotoFrame
                 className="is-fill"
                 src={frameSrc(chai, chai.steps[1]?.keyframe ?? chai.hero.image)}
                 alt="Hands crushing spices in the same mortar"
                 objectPosition={CHAI.stepCrops[1] ?? CHAI.crop}
-                zoom={CHAI.zoom}
+                zoom={CHAI.stepZooms[1] ?? CHAI.zoom}
               />
             </div>
           </article>
           <article>
             <span className="index">03</span>
             <h3>Highlights on the objects</h3>
-            <div className="reel-phone">
+            <div className={`reel-phone ${shapeClass(CHAI.shape)}`}>
               <PhotoFrame
                 className="is-fill"
                 src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
                 alt="Recorded highlight on the mortar"
                 objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
-                zoom={CHAI.zoom}
+                zoom={CHAI.stepZooms[0] ?? CHAI.zoom}
                 overlay={heroOverlay(chai)}
               />
             </div>
@@ -127,16 +128,17 @@ export function Landing() {
         <div className="demo-grid">
           {PUBLISHED_SAMPLES.map((sample) => (
             <article className="panel demo-card" key={sample.id}>
-              <div className="reel-phone">
+              <div className="reel-phone card-frame">
                 <PhotoFrame
                   className="is-fill"
                   src={frameSrc(sample.scene, sample.poster)}
                   alt={`${sample.tutorial.title} sample frame`}
                   loopSrc={frameSrc(sample.scene, sample.clip)}
-                  objectPosition={sample.crop}
-                  zoom={sample.zoom}
+                  objectPosition={sample.cardCrop}
+                  zoom={sample.cardZoom}
                   sampleChip
                   showProgress
+                  drawOutlines={sample.cardOutlines}
                   overlay={heroOverlay(sample.scene)}
                 />
               </div>
@@ -235,7 +237,7 @@ function HeroStage({ scene }: { scene: SampleScene }) {
             overlay={overlay}
           />
         </div>
-        <div className="reel-phone hero-reel">
+        <div className={`reel-phone hero-reel ${shapeClass(CHAI.shape)}`}>
           <PhotoFrame
             className="is-fill"
             src={frameSrc(scene, heroStill)}

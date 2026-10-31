@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, objectPositionForPoint, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
+import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -25,25 +25,47 @@ interface DrawItem {
   box: FrameBox;
 }
 
-/** Catalog crops are tuned for a 5:4 stage. A taller stage recenters that same focal point. */
-function positionForFrame(position: ObjectPosition, frameW: number, frameH: number, viewW: number, viewH: number): ObjectPosition {
-  if (viewW <= 0 || viewH <= 0 || viewW / viewH >= 1.2) return position;
-  const refW = frameH * 1.25;
-  const ref = coverTransform(frameW, frameH, refW, frameH, position, 1);
-  const x0 = ((0 - ref.left) / ref.width) * frameW;
-  const x1 = ((refW - ref.left) / ref.width) * frameW;
-  const focal = {
-    x: x0 + (x1 - x0) * 0.62,
-    y: ((frameH / 2 - ref.top) / ref.height) * frameH,
-  };
-  return objectPositionForPoint(focal.x, focal.y, frameW, frameH, viewW, viewH);
+function boxFullyInside(box: FrameBox, view: FrameBox): boolean {
+  return box.x1 >= view.x1 - 0.5 && box.y1 >= view.y1 - 0.5 && box.x2 <= view.x2 + 0.5 && box.y2 <= view.y2 + 0.5;
 }
 
-function overlapRatio(box: FrameBox, view: FrameBox): number {
-  const width = Math.max(0, Math.min(box.x2, view.x2) - Math.max(box.x1, view.x1));
-  const height = Math.max(0, Math.min(box.y2, view.y2) - Math.max(box.y1, view.y1));
-  const area = Math.max(1, (box.x2 - box.x1) * (box.y2 - box.y1));
-  return (width * height) / area;
+function placeLabels(
+  items: DrawItem[],
+  frameW: number,
+  frameH: number,
+  cover: CoverTransform,
+  view: { w: number; h: number },
+): Array<{ noun: string; color: string; x: number; y: number }> {
+  const placed: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+  const labels: Array<{ noun: string; color: string; x: number; y: number }> = [];
+  const chipTop = view.h - 78;
+  const chipRight = Math.min(view.w - 8, 248);
+  for (const item of items) {
+    if (!item.draw.centroid) continue;
+    const point = frameToView(item.draw.centroid.x, item.draw.centroid.y, frameW, frameH, cover);
+    if (point.x < 8 || point.y < 8 || point.x > view.w - 8 || point.y > view.h - 8) continue;
+    const labelW = Math.max(64, item.noun.length * 7.2 + 22);
+    const labelH = 26;
+    const halfW = labelW / 2;
+    const halfH = labelH / 2;
+    const clamp = (rawX: number, rawY: number) => {
+      let x = Math.min(view.w - halfW - 6, Math.max(halfW + 6, rawX));
+      let y = Math.min(view.h - halfH - 6, Math.max(halfH + 6, rawY));
+      if (y + halfH > chipTop && x - halfW < chipRight) y = Math.max(halfH + 6, chipTop - halfH - 4);
+      return { x, y };
+    };
+    let { x, y } = clamp(point.x, point.y);
+    for (let pass = 0; pass < 8; pass += 1) {
+      const mine = { x1: x - halfW, y1: y - halfH, x2: x + halfW, y2: y + halfH };
+      const hit = placed.find((other) => mine.x1 < other.x2 && mine.x2 > other.x1 && mine.y1 < other.y2 && mine.y2 > other.y1);
+      if (!hit) break;
+      const otherCx = (hit.x1 + hit.x2) / 2;
+      ({ x, y } = clamp(x + (x >= otherCx ? 14 : -14), y));
+    }
+    placed.push({ x1: x - halfW, y1: y - halfH, x2: x + halfW, y2: y + halfH });
+    labels.push({ noun: item.noun, color: item.color, x, y });
+  }
+  return labels;
 }
 
 function formatClock(seconds: number): string {
@@ -65,6 +87,7 @@ export function PhotoFrame({
   zoom = 1,
   status,
   showProgress = false,
+  drawOutlines = true,
 }: {
   src: string;
   alt: string;
@@ -79,6 +102,8 @@ export function PhotoFrame({
   zoom?: number;
   status?: string | null;
   showProgress?: boolean;
+  /** False drops every contour. A partial outline is never drawn. */
+  drawOutlines?: boolean;
 }) {
   const glowId = useId().replace(/:/g, "");
   const [view, setView] = useState({ w: 0, h: 0 });
@@ -155,11 +180,8 @@ export function PhotoFrame({
 
   const frameW = items[0]?.frameW || SAM_FRAME.width;
   const frameH = items[0]?.frameH || SAM_FRAME.height;
-  const fittedPosition = view.w > 0 && view.h > 0
-    ? positionForFrame(objectPosition, frameW, frameH, view.w, view.h)
-    : objectPosition;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
-    ? coverTransform(frameW, frameH, view.w, view.h, fittedPosition, zoom)
+    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
     : null;
   const showRecorded = recordedLabel && !status;
   const playLoop = Boolean(loopSrc) && !reduced;
@@ -220,7 +242,7 @@ export function PhotoFrame({
               </filter>
             </defs>
             {items.map((item) => {
-              if (visible && overlapRatio(item.box, visible) < 0.62) return null;
+              if (!drawOutlines || (visible && !boxFullyInside(item.box, visible))) return null;
               const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
               if (!d) return null;
               return (
@@ -234,37 +256,20 @@ export function PhotoFrame({
           </svg>
         ) : null}
       </div>
-      {cover ? items.map((item) => {
-        if (!item.draw.centroid) return null;
-        const point = frameToView(item.draw.centroid.x, item.draw.centroid.y, frameW, frameH, cover);
-        if (!visible || overlapRatio(item.box, visible) < 0.62) return null;
-        if (point.x < 12 || point.y < 12 || point.x > view.w - 12 || point.y > view.h - 12) return null;
-        const labelW = Math.max(64, item.noun.length * 7.2 + 22);
-        const labelH = 26;
-        const halfW = labelW / 2;
-        const halfH = labelH / 2;
-        let x = Math.min(view.w - halfW - 8, Math.max(halfW + 8, point.x));
-        let y = Math.min(view.h - halfH - 8, Math.max(halfH + 8, point.y));
-        const chipTop = view.h - 78;
-        const chipRight = Math.min(view.w - 8, 248);
-        if (y + halfH > chipTop && x - halfW < chipRight) {
-          y = Math.max(halfH + 8, chipTop - halfH - 4);
-        }
-        return (
+      {cover ? placeLabels(items, frameW, frameH, cover, view).map((label) => (
           <span
-            key={item.noun}
+            key={label.noun}
             className="noun-chip"
             style={{
-              left: x,
-              top: y,
-              borderColor: item.color,
-              color: item.color,
+              left: label.x,
+              top: label.y,
+              borderColor: label.color,
+              color: label.color,
             }}
           >
-            {item.noun}
+            {label.noun}
           </span>
-        );
-      }) : null}
+      )) : null}
       {status ? <span className="reel-status" style={{ bottom: mediaBottom }}>{status}</span> : null}
       {showRecorded ? <span className="reel-status" style={{ bottom: mediaBottom }}>{RECORDED_SAM_LABEL}</span> : null}
       {!status && !showRecorded && sampleChip ? <span className="reel-status" style={{ bottom: mediaBottom }}>Sample</span> : null}

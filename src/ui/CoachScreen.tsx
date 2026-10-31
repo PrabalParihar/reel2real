@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { sampleByPublishedId } from "@/src/domains/catalog";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
+import { shapeClass } from "@/src/samples/frame-fit";
 import { presentNouns, RECORDED_SAM_LABEL, sceneAsset } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
@@ -83,6 +84,7 @@ function CoachBody() {
   const sceneStep = scene?.steps[coach.machine.context.stepIndex];
   const showRecorded = Boolean(scene) && coach.cameraPhase !== "live";
   const stepCrop = published?.stepCrops[coach.machine.context.stepIndex] ?? published?.crop ?? { x: 0.5, y: 0.5 };
+  const stepZoom = published?.stepZooms[coach.machine.context.stepIndex] ?? published?.zoom ?? 1;
   const onVideoStatus = highlights
     ? highlights
     : coach.highlightsPaused
@@ -101,7 +103,7 @@ function CoachBody() {
     <AppShell backHref="/upload">
       <main className="screen coach">
         <section className="stage-wrap">
-          <div className="reel-phone">
+          <div className={`reel-phone${published ? ` ${shapeClass(published.shape)}` : ""}`}>
             <video ref={videoRef} className={coach.cameraPhase === "live" ? "camera" : "camera is-hidden"} playsInline muted />
             {showRecorded && scene && sceneStep ? (
               <PhotoFrame
@@ -110,7 +112,7 @@ function CoachBody() {
                 alt={sceneStep.title}
                 sizes="(max-width: 1023px) 100vw, 60vw"
                 objectPosition={stepCrop}
-                zoom={published?.zoom ?? 1}
+                zoom={stepZoom}
                 status={onVideoStatus}
                 overlay={{ samUrl: sceneAsset(scene, sceneStep.samFile), nouns: recordedNouns }}
               />
@@ -143,11 +145,12 @@ function CoachBody() {
               {tutorial.steps.map((item, index) => (
                 <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
                   <PhotoFrame
+                    className={shapeClass(published.shape)}
                     src={sceneAsset(published.scene, published.scene.steps[index]?.keyframe ?? published.poster)}
                     alt=""
                     objectPosition={published.stepCrops[index] ?? published.crop}
-                    zoom={published.zoom}
-                    sizes="96px"
+                    zoom={published.stepZooms[index] ?? published.zoom}
+                    sizes="160px"
                   />
                   <span className="film-num">{index + 1}</span>
                   {index === coach.machine.context.stepIndex ? <span className="film-title">{item.instructionText}</span> : null}

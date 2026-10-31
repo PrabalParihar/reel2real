@@ -1,4 +1,5 @@
 import { DEMOS, type DemoDefinition } from "@/src/samples/demos";
+import type { FrameShapeId } from "@/src/samples/frame-fit";
 import { tutorialFromScene, type SampleScene } from "@/src/samples/scene";
 import type { ObjectPosition } from "@/src/samples/mask-geometry";
 import type { TutorialSteps } from "@/src/schema/types";
@@ -14,9 +15,14 @@ export interface PublishedSample {
   tutorial: TutorialSteps;
   clip: string;
   poster: string;
+  shape: FrameShapeId;
   crop: ObjectPosition;
   zoom: number;
   stepCrops: ObjectPosition[];
+  stepZooms: number[];
+  cardCrop: ObjectPosition;
+  cardZoom: number;
+  cardOutlines: boolean;
   demo: DemoDefinition;
 }
 
@@ -30,9 +36,14 @@ function publish(demo: DemoDefinition): PublishedSample {
     tutorial: tutorialFromScene(demo.scene),
     clip: demo.clip,
     poster: demo.poster,
+    shape: demo.shape,
     crop: demo.crop,
     zoom: demo.zoom,
     stepCrops: demo.stepCrops,
+    stepZooms: demo.stepZooms,
+    cardCrop: demo.cardCrop,
+    cardZoom: demo.cardZoom,
+    cardOutlines: demo.cardOutlines,
     demo,
   };
 }

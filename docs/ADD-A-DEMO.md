@@ -9,7 +9,8 @@ The landing, demos section, coach, and done screen read `DEMOS` in `src/samples/
    - `title`, `domain`, `clip`, `poster`
    - `credit` with the creator name, licence, and source URL
    - `scene` imported from that `steps.json`
-   - `crop`, `zoom`, and `stepCrops`: object-position (`x` and `y` from 0 to 1) for the 5:4 phone. `zoom` stays 1. A lower zoom letterboxes the 16:9 clip inside the frame.
+   - `boxes`: the highlighted mask boxes from each `sam/step-N.json`, in record order
+   - Leave `shape`, `crop`, `zoom`, `stepCrops`, and `stepZooms` to `fitDemo` in `src/samples/frame-fit.ts`. It picks the narrowest of 4:5, 1:1, and 5:4 that holds every step with margin. Zoom stays at 1 unless the fit needs more. Do not letterbox.
 4. Mention the clip in `public/samples/CREDITS.md`.
 
-`objectPositionForPoint` in `src/samples/mask-geometry.ts` turns a frame focal point into that crop for a 5:4 stage (`viewW / viewH = 1.25`). The mask overlay uses the same cover math against the rendered box, so the contour follows the crop. If a 5:4 cover cannot hold the nouns, widen the phone. Do not letterbox.
+Demo grid cards stay 4:5 even when the phone is wider. `fitDemo` turns card outlines off when those boxes do not fit that card.
