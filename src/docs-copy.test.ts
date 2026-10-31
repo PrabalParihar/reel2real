@@ -24,6 +24,12 @@ describe("submission copy", () => {
     }
   });
 
+  it("does not mention gate0 in the submission docs", () => {
+    for (const file of ["README.md", "docs/demo-script.md", "docs/SUBMISSION-DRAFT.md"]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/gate\s*0/i);
+    }
+  });
+
   it("keeps the submission write-up as a draft", () => {
     const text = readFileSync("docs/SUBMISSION-DRAFT.md", "utf8");
     expect(text.startsWith("# DRAFT")).toBe(true);

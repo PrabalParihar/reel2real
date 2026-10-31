@@ -11,7 +11,7 @@ Say the words below, or stay close to them. Read the step titles that are actual
 - Full screen the browser. Hide bookmarks. 1440-wide is a good frame.
 - Open the prod URL. If a sign-in dialog appears, type the preview password off camera, then come back to the screen.
 - The hero must be the chai clip. The five cards under Demos are masala chai, flask colour, origami, seed planting, and latte art.
-- Sample chips say Sample, or `Sample · recorded SAM output`. If a chip says Live, you are on your own clip, not a Sample. If a chip says Mock, stop. This take needs the live model path.
+- Sample chips say Sample, or `Sample · recorded SAM output`. If a chip says Live, you are on your own clip, not a Sample. Contour outlines are Sample only. Live SAM draws a box around the object.
 - Leave the mode on Keyframe.
 - flask-colour: the yellow note says Grown-up supervision. Do not say a chemical name. Describe the colour you see.
 - Some steps have no outline. Say that the recorded mask failed verification, so the step shows a plain hint and does not guess a box. Known cases: latte art steps 1 and 3, masala chai step 3, origami step 3. Chai step 2 keeps the hand. Flask step 3 keeps the flask.
@@ -22,7 +22,7 @@ Say the words below, or stay close to them. Read the step titles that are actual
 
 On camera: the laptop screen, browser on the prod landing page. No password dialog in frame.
 
-Say: "Reel2Real coaches you through a short tutorial. The phone sits on a stand. You match the step, and the object lights up."
+Say: "Reel2Real coaches you through a short tutorial. The phone sits on a stand. You match the step. Live SAM draws a box around the object. Sample demos show a recorded contour."
 
 Show the chai hero and the Sample label. Scroll to Demos. Point at the five cards. Point at a credit line. Chai says Pexels contributor. On the flask card, point at Grown-up supervision.
 
@@ -40,19 +40,19 @@ Open flask colour.
 
 Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see."
 
-Show Grown-up supervision. Read the titles. Highlights are the flask and the bottle, then the flask and the bottle, then the flask. Do not name a chemical. Credit is AlexKopeykin, Pixabay Content License, https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/.
+Show Grown-up supervision. Read the titles. The contours are the flask and the bottle, then the flask and the bottle, then the flask. Do not name a chemical. Credit is AlexKopeykin, Pixabay Content License, https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/.
 
 ### 4. Origami (1:00 to 1:15)
 
 Open origami. Yogendra Singh, Pexels License, https://www.pexels.com/video/a-person-making-origami-6364305/.
 
-Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding". The paper highlight is the sheet being folded. Step 3 has no outline and no Sample chip. The hint is "Keep the crane fully in frame."
+Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding". The paper contour is the sheet being folded. Step 3 has no outline and no Sample chip. The hint is "Keep the crane fully in frame."
 
 ### 5. Seed planting (1:15 to 1:30)
 
 Open seed planting. Tima Miroshnichenko, Pexels License, https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/.
 
-Read: "Poke cells in the seed tray", "Work down the row", "Finish with the jar in view". Highlights: gloves and tray, then gloves, then jar and gloves.
+Read: "Poke cells in the seed tray", "Work down the row", "Finish with the jar in view". Contours: gloves and tray, then gloves, then jar and gloves.
 
 ### 6. Latte art (1:30 to 1:45)
 
@@ -60,19 +60,23 @@ Open latte art. franklandgrave, Mixkit Stock Video Free License, https://mixkit.
 
 Read: "Start the pour", "Build a foam circle in the cup", "Finish the foam". Step 2 shows the cup. Steps 1 and 3 have no outline and no Sample chip. The only hint is "Keep the cup fully in frame."
 
-### 7. One live SAM highlight (1:45 to 2:15)
+### 7. One live SAM box (1:45 to 2:15)
 
-Go to Upload on the same prod site. This beat is your clip, not a Sample.
+Stay on a Sample you already opened. Masala chai is the simplest. Do not go to Upload. Upload calls Muse.
 
-Say: "The same coach runs live. Spark reads a clip once. SAM checks the frame."
+Allow your own laptop camera when the browser asks. Keep the desk in frame. Do not show another person.
 
-Upload a short clip you filmed on this desk, or allow the laptop camera and keep two or three objects fully in frame. Do not show another person.
+Say: "This is still the Sample tutorial. The camera is mine. SAM draws a box around the object."
 
-When SAM draws a highlight, point at it and stop talking. That is the live beat. If the stage says Highlights unavailable, leave that line up, press Next, and do not draw a fake box. Reshoot this beat until one real highlight is on screen. Do not claim a highlight you did not get.
+Filming budget: at most 6 SAM calls in total, and at most 3 retakes of this beat. Stop after the 3rd retake, whatever happens.
+
+If a real box appears, point at it. If no real box appears within that cap, use the fallback ending: leave the honest `Highlights unavailable` line on screen and say so. Never fake a box.
+
+Editor: a backup still exists of an earlier prod live call where the coach drew a box around the mortar. It can be used in the edit, clearly as a still.
 
 ### 8. Close (2:15 to 2:30)
 
-Say: "Sample stays Sample. Live stays live. If SAM does not answer, we say so."
+Say: "Sample stays Sample, and those are contours. Live SAM draws a box. If SAM does not answer, we say so."
 
 Hold on the model ids `muse-spark-1.3` and `sam-3.1`, and on one credit line. End before 3:00.
 

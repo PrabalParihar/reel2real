@@ -38,6 +38,17 @@ Status is meets, partial, cannot meet, or unknown. Unverified third-party claims
 | Description length limit | Official public pages | Not stated | unknown |
 | How judges open the password-gated prod demo | Not stated on public pages | Prod URL above. A preview password still gates pages. No decision yet on sharing that password or opening a temporary ungated window | unknown |
 
+## Open questions for Prabal
+
+These are open. This draft does not choose an answer.
+
+- Should the repo stay private, or be made public?
+- How should judges open the password-gated prod demo?
+- Which track should the project enter?
+- Were Nikhil Verma and Neha Singh accepted, and do they meet the 18+ requirement?
+- What fields does the portal form show after login?
+- Where should the demo video be hosted?
+
 ## Gaps
 
 - Video length, format, and hosting are not stated on the public pages.
@@ -55,7 +66,7 @@ Reel2Real
 
 ## One-liner
 
-Put the phone on a stand, upload a short tutorial, and follow each step while the objects light up on camera.
+Put the phone on a stand, upload a short tutorial, and follow each step while SAM draws a box around the object.
 
 ## Problem
 
@@ -63,7 +74,7 @@ A tutorial video keeps playing while your hands are busy. It is easy to lose the
 
 ## What it does
 
-Reel2Real is a browser coach. You upload a clip you filmed. Muse Spark (`muse-spark-1.3`) turns that clip into a short list of steps. SAM 3.1 (`sam-3.1`) then checks objects on keyframes and draws a highlight when it sees them.
+Reel2Real is a browser coach. You upload a clip you filmed. Muse Spark (`muse-spark-1.3`) turns that clip into a short list of steps. On the live camera, SAM 3.1 (`sam-3.1`) draws a box around the object. Contour outlines appear only on the recorded Sample demos.
 
 The browser does not hold the model key. The public app accepts a same-origin segment request, then sends it through a private, authenticated server-side forward to a worker service on the host's private network. The worker calls Meta SAM 3.1 and returns the result. If the forward or the Meta call fails, the coach shows Highlights unavailable and does not invent a box.
 
@@ -88,9 +99,9 @@ Full lines are in `public/samples/CREDITS.md`.
 | Model | Id | Role |
 | --- | --- | --- |
 | Muse Spark | `muse-spark-1.3` | Once, when a clip is extracted into steps |
-| SAM 3.1 | `sam-3.1` | Live coach keyframes. Sample demos replay masks recorded from this model |
+| SAM 3.1 | `sam-3.1` | Live coach keyframes. It draws a box around the object. Sample demos replay contour outlines recorded from this model |
 
-Calls go to `POST https://api.meta.ai/v1/responses`. `/api/spark` extracts steps. `/api/segment` requests a live SAM mask through the private forward described above. Sample demos do not use that live path for their saved outlines.
+Calls go to `POST https://api.meta.ai/v1/responses`. `/api/spark` extracts steps from an uploaded clip. `/api/segment` asks live SAM to draw a box around the object, through the private forward described above. Sample demos do not use that live path. They replay recorded contour outlines.
 
 Muse Image is not used.
 
