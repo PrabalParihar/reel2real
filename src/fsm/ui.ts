@@ -7,6 +7,11 @@ export function honestyChip(mode: PreferredLiveMode, stillsArmed = false): strin
   return "Keyframe mode";
 }
 
+export function coachHonesty(mode: PreferredLiveMode, stillsArmed: boolean, sampleSteps: boolean): string {
+  const base = stillsArmed || mode === "stills_only" ? "Stills mode" : mode === "chunk_video_1_2s" ? "Chunk mode" : "Keyframe stills";
+  return sampleSteps ? `${base} · Sample steps` : `${base} · Steps from clip`;
+}
+
 export function stateChip(state: CoachStateId): string | null {
   switch (state) {
     case "awaiting_camera":

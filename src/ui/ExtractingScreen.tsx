@@ -52,7 +52,7 @@ export function ExtractingScreen() {
       key: `demo:${sampleId}`,
       sampleId,
       hasClip: false,
-      creatorName: sampleId === "bike-chain" ? "Sample maker (self-filmed)" : "Sample cook (self-filmed)",
+      creatorName: sampleId === "bike-chain" ? "Sample maker" : "Sample cook",
       licenceChoice: "self_filmed",
       domain: sampleId === "bike-chain" ? "non_cooking_diy" : "indian_recipe",
       title: sampleId === "bike-chain" ? "Sample · Bike chain wipe" : sampleId === "aloo-jeera" ? "Sample · Aloo jeera — onion prep" : "Sample · Masala chai",

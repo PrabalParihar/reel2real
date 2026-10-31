@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Camera, Clapperboard, ScanLine } from "lucide-react";
 import chaiSteps from "@/src/fixtures/sample-masala-chai.steps.json";
 import bikeSteps from "@/src/fixtures/sample-bike-chain.steps.json";
-import { GATE0_REPORT, SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
+import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
 import { Chip } from "./chrome";
 import { SparkMark } from "./mark";
 import { StillFrame } from "./StandScene";
@@ -37,18 +37,11 @@ export function Landing() {
         <div className="hero-copy">
           <p className="kicker">Phone stand · Upload · Coach</p>
           <h1>Upload a tutorial. Follow it with your camera.</h1>
-          <p className="lead">
-            Muse Spark turns your clip into checkable steps. SAM 3.1 watches 2–4 objects on keyframes.
-            Skip, out of order, and one safety rule are part of the coach. Glasses are optional. The phone sits on a stand.
-          </p>
+          <p className="lead">Muse Spark turns your clip into steps. SAM checks 2–4 objects on keyframes from a phone on a stand.</p>
           <div className="cta-row">
             <Link className="btn btn-primary" href="/upload">Try the coach <ArrowRight size={18} strokeWidth={1.5} /></Link>
             <a className="btn btn-ghost" href="#demos">Watch the demos</a>
           </div>
-          <p className="mono honesty">
-            {runtime.mock ? "Steps from transcript (Sample) · Mock · " : "Steps from clip · muse-spark-1.3 · "}
-            Keyframe mode · Meta Model API
-          </p>
         </div>
         <HeroStage mock={runtime.mock} />
       </header>
@@ -81,10 +74,7 @@ export function Landing() {
             <ScanLine strokeWidth={1.5} />
             <h3>Coach with SAM</h3>
             <p>SAM 3.1 checks 2–4 objects every 1–2 seconds on a keyframe. Advance, skip, out of order, one safety rule.</p>
-            <div className="mini-visual">
-              <span>Keyframe mode</span>
-              <span className="blob-row">ginger · pestle · cup</span>
-            </div>
+            <StillFrame kind="chai" />
           </article>
         </div>
       </section>
@@ -102,7 +92,7 @@ export function Landing() {
           <div className="credit-mock">
             <StillFrame kind="chai" />
             <p>{CHAI[1]}</p>
-            <p className="mono">Credit · Sample cook (self-filmed) · self-filmed</p>
+            <p>Credit · Sample cook · self-filmed</p>
           </div>
         </article>
       </section>
@@ -136,8 +126,7 @@ export function Landing() {
             </div>
           </article>
         </div>
-        <p className="mono footnote">Demo clips are Sample unless a permission letter exists. Placeholder art only. No creator footage is in this repo.</p>
-      </section>
+        </section>
 
       <section className="section wrap" id="meta">
         <p className="kicker">Models</p>
@@ -154,11 +143,7 @@ export function Landing() {
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>
-        <p className="note">Muse Image is not used. It is blocked in India under the Geographic Use Policy.</p>
-        <p className="mono footnote">
-          Gate 0 median time to first mask: {GATE0_REPORT.stillMedianMs} ms on a still, {GATE0_REPORT.chunkMedianMs} ms on a 2s chunk.
-          Verdict: {GATE0_REPORT.decision}, keyframe stills. Models actually called are listed in the app and the README.
-        </p>
+        <p className="quiet">Muse Image is not used.</p>
       </section>
 
       <section className="closing mesh">
@@ -173,7 +158,7 @@ export function Landing() {
 
       <footer className="footer wrap">
         <p>© Reel2Real · Indie · Meta Global AI Hackathon</p>
-        <p className="mono">Upload only · {SPARK_MODEL_ID} · {SAM_MODEL_ID} · Sample labels</p>
+        <p>Upload only. Self-filmed demos are labelled Sample.</p>
         <p className="footer-links">
           <a href="#how">How it works</a>
           <a href="#demos">Demos</a>
@@ -205,9 +190,7 @@ function HeroStage({ mock }: { mock: boolean }) {
       <div className="phone-ghost" />
       <div className="coach-mock">
         <div className="mock-top">
-          <Chip tone="wait">Keyframe mode</Chip>
-          {mock ? <Chip tone="mock">Mock</Chip> : <Chip>Steps from clip · muse-spark-1.3</Chip>}
-          <Chip>Sample</Chip>
+          <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
         </div>
         <div className={motion ? "mock-view is-loop" : "mock-view"} key={motion ? index : "still"}>
           <span className="blob blob-a"><i />ginger</span>
@@ -217,7 +200,7 @@ function HeroStage({ mock }: { mock: boolean }) {
         <article className="mock-card" key={CHAI[index]}>
           <p className="mock-kicker">Step {index + 1} of {CHAI.length} · Match</p>
           <h2>{CHAI[index]}</h2>
-          <p className="mono">Sample · self-filmed</p>
+          <p>Sample cook · self-filmed</p>
         </article>
       </div>
     </div>

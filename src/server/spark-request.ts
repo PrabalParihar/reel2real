@@ -23,7 +23,7 @@ export function chooseSparkMediaPlan(input: { durationSec?: number; byteLength: 
 type ContentPart =
   | { type: "input_text"; text: string }
   | { type: "input_video"; video_url: string }
-  | { type: "input_video"; file_id: string };
+  | { type: "input_file"; file_id: string };
 
 export function buildSparkResponsesBody(args: {
   instruction?: string;
@@ -35,7 +35,7 @@ export function buildSparkResponsesBody(args: {
   const instruction = args.instruction ?? SPARK_STEPS_INSTRUCTION;
   const content: ContentPart[] = [{ type: "input_text", text: instruction }];
   if (args.fileId) {
-    content.push({ type: "input_video", file_id: args.fileId });
+    content.push({ type: "input_file", file_id: args.fileId });
   } else if (args.videoBase64) {
     const mime = args.mimeType || "video/mp4";
     content.push({ type: "input_video", video_url: `data:${mime};base64,${args.videoBase64}` });

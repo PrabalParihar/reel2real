@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
 import type { LicenceChoice } from "@/src/schema/attribution";
 import { applyUserAttribution } from "@/src/schema/attribution";
-import { AppShell, Chip } from "./chrome";
+import { AppShell } from "./chrome";
+import { StillFrame } from "./StandScene";
 import { useSession } from "./session";
 import { readStepsCache, sha256Hex } from "./steps-cache";
 
 const SAMPLES = [
-  { id: "masala-chai", title: "Sample · Masala chai", domain: "indian_recipe" as const, creatorName: "Sample cook (self-filmed)" },
-  { id: "bike-chain", title: "Sample · Bike chain wipe", domain: "non_cooking_diy" as const, creatorName: "Sample maker (self-filmed)" },
+  { id: "masala-chai", title: "Sample · Masala chai", domain: "indian_recipe" as const, creatorName: "Sample cook", kind: "chai" as const },
+  { id: "bike-chain", title: "Sample · Bike chain wipe", domain: "non_cooking_diy" as const, creatorName: "Sample maker", kind: "bike" as const },
 ];
 
 export function UploadScreen() {
@@ -104,7 +105,7 @@ export function UploadScreen() {
   const ready = Boolean((file || sampleId) && licence && creatorName.trim());
 
   return (
-    <AppShell mock={session.runtime.mock}>
+    <AppShell backHref="/" mock={session.runtime.mock}>
       <main className="screen upload-screen">
         <div className="upload-grid">
           <section>
@@ -160,13 +161,12 @@ export function UploadScreen() {
               Transcript fallback
               <textarea className="field" rows={3} value={transcript} placeholder="Used only if no clip is sent." onChange={(event) => setTranscript(event.target.value)} />
             </label>
-            <div className="sample-pick">
-              <p className="mono">Or start from a Sample</p>
+            <div className="sample-grid">
               {SAMPLES.map((sample) => (
                 <button
                   key={sample.id}
                   type="button"
-                  className={sampleId === sample.id ? "sample-row is-on" : "sample-row"}
+                  className={sampleId === sample.id ? "sample-card is-on" : "sample-card"}
                   onClick={() => {
                     setSampleId(sample.id);
                     setFile(null);
@@ -175,8 +175,8 @@ export function UploadScreen() {
                     setDomain(sample.domain);
                   }}
                 >
-                  <Chip tone="neutral">Sample</Chip>
-                  {sample.title}
+                  <StillFrame kind={sample.kind} />
+                  <span>{sample.title}</span>
                 </button>
               ))}
             </div>
@@ -189,7 +189,7 @@ export function UploadScreen() {
           <aside className="panel tips">
             <h2>Framing</h2>
             <p>2–4 objects work best. Good light. Each tracked object stays fully inside the frame.</p>
-            <p>Gate 0 missed the cup because it sat outside the shot. If a noun is not masked, move it in before you continue.</p>
+            <p>If an object is not highlighted, move it fully into the frame before you continue.</p>
             <p className="mono">Credit and licence come from this form. Spark does not choose them.</p>
           </aside>
         </div>

@@ -34,6 +34,7 @@ export interface SessionSummary {
   steps: number;
   skips: number;
   safetyHits: number;
+  skippedStepIds: string[];
 }
 
 interface SessionValue {

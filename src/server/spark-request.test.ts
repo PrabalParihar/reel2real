@@ -30,7 +30,7 @@ describe("Spark request builder", () => {
     expect(chooseSparkMediaPlan({ durationSec: 10.1, byteLength: 1000 })).toBe("files_api");
     expect(chooseSparkMediaPlan({ durationSec: 4, byteLength: DATA_URL_MAX_BYTES + 1 })).toBe("files_api");
     const body = buildSparkResponsesBody({ fileId: "file_abc" });
-    expect(body.input[0].content[1]).toEqual({ type: "input_video", file_id: "file_abc" });
+    expect(body.input[0].content[1]).toEqual({ type: "input_file", file_id: "file_abc" });
     expect(JSON.stringify(body)).not.toContain("base64");
   });
 

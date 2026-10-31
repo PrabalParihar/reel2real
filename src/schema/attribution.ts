@@ -10,6 +10,18 @@ export interface UserAttribution {
   creditLink?: string;
 }
 
+export function licenceLabel(licence: string): string {
+  if (licence === "self_filmed_sample" || licence === "self_filmed") return "self-filmed";
+  if (licence === "written_permission" || licence === "permission_granted") return "permission granted";
+  return "cleared";
+}
+
+export function formatCredit(attribution: { creatorName: string; licence: string; creditLine?: string }): string {
+  const link = attribution.creditLine?.match(/https?:\/\/\S+/)?.[0];
+  const line = `Credit · ${attribution.creatorName} · ${licenceLabel(attribution.licence)}`;
+  return link ? `${line} · ${link}` : line;
+}
+
 export function creditLineFromUser(meta: UserAttribution): string {
   const name = meta.creatorName.trim();
   const link = meta.creditLink?.trim();

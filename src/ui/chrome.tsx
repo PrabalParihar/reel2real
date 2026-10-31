@@ -28,8 +28,7 @@ export function AppShell({
         {backHref ? <Link className="back" href={backHref}>Back</Link> : <span />}
         <Link href="/" className="wordmark"><SparkMark /> Reel2Real</Link>
         <span className="bar-end">
-          {mock ? <Chip tone="mock">Mock</Chip> : null}
-          <span className="model-chip">sam-3.1</span>
+          <Chip tone={mock ? "wait" : "match"}>{mock ? "Sample mode" : "Live"}</Chip>
         </span>
       </header>
       {children}

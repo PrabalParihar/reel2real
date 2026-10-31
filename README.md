@@ -24,7 +24,7 @@ Names only. Never commit values, and never print them.
 
 If neither model key is set, Spark and SAM use the mock clients. The UI shows a Mock chip. Sample tutorials stay labelled Sample.
 
-The real client calls `POST https://api.meta.ai/v1/responses` with `muse-spark-1.3` and `sam-3.1`. A clip of about 10 seconds or less is sent as a 2 second `input_video` data URL. A longer clip, or a payload over 8 MB, uses `POST https://api.meta.ai/v1/files` and then `file_id`. If both fail, the API returns an error and does not invent steps. A transcript is only the fallback when no clip is sent, and the chip reads `Steps from transcript (Sample)`. Muse Image is not used.
+The real client calls `POST https://api.meta.ai/v1/responses` with `muse-spark-1.3` and `sam-3.1`. A clip of about 10 seconds or less is sent as a 2 second `input_video` data URL. A longer clip, or a payload over 8 MB, is uploaded with `POST https://api.meta.ai/v1/files` (`purpose=user_data`) and referenced as an `input_file` `file_id`, which is the shape in the file-handling guide. If both fail, the API returns an error and does not invent steps. A transcript is only the fallback when no clip is sent. Muse Image is not used.
 
 `/api/spark` and `/api/segment` allow 20 requests per minute per IP. That limit is ours, not a Meta quota. The daily cap counts outbound Meta calls in process memory and answers 429 when it is spent. The UI then shows cached steps for that file, or a Sample tutorial, with a chip that says the cap was reached.
 

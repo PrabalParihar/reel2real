@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SAMPLE_CHAI } from "@/src/server/fixtures";
-import { honestyChip, missingObjectHint, stateChip } from "./ui";
+import { coachHonesty, honestyChip, missingObjectHint, stateChip } from "./ui";
 import { evaluateCheck } from "./evaluate";
 import { createCoach, transition } from "./machine";
 import { TIMEOUTS } from "./types";
@@ -86,6 +86,7 @@ describe("step fsm", () => {
 
   it("labels keyframe mode and the checking chip", () => {
     expect(honestyChip("keyframe_still")).toBe("Keyframe mode");
+    expect(coachHonesty("keyframe_still", false, true)).toBe("Keyframe stills · Sample steps");
     expect(honestyChip("chunk_video_1_2s")).toBe("Chunk mode");
     expect(stateChip("tracking")).toBe("Checking…");
     expect(stateChip("skip_detected")).toBe("Skip");
