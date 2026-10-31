@@ -1,0 +1,69 @@
+{
+  "demo": "origami",
+  "step": 2,
+  "keyframe": "public/samples/origami/step-2.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "origami",
+      "step": 2,
+      "objectId": "obj_heart",
+      "noun": "paper heart",
+      "image": "public/samples/origami/step-2.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 27617
+      },
+      "status": 200,
+      "ms": 653,
+      "requestId": "ddd9b238-bdf3-4e08-88ba-38248bb406ca",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "boxRaw": {
+            "kind": "box",
+            "order": 0,
+            "objectId": "0",
+            "left": 49,
+            "top": 272,
+            "right": 123,
+            "bottom": 337
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 74,
+            "height": 65,
+            "payloadLen": 64
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 65,
+            "width": 74,
+            "payload": "!!!!!TD]mrxG5aY[C)[8.RPGSX&*+Oy?og7ym@B63mtIl-'&[b?5'cNv?E%xf85%"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 49,
+            "y1": 272,
+            "x2": 123,
+            "y2": 337,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.06805555555555555,
+            "y": 0.671604938271605,
+            "w": 0.10277777777777777,
+            "h": 0.16049382716049382
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

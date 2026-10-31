@@ -138,12 +138,12 @@ describe("step fsm", () => {
   });
 
   it("tells the cook when an expected object is not highlighted", () => {
-    const step = SAMPLE_CHAI.steps[2];
-    const hint = missingObjectHint(step, { obj_spices: false });
-    expect(hint).toMatch(/spices/i);
+    const step = SAMPLE_CHAI.steps[0];
+    const hint = missingObjectHint(step, { obj_mortar: false, obj_pestle: true });
+    expect(hint).toMatch(/mortar/i);
     expect(hint).toMatch(/highlighted/i);
     expect(hint?.toLowerCase().includes("mask")).toBe(false);
-    expect(missingObjectHint(step, { obj_spices: true })).toBeNull();
+    expect(missingObjectHint(step, { obj_mortar: true, obj_pestle: true })).toBeNull();
     expect(missingObjectHint({ ...step, objects: [], successCheck: { ...step.successCheck, requiredObjectIds: [] } }, null)).toMatch(/No highlight/i);
     expect(stateChip("mask_lost")).toBe("Highlight lost");
     expect(coachStatusChip("tracking", true)).toBe("Manual, press Next");

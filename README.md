@@ -1,8 +1,12 @@
 # Reel2Real
 
-Phone-on-a-stand browser coach. Upload a short tutorial. Muse Spark turns the clip into steps once. SAM 3.1 checks 2–4 objects on keyframes. Credit and licence come from the form, not from the model.
+Reel2Real is a phone-on-a-stand browser coach. Upload a short tutorial you filmed. The app turns that clip into steps, then highlights the objects in each step while you follow along on camera.
+
+Five Sample demos are included so the coach can be shown from recorded output: masala chai, a kids science flask, origami, seed planting, and latte art. The landing hero stays on masala chai. Sample runs are labelled Sample. They are not a live camera call.
 
 ## Setup
+
+Node 22. `.nvmrc` is `22`. `package.json` `engines.node` is `>=22 <23`. Railpack reads `engines.node` before `.nvmrc`.
 
 ```bash
 npm install
@@ -28,11 +32,17 @@ Names only. Never commit values, and never print them.
 - `SAM_FORWARD_URL` (optional). Where that forward goes. See `docs/SAM-FORWARD.md`.
 - `SAM_FORWARD_SECRET` (optional shared secret). Never print it.
 
-Node 22 is pinned with `.nvmrc` (`22`) and `package.json` `engines.node` `>=22 <23`. Railpack reads `engines.node` before `.nvmrc`.
-
 If neither model key is set, Spark and SAM use the mock clients. The UI shows a Mock chip. Sample tutorials stay labelled Sample.
 
-The real client calls `POST https://api.meta.ai/v1/responses` with `muse-spark-1.3` and `sam-3.1`. SAM sends `stream: true`, `metadata.mask_encoding` `one_bit`, and `Accept: text/event-stream`, which is the still request in the [segmenting guide](https://dev.meta.ai/docs/sam/segmenting). A missing `META_API_BASE` stays on `https://api.meta.ai/v1`. A failed SAM call logs the upstream status and path only. If highlights never arrive, Next and Skip still move the step and the stage shows Highlights unavailable. A clip of about 10 seconds or less is sent as a 2 second `input_video` data URL. A longer clip, or a payload over 8 MB, is uploaded with `POST https://api.meta.ai/v1/files` (`purpose=user_data`) and referenced as an `input_file` `file_id`, which is the shape in the file-handling guide. If both fail, the API returns an error and does not invent steps. A transcript is only the fallback when no clip is sent. Muse Image is not used.
+## Architecture
+
+This is a Next.js app. The browser talks to same-origin routes. It does not call Meta directly.
+
+- `/api/spark` runs once, while steps are extracted.
+- `/api/segment` is the server route for live highlights. It sends the keyframe to Meta.
+- Live model calls go to `POST https://api.meta.ai/v1/responses`. SAM uses model id `sam-3.1`. Spark uses model id `muse-spark-1.3`.
+- Sample demos do not use those routes for their outlines. Each demo is a folder of stills plus recorded SAM output under `public/samples/<slug>/`. The label on those outlines is `Sample · recorded SAM output`.
+- If a live highlight never arrives, Next and Skip still move the step and the stage shows Highlights unavailable. The app does not invent a box.
 
 `/api/spark` and `/api/segment` allow 20 requests per minute per IP. That limit is ours, not a Meta quota. The daily cap counts outbound Meta calls in process memory and answers 429 when it is spent. The UI then shows cached steps for that file, or a Sample tutorial, with a chip that says the cap was reached.
 
@@ -40,14 +50,35 @@ The real client calls `POST https://api.meta.ai/v1/responses` with `muse-spark-1
 
 ## Models
 
-| Model | Id | When |
+| Model | Id | How it is used |
 | --- | --- | --- |
-| Muse Spark | `muse-spark-1.3` | Once, while extracting steps |
-| SAM 3.1 | `sam-3.1` | Every 1–2s keyframe in the coach |
+| Muse Spark | `muse-spark-1.3` | Once, while extracting steps from a clip you upload |
+| SAM 3.1 | `sam-3.1` | Live coach keyframes, about every 1 to 2 seconds, for 2 to 4 objects. Sample demos replay masks recorded from this model |
 
-Gate 0 (reported, not re-run here): median time to first box 922 ms on a still and 2213 ms on a 2s chunk. 2213 ms is over the 2000 ms live threshold, so the default is **Keyframe mode**. Chunk tracking is optional. Above 5000 ms, or a timeout, the fallback is stills-only. Flip `runtimeHints.preferredLiveMode` to `stills_only` and the coach shows **Stills mode · Sample**. Same steps schema either way.
+Muse Image is not used.
 
-A verified 2 second Spark clip took about 16.7 seconds median (3 runs, HTTP 200, schema-valid, 3 steps). Text-only Spark was reported around 6–9 seconds. `/extracting` shows the stages that actually happen and the elapsed time for this run. It does not draw a percentage. The same clip hash (SHA-256 of the file bytes) is cached in this browser, and a replay shows a Cached chip.
+The real client calls `POST https://api.meta.ai/v1/responses`. SAM sends `stream: true`, `metadata.mask_encoding` `one_bit`, and `Accept: text/event-stream`, which is the still request in the [segmenting guide](https://dev.meta.ai/docs/sam/segmenting). A missing `META_API_BASE` stays on `https://api.meta.ai/v1`. A failed SAM call logs the upstream status and path only. A clip of about 10 seconds or less is sent as a 2 second `input_video` data URL. A longer clip, or a payload over 8 MB, is uploaded with `POST https://api.meta.ai/v1/files` (`purpose=user_data`) and referenced as an `input_file` `file_id`. If both fail, the API returns an error and does not invent steps. A transcript is only the fallback when no clip is sent.
+
+Gate 0 (reported, not re-run here): median time to first box 922 ms on a still and 2213 ms on a 2 second chunk. 2213 ms is over the 2000 ms live threshold, so the default is **Keyframe mode**. Chunk tracking is optional. Above 5000 ms, or a timeout, the fallback is stills-only. Flip `runtimeHints.preferredLiveMode` to `stills_only` and the coach shows **Stills mode · Sample**. Same steps schema either way.
+
+A verified 2 second Spark clip took about 16.7 seconds median (3 runs, HTTP 200, schema-valid, 3 steps). Text-only Spark was reported around 6 to 9 seconds. `/extracting` shows the stages that actually happen and the elapsed time for this run. It does not draw a percentage. The same clip hash (SHA-256 of the file bytes) is cached in this browser, and a replay shows a Cached chip.
+
+## Add a demo
+
+Demos are data. Screens read `DEMOS` in `src/samples/demos.ts`.
+
+1. Put the reel in `public/samples/<slug>/` (`hero-loop.mp4`, `hero.jpg`, `step-N.jpg`, `steps.json`, `sam/step-N.json`). Keep `meta.json` out of `public/`. The drop-in folder is `build/<slug>/`.
+2. Run `npx tsx scripts/sync-sample-boxes.ts` so the fit uses the recorded boxes.
+3. Add one `defineDemo` entry: slug, domain, scene, credit (creator, source URL, licence, licence link), and `safetyNote` when the demo needs one.
+4. Add the creator to `public/samples/CREDITS.md`.
+
+`fitDemo` picks the narrowest of 4:5, 1:1, and 5:4 that holds every step with a 4% margin. Grid cards stay 4:5. An outline is drawn on a card only when every box fits. Otherwise the card shows the cover and a tag row. Details are in `docs/ADD-A-DEMO.md`.
+
+The flask-colour demo is kids science. Its steps name only what you can see. The card and the coach show Grown-up supervision. Do not add chemical names to that demo.
+
+## Sample demos
+
+Published order: masala-chai, flask-colour, origami, seed-planting, latte-art. Filming notes are in `docs/demo-script.md`. A draft submission write-up is in `docs/SUBMISSION-DRAFT.md`. That file is a draft. Do not submit it from this repo.
 
 ## Railway
 
@@ -63,6 +94,8 @@ Docs used: [Next.js Node.js server deployment](https://nextjs.org/docs/app/build
 npm test
 ```
 
+Tests do not call Meta.
+
 ## Gate 0 harness
 
 Pass a local clip. The harness does not print the API key. With no key it uses the mock client and labels the decision `unverified_mock`.
@@ -71,12 +104,8 @@ Pass a local clip. The harness does not print the API key. With no key it uses t
 npm run gate0 -- clips/your-clip.mp4
 ```
 
-`clips/` is gitignored. Do not commit video or audio.
+`clips/` is gitignored. Do not commit video or audio outside `public/samples/` and `build/`.
 
-## Sample data
+## Safety
 
-Published Sample steps, keyframes, and recorded SAM masks live in `public/samples/`. Titles and nouns come from each demo's `steps.json`. Filming notes are in `docs/demo-script.md`. The coach shows a hint when an expected object is not highlighted. A step with no recorded hit shows that honestly and does not invent a box.
-
-## Safety rule
-
-On the aloo jeera knife-down step, a knife that is not required for the step raises `safety_halt`. Next stays disabled until Retry. The published chai sample does not claim a cup, ginger, or cardamom.
+On the aloo jeera knife-down step, a knife that is not required for the step raises `safety_halt`. Next stays disabled until Retry. The published chai sample does not claim a cup, ginger, or cardamom. flask-colour shows Grown-up supervision and does not name a chemical.

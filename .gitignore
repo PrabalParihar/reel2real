@@ -8,6 +8,9 @@ placeholders/
 !public/samples/
 !public/samples/**
 !public/samples/**/*.mp4
+!build/
+!build/**
+!build/**/*.mp4
 !src/samples/
 !src/samples/**
 *.m4v

@@ -1,0 +1,66 @@
+{
+  "demo": "latte-art",
+  "step": 2,
+  "keyframe": "public/samples/latte-art/step-2.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "latte-art",
+      "step": 2,
+      "objectId": "obj_cup",
+      "noun": "cup",
+      "image": "public/samples/latte-art/step-2.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 26586
+      },
+      "status": 200,
+      "ms": 5904,
+      "requestId": "5aa4009f-4637-4249-bb06-40d943b36ced",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 311,
+            "y1": 130,
+            "x2": 572,
+            "y2": 403,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.43194444444444446,
+            "y": 0.32098765432098764,
+            "w": 0.3625,
+            "h": 0.674074074074074
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 261,
+            "height": 273,
+            "payloadLen": 415
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 273,
+            "width": 261,
+            "payload": "!!!!%oBG=w7%XF!rRI4K9BsPxN_Z.d]eI*Em3KhYVF*q+Tm#0RMtSJL$3))ykeJsIcZt/:N6xIvh:/58LaJO+K[RHF=f@T#dg[yq&cwtLjABD%dLe3t9oWtk_(9BT.e/CaJ&(fznnl87vl*+fJht{u%p%c=w$Uba5..k@9NPl{*[])jDhrFMU_MZNJj/{ZgvGh+rk9fmjtj(zW+.Q$fQ]Pvh!JVNfOE#LbsD^{9[VMV{rx$Bk5z)s)nTrSwV.ZT0?vm..RChc#_l#BUmn=1{XX#fw7=sY&3@BjksWXTt1`X&bgy3%c_@g=]Q3]FY_H/+o`.za2FrpqXSfSzpOj#'p45R+pW'0&1wLgbcrkX@luBX$*Me{`8Opw(OIU[wbmtg:c%q!0^jPSmeK8nODW!Z+Eh:[i%R$&*"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 311,
+            "top": 130,
+            "right": 572,
+            "bottom": 403
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

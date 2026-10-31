@@ -69,6 +69,94 @@ describe("mask to path", () => {
     expect(draw.d).not.toMatch(/rect/i);
   });
 
+  it("draws the recorded instance named by maskOrdinal and hides an unverified box", () => {
+    const noun = {
+      objectId: "obj_paper",
+      noun: "paper",
+      samPrompt: "paper",
+      color: "#E88C30",
+      present: true,
+      verified: true,
+      requestId: "req",
+      maskOrdinal: "6",
+    };
+    const calls = [{
+      requestId: "req",
+      noun: "paper",
+      present: true,
+      records: [
+        { ordinal: "0", box: { x1: 1, y1: 1, x2: 4, y2: 4, frameW: 720, frameH: 405 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } },
+        { ordinal: "6", box: { x1: 10, y1: 10, x2: 20, y2: 20, frameW: 720, frameH: 405 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } },
+      ],
+    }];
+    expect(selectMaskRecord(calls, noun)?.record.ordinal).toBe("6");
+    const unverified = { ...noun, maskOrdinal: undefined, verified: false as const };
+    expect(selectMaskRecord([{
+      requestId: "req",
+      present: true,
+      records: [{ ordinal: "0", boxRecovered: true, box: { x1: 1, y1: 1, x2: 4, y2: 4 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } }],
+    }], unverified)).toBeNull();
+    const matched = { ...noun, maskOrdinal: undefined, verified: true as const };
+    expect(selectMaskRecord([{
+      requestId: "req",
+      present: true,
+      records: [{ ordinal: "0", boxRecovered: true, box: { x1: 1, y1: 1, x2: 4, y2: 4, frameW: 720, frameH: 405 }, maskPayload: { encoding: "one_bit" as const, width: 2, height: 2, payload: "xx" } }],
+    }], matched)?.box).toEqual({ x1: 1, y1: 1, x2: 4, y2: 4, frameW: 720, frameH: 405 });
+  });
+
+  it("uses origami paper instance 6 and leaves unverified latte cups blank", () => {
+    const origami = SAMPLE_SCENES.find((scene) => scene.demo === "origami");
+    const paper = origami!.steps[0].nouns.find((noun) => noun.noun === "paper");
+    const paperFile = loadSam("origami", origami!.steps[0].samFile);
+    expect(selectMaskRecord(paperFile.calls, paper!)?.record.ordinal).toBe("6");
+    const crane = origami!.steps[2].nouns[0];
+    const craneFile = loadSam("origami", origami!.steps[2].samFile);
+    expect(crane.verified).toBe(false);
+    expect(selectMaskRecord(craneFile.calls, crane)).toBeNull();
+    const latte = SAMPLE_SCENES.find((scene) => scene.demo === "latte-art");
+    for (const index of [0, 2]) {
+      const cup = latte!.steps[index].nouns[0];
+      const file = loadSam("latte-art", latte!.steps[index].samFile);
+      expect(cup.verified).toBe(false);
+      expect(selectMaskRecord(file.calls, cup)).toBeNull();
+    }
+    const flask = SAMPLE_SCENES.find((scene) => scene.demo === "flask-colour");
+    const bottleOnTable = [
+      { step: 0, ordinal: "2", box: { x1: 391, y1: 235, x2: 472, y2: 405 } },
+      { step: 1, ordinal: "3", box: { x1: 391, y1: 235, x2: 472, y2: 405 } },
+    ];
+    for (const expected of bottleOnTable) {
+      const step = flask!.steps[expected.step];
+      const noun = step.nouns.find((item) => item.noun === "bottle");
+      const file = loadSam("flask-colour", step.samFile);
+      const selected = selectMaskRecord(file.calls, noun!);
+      expect(selected?.record.ordinal).toBe(expected.ordinal);
+      expect(selected?.record.verified).toBe(true);
+      expect(selected?.box.x1).toBe(expected.box.x1);
+      expect(selected?.box.y1).toBe(expected.box.y1);
+      expect(selected?.box.x2).toBe(expected.box.x2);
+      expect(selected?.box.y2).toBe(expected.box.y2);
+      const call = file.calls?.find((item) => item.noun === "bottle");
+      for (const record of call?.records ?? []) {
+        expect(record.verified).toBe(String(record.ordinal) === expected.ordinal);
+      }
+    }
+    expect(flask!.steps[2].nouns.some((noun) => noun.noun === "bottle")).toBe(false);
+
+    const verifiedCup = latte!.steps[1].nouns[0];
+    const step2 = loadSam("latte-art", latte!.steps[1].samFile);
+    expect(selectMaskRecord(step2.calls, verifiedCup)?.box.x1).toBeGreaterThan(200);
+  });
+
+  it("does not invent a mask when the sam file is empty", () => {
+    const scene = SAMPLE_SCENES[0];
+    const noun = scene.steps[0].nouns[0];
+    expect(selectMaskRecord([], noun)).toBeNull();
+    expect(selectMaskRecord(undefined, noun)).toBeNull();
+    expect(selectMaskRecord([{ noun: noun.noun, present: true, records: [] }], noun)).toBeNull();
+    expect(selectMaskRecord([{ noun: noun.noun, present: true, records: [{ box: { x1: 1, y1: 1, x2: 4, y2: 4 } }] }], noun)).toBeNull();
+  });
+
   it("ignores a recorded miss when the noun is marked absent", () => {
     const scene = SAMPLE_SCENES[0];
     const noun = { ...scene.steps[0].nouns[0], present: false };
@@ -152,7 +240,7 @@ describe("scene tutorials", () => {
       expect(tutorial.sourceClip.localUri?.startsWith("http")).toBe(false);
       scene.steps.forEach((step, index) => {
         expect(tutorial.steps[index].objects.map((object) => object.samPrompt)).toEqual(
-          step.nouns.filter((noun) => noun.present).map((noun) => noun.samPrompt),
+          step.nouns.filter((noun) => noun.present && noun.verified !== false).map((noun) => noun.samPrompt),
         );
       });
     }

@@ -1,0 +1,346 @@
+{
+  "title": "Plant seeds in a tray",
+  "slug": "seed-planting",
+  "domain": "gardening",
+  "steps": [
+    {
+      "title": "Poke cells in the seed tray",
+      "instruction": "With gloves on, poke a hole in a soil cell of the seed tray. Keep the tray and gloves fully in frame.",
+      "nouns": [
+        "gloves",
+        "tray"
+      ],
+      "samPrompts": [
+        "gloves",
+        "seed tray"
+      ],
+      "keepFullyInFrame": [
+        "gloves",
+        "tray"
+      ]
+    },
+    {
+      "title": "Work across the tray beside the pot",
+      "instruction": "Move along the tray with gloves on while a small pot stays in view. Keep the pot and gloves fully in frame.",
+      "nouns": [
+        "pot",
+        "gloves"
+      ],
+      "samPrompts": [
+        "pot",
+        "gloves"
+      ],
+      "keepFullyInFrame": [
+        "pot",
+        "gloves"
+      ]
+    },
+    {
+      "title": "Finish with the jar in view",
+      "instruction": "Finish the row with gloves on and the glass jar of seeds visible. Keep the jar and gloves fully in frame.",
+      "nouns": [
+        "jar",
+        "gloves"
+      ],
+      "samPrompts": [
+        "glass jar",
+        "gloves"
+      ],
+      "keepFullyInFrame": [
+        "jar",
+        "gloves"
+      ]
+    }
+  ],
+  "segment": {
+    "source": "pexels-planting.mp4",
+    "startSec": 6.0,
+    "endSec": 14.0,
+    "durationSec": 8.0,
+    "stepTimestampsSec": [
+      7.0,
+      10.0,
+      13.0
+    ]
+  },
+  "shape": {
+    "id": "5:4",
+    "aspect": 1.25,
+    "forcedByStep": 2,
+    "margins": [
+      {
+        "minClearancePx": 22.0,
+        "requiredPadPx": 16.2,
+        "ok": true
+      },
+      {
+        "minClearancePx": 15.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      },
+      {
+        "minClearancePx": 0.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      }
+    ],
+    "requiredAspects": [
+      1.0971605330705643,
+      0.8107407540082932,
+      1.1324691772460938
+    ],
+    "stepCrops": [
+      {
+        "position": {
+          "x": 0.4251461988304094,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.7385964912280701,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 1.0,
+          "y": 0.5
+        },
+        "zoom": 1
+      }
+    ],
+    "fitBoxes": [
+      [
+        {
+          "x1": 260,
+          "y1": 90,
+          "x2": 378,
+          "y2": 208
+        },
+        {
+          "x1": 322,
+          "y1": 22,
+          "x2": 443,
+          "y2": 92
+        },
+        {
+          "x1": 138,
+          "y1": 127,
+          "x2": 550,
+          "y2": 303
+        }
+      ],
+      [
+        {
+          "x1": 458,
+          "y1": 264,
+          "x2": 559,
+          "y2": 323
+        },
+        {
+          "x1": 263,
+          "y1": 103,
+          "x2": 379,
+          "y2": 226
+        },
+        {
+          "x1": 312,
+          "y1": 15,
+          "x2": 433,
+          "y2": 85
+        }
+      ],
+      [
+        {
+          "x1": 665,
+          "y1": 297,
+          "x2": 720,
+          "y2": 392
+        },
+        {
+          "x1": 277,
+          "y1": 98,
+          "x2": 378,
+          "y2": 237
+        },
+        {
+          "x1": 322,
+          "y1": 14,
+          "x2": 443,
+          "y2": 84
+        }
+      ]
+    ]
+  },
+  "credit": {
+    "creator": "Tima Miroshnichenko",
+    "sourceUrl": "https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/",
+    "licenseName": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/"
+  },
+  "safetyNote": null,
+  "sam": {
+    "label": "Sample \u00b7 recorded SAM output",
+    "batch2Used": 10,
+    "batch2Max": 10,
+    "allHits": [
+      {
+        "n": 13,
+        "step": 1,
+        "noun": "tray",
+        "present": false,
+        "requestId": "d727ea03-533e-4eab-b0f1-c5b2c4b1d6cc",
+        "batch": 1
+      },
+      {
+        "n": 14,
+        "step": 1,
+        "noun": "gloves",
+        "present": true,
+        "requestId": "0c215f43-aeaa-4d2f-899e-215eb9d19624",
+        "batch": 1
+      },
+      {
+        "n": 15,
+        "step": 2,
+        "noun": "pot",
+        "present": true,
+        "requestId": "54978711-dd33-4ec8-8cd5-7fe081230ac0",
+        "batch": 1
+      },
+      {
+        "n": 19,
+        "step": 3,
+        "noun": "glass jar",
+        "present": true,
+        "requestId": "4d2a3dd9-0d46-4285-bc08-d586f47f68c7",
+        "batch": 2
+      },
+      {
+        "n": 23,
+        "step": 1,
+        "noun": "seed tray",
+        "present": true,
+        "requestId": "544f9274-fa2c-441d-8b08-980137e54437",
+        "batch": 2
+      },
+      {
+        "n": 24,
+        "step": 2,
+        "noun": "gloves",
+        "present": true,
+        "requestId": "6e91e4cc-97e2-47d4-9548-40af88ba4be7",
+        "batch": 2
+      },
+      {
+        "n": 27,
+        "step": 3,
+        "noun": "gloves",
+        "present": true,
+        "requestId": "940de15b-d5db-4eeb-bd3e-0f684335b19c",
+        "batch": 2
+      }
+    ],
+    "batch2Calls": [
+      {
+        "n": 19,
+        "batch2": 1,
+        "demo": "seed-planting",
+        "step": 3,
+        "noun": "glass jar",
+        "objectId": "obj_jar",
+        "image": "seed-planting_step-3.jpg",
+        "status": 200,
+        "ms": 1579,
+        "requestId": "4d2a3dd9-0d46-4285-bc08-d586f47f68c7",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 1,
+        "boxCount": 1,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 23,
+        "batch2": 5,
+        "demo": "seed-planting",
+        "step": 1,
+        "noun": "seed tray",
+        "objectId": "obj_tray",
+        "image": "seed-planting_step-1.jpg",
+        "status": 200,
+        "ms": 1874,
+        "requestId": "544f9274-fa2c-441d-8b08-980137e54437",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 1,
+        "boxCount": 1,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 24,
+        "batch2": 6,
+        "demo": "seed-planting",
+        "step": 2,
+        "noun": "gloves",
+        "objectId": "obj_gloves",
+        "image": "seed-planting_step-2.jpg",
+        "status": 200,
+        "ms": 1117,
+        "requestId": "6e91e4cc-97e2-47d4-9548-40af88ba4be7",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 2,
+        "boxCount": 2,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 27,
+        "batch2": 9,
+        "demo": "seed-planting",
+        "step": 3,
+        "noun": "gloves",
+        "objectId": "obj_gloves",
+        "image": "seed-planting_step-3.jpg",
+        "status": 200,
+        "ms": 1254,
+        "requestId": "940de15b-d5db-4eeb-bd3e-0f684335b19c",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 2,
+        "boxCount": 2,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      }
+    ]
+  },
+  "files": {
+    "heroLoop": "hero-loop.mp4",
+    "hero": "hero.jpg",
+    "steps": [
+      "step-1.jpg",
+      "step-2.jpg",
+      "step-3.jpg"
+    ],
+    "sam": [
+      "sam/step-1.json",
+      "sam/step-2.json",
+      "sam/step-3.json"
+    ],
+    "stepsJson": "steps.json"
+  },
+  "gaps": []
+}

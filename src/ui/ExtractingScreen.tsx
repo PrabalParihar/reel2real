@@ -23,7 +23,9 @@ async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: Tuto
       return { tutorial: applyUserAttribution(cached.tutorial, meta), toolCalls: cached.toolCalls, source: "cap_cache" };
     }
   }
-  const raw = PUBLISHED_SAMPLES.find((item) => item.domain === prepare.domain)?.tutorial ?? PUBLISHED_SAMPLES[0].tutorial;
+  const raw = PUBLISHED_SAMPLES.find((item) => item.id === prepare.sampleId)?.tutorial
+    ?? PUBLISHED_SAMPLES.find((item) => item.domain === prepare.domain)?.tutorial
+    ?? PUBLISHED_SAMPLES[0].tutorial;
   const validated = validateTutorialSteps(raw);
   if (!validated.ok) return null;
   return { tutorial: applyUserAttribution(validated.value, meta), toolCalls: [], source: "cap_sample" };
@@ -155,7 +157,7 @@ export function ExtractingScreen() {
           <p className="quiet">
             {session.runtime.mock
               ? "Mock client. This is not a live Spark call."
-              : "A clip often takes 15–20 seconds. This clock is this run."}
+              : "A clip often takes 15 to 20 seconds. This clock is this run."}
           </p>
         </section>
         <section>

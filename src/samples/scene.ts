@@ -1,7 +1,20 @@
 import type { TutorialSteps } from "@/src/schema/types";
-import chaiSceneJson from "../../public/samples/masala-chai/steps.json";
+import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
+
+export function unverifiedStep(nouns: SceneNoun[] | undefined): boolean {
+  const present = (nouns ?? []).filter((noun) => noun.present !== false && noun.noun.trim());
+  return present.length > 0 && present.every((noun) => noun.verified === false);
+}
+
+/** Plain hint for a step whose masks are not verified. No Sample chip and no highlight wording. */
+export function unverifiedStepHint(nouns: SceneNoun[] | undefined): string {
+  const names = (nouns ?? []).filter((noun) => noun.present !== false && noun.verified === false).map((noun) => noun.noun);
+  if (names.length === 1) return `Keep the ${names[0]} fully in frame`;
+  if (names.length > 1) return `Keep the ${names.join(" and ")} fully in frame`;
+  return "Keep the cup fully in frame";
+}
 export const SAM_FRAME = { width: 720, height: 405 } as const;
 
 export interface SceneNoun {
@@ -11,6 +24,10 @@ export interface SceneNoun {
   color: string;
   present: boolean;
   requestId?: string;
+  /** Which recorded instance to draw. Origami paper uses 6, the sheet being folded. */
+  maskOrdinal?: string;
+  /** False when the recorded box is unverified, for example a failed boxRecovered. */
+  verified?: boolean;
 }
 
 export interface SceneStep {
@@ -31,7 +48,7 @@ export interface SampleScene {
   label: string;
   sourceClip: {
     file: string;
-    pexelsId: string;
+    pexelsId?: string;
     page: string;
     author: string;
     license: string;
@@ -66,8 +83,17 @@ export interface SamMaskPayload {
 }
 
 export interface SamRecord {
+  ordinal?: string | number;
   box?: SamBox;
   maskPayload?: SamMaskPayload;
+  /**
+   * The box was rebuilt after the original bounds were dropped.
+   * Some rebuilt boxes still sit on the object (seed gloves).
+   * A step sets noun.verified false when the rebuilt box is the wrong object.
+   */
+  boxRecovered?: boolean;
+  /** False when this instance was checked and does not sit on the noun. */
+  verified?: boolean;
 }
 
 export interface SamCall {
@@ -84,17 +110,16 @@ export interface SamStepFile {
   calls?: SamCall[];
 }
 
-const DOMAIN_BY_DEMO: Record<string, NonNullable<TutorialSteps["domain"]>> = {
-  "masala-chai": "indian_recipe",
-};
-
-export const SAMPLE_SCENES: SampleScene[] = [
-  chaiSceneJson as SampleScene,
-];
+export const SAMPLE_SCENES: SampleScene[] = DEMOS.map((demo) => demo.scene);
 
 export function sceneByDemo(id: string | null | undefined): SampleScene | undefined {
   if (!id) return undefined;
   return SAMPLE_SCENES.find((scene) => scene.demo === id);
+}
+
+/** Still SAM actually saw for this step. Outlines must sit on this file, not a moving loop. */
+export function recordedFrameFile(scene: SampleScene, stepIndex: number): string {
+  return scene.steps[stepIndex]?.keyframe ?? scene.hero.image;
 }
 
 export function sceneAsset(scene: SampleScene, file: string): string {
@@ -133,14 +158,17 @@ export function heroSamFile(scene: SampleScene): string | undefined {
 export function creditLineForScene(scene: SampleScene): string {
   const author = scene.sourceClip.author.trim();
   const page = scene.sourceClip.page.trim();
-  return page ? `${author} · Pexels License · ${page}` : `${author} · Pexels License`;
+  const license = scene.sourceClip.license.trim() || "Pexels License";
+  return page ? `${author} · ${license} · ${page}` : `${author} · ${license}`;
 }
 
 /** Build the coach tutorial from a demo's public steps.json. Swapping that file is enough. */
-export function tutorialFromScene(scene: SampleScene): TutorialSteps {
+export function tutorialFromScene(
+  scene: SampleScene,
+  domain: NonNullable<TutorialSteps["domain"]> = DEMOS.find((demo) => demo.slug === scene.demo)?.domain ?? "other",
+): TutorialSteps {
   const span = 10;
   const durationSec = Math.max(scene.steps.length * span, span);
-  const domain = DOMAIN_BY_DEMO[scene.demo] ?? "other";
   const creditLine = creditLineForScene(scene);
   const creatorName = scene.sourceClip.author.trim() || "Sample";
   return {
@@ -178,7 +206,7 @@ export function tutorialFromScene(scene: SampleScene): TutorialSteps {
       maxObjectsPerStep: 4,
     },
     steps: scene.steps.map((step, index) => {
-      const nouns = presentNouns(step);
+      const nouns = presentNouns(step).filter((noun) => noun.verified !== false);
       const objects = nouns.map((noun) => ({
         objectId: noun.objectId,
         noun: noun.noun,
@@ -253,7 +281,7 @@ export function selectMaskRecord(calls: SamCall[] | undefined, noun: SceneNoun):
   box: NonNullable<ReturnType<typeof placementBox>>;
   mask: SamMaskPayload;
 } | null {
-  if (!noun.present) return null;
+  if (!noun.present || noun.verified !== true) return null;
   const list = calls ?? [];
   const ranked = [
     ...list.filter((call) => noun.requestId && call.requestId === noun.requestId),
@@ -265,6 +293,8 @@ export function selectMaskRecord(calls: SamCall[] | undefined, noun: SceneNoun):
     seen.add(call);
     if (call.present === false) continue;
     for (const record of call.records ?? []) {
+      if (record.verified === false) continue;
+      if (noun.maskOrdinal != null && String(record.ordinal) !== String(noun.maskOrdinal)) continue;
       const mask = record.maskPayload;
       if (!mask?.payload || !mask.width || !mask.height) continue;
       const box = placementBox(record, call);

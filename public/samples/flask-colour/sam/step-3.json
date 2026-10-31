@@ -1,0 +1,197 @@
+{
+  "demo": "flask-colour",
+  "step": 3,
+  "keyframe": "public/samples/flask-colour/step-3.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "flask-colour",
+      "step": 3,
+      "objectId": "obj_rod",
+      "noun": "stirring rod",
+      "image": "public/samples/flask-colour/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 23242
+      },
+      "status": 200,
+      "ms": 1297,
+      "requestId": "dfc45833-29c0-4db3-b541-6b3a7bd0b3c2",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "boxRaw": {
+            "kind": "box",
+            "order": 0,
+            "objectId": "0",
+            "left": 377,
+            "top": 248,
+            "right": 576,
+            "bottom": 363
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 199,
+            "height": 115,
+            "payloadLen": 83
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 115,
+            "width": 199,
+            "payload": "!!!!!dNP2D?)J-Iw5+GdH:3rcl6/aQhCQ-Y[kLu1Jl$%dNAQtHSIdrUi9+auzl$*-9'TxDe_&5DR(#ZRx!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 377,
+            "y1": 248,
+            "x2": 576,
+            "y2": 363,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5236111111111111,
+            "y": 0.6123456790123457,
+            "w": 0.2763888888888889,
+            "h": 0.2839506172839506
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    },
+    {
+      "demo": "flask-colour",
+      "step": 3,
+      "objectId": "obj_flask",
+      "noun": "flask",
+      "image": "public/samples/flask-colour/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 23242
+      },
+      "status": 200,
+      "ms": 1379,
+      "requestId": "3e963e25-6b53-4155-950a-059ab4a00058",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "box": {
+            "x1": 235,
+            "y1": 76,
+            "x2": 392,
+            "y2": 371,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.3263888888888889,
+            "y": 0.18765432098765433,
+            "w": 0.21805555555555556,
+            "h": 0.7283950617283951
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 157,
+            "height": 295,
+            "payloadLen": 150
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 295,
+            "width": 157,
+            "payload": "!!!!#DCH:uNOEkK.L%2d)uwUR_0&VUl4EnFI^S_Kn)AB-.xvqkltS/aN:Re=W0E1[m]:Z+m/l-&H9hY66fC.Onx3G(vuo.M:Dk@88cgr*':C[V=A^jp*)-w/J!3CkpOv5r8i)+%%USNP@9vhBfl!_U"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 235,
+            "top": 76,
+            "right": 392,
+            "bottom": 371
+          }
+        },
+        {
+          "ordinal": "1",
+          "box": {
+            "x1": 441,
+            "y1": 311,
+            "x2": 532,
+            "y2": 405,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.6125,
+            "y": 0.7679012345679013,
+            "w": 0.12638888888888888,
+            "h": 0.23209876543209876
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 91,
+            "height": 94,
+            "payloadLen": 65
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 94,
+            "width": 91,
+            "payload": "!!!!!UE9cAX-vvBD(RmJ/GQL51?V999#0RPEs3/1$_8Ma&`HD-r=E(iQe.PzOP(2("
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 441,
+            "top": 311,
+            "right": 532,
+            "bottom": 405
+          }
+        },
+        {
+          "ordinal": "2",
+          "box": {
+            "x1": 391,
+            "y1": 235,
+            "x2": 471,
+            "y2": 405,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.5430555555555555,
+            "y": 0.5802469135802469,
+            "w": 0.1111111111111111,
+            "h": 0.41975308641975306
+          },
+          "mask": {
+            "encoding": "one_bit",
+            "width": 80,
+            "height": 170,
+            "payloadLen": 100
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 170,
+            "width": 80,
+            "payload": "!!!!!rE-gdAf5K`.iGo9Htg.MREjo@MJ4NAT.rAm_=*LEKoQp=P]C2g'Depc{.Bx%(06/fCy!+xElLf3a3INf484VAimETbLgll-"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "bounds": {
+            "left": 391,
+            "top": 235,
+            "right": 471,
+            "bottom": 405
+          }
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

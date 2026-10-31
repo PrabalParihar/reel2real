@@ -1,0 +1,62 @@
+{
+  "demo": "latte-art",
+  "step": 3,
+  "keyframe": "public/samples/latte-art/step-3.jpg",
+  "label": "Sample \u00b7 recorded SAM output",
+  "calls": [
+    {
+      "demo": "latte-art",
+      "step": 3,
+      "objectId": "obj_cup",
+      "noun": "cup",
+      "image": "public/samples/latte-art/step-3.jpg",
+      "samImageSize": {
+        "w": 720,
+        "h": 405,
+        "bytes": 27695
+      },
+      "status": 200,
+      "ms": 1012,
+      "requestId": "843ab4e9-586e-47c3-b0e2-5e1f7eee58ed",
+      "route": "model-api-rust",
+      "present": true,
+      "records": [
+        {
+          "ordinal": "0",
+          "mask": {
+            "encoding": "one_bit",
+            "width": 249,
+            "height": 234,
+            "payloadLen": 264
+          },
+          "maskPayload": {
+            "encoding": "one_bit",
+            "height": 234,
+            "width": 249,
+            "payload": "!!!!$JBHfbq6VR*u1J:!smg4qEO#6(dWJ=EKR`@7BJ]dRH6mI%X2z)iwiD1@I*j%S&HN_y/sa]UCxR-:AI(dV&.r&6P'Jms'*&s1W/N^+?sp1*Vf'(5ijj)b)27bfO)9)=BT4B$w8![FV:d/a:dx9Q.m6uUIr4Z=G[P-Es%ONN^%LU0GX+B=n[QMT%2iuBcwA:LHcX5^1-c`g#5JaU2B^T2sgs.wKgUzv2Auf5zp$%Ln?wV[8hid#Y`t6K[#8-br$2MYC!!!"
+          },
+          "maskDecoded": true,
+          "decodeNote": "decodeMaskToRaster ok",
+          "box": {
+            "x1": 120,
+            "y1": 166,
+            "x2": 369,
+            "y2": 400,
+            "frameW": 720,
+            "frameH": 405,
+            "x": 0.16666666666666666,
+            "y": 0.40987654320987654,
+            "w": 0.3458333333333333,
+            "h": 0.5777777777777777
+          },
+          "boxRecovered": true,
+          "boxRecoverNote": "box recovered by matching mask raster to step frame (bounds were dropped in first parse)"
+        }
+      ],
+      "hasMaskToken": true,
+      "error": null,
+      "maskDecoded": true,
+      "decodeNote": "decodeMaskToRaster ok"
+    }
+  ]
+}

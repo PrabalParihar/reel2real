@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { readableChipColor } from "@/src/ui/chip-color";
+import { durationChipLabel } from "@/src/ui/duration-chip";
 import { chooseLabelPosition, LABEL_CLEARANCE, type LabelRect } from "@/src/ui/label-place";
-import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
+import { clipPathToRect, framePathFromPayload, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, sharedStillRect, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -62,6 +62,10 @@ function outlineSegments(d: string, frameW: number, frameH: number, cover: Cover
 
 /** Outer painted contour. The 4.5 core sits inside this glow stroke. */
 const OUTLINE_STROKE = 14;
+/** feGaussianBlur stdDeviation on that glow. */
+const OUTLINE_GLOW = 6;
+/** Pull the path in by the glow stroke plus the blur so overflow does not clip it. */
+export const EDGE_STROKE_INSET = OUTLINE_STROKE + OUTLINE_GLOW;
 
 function statusRect(text: string, viewW: number, viewH: number, bottom: number): LabelRect {
   const textWidth = text.length * 7;
@@ -85,12 +89,13 @@ function placeLabels(
   cover: CoverTransform,
   view: { w: number; h: number },
   status: LabelRect | null,
+  strokeWidth = OUTLINE_STROKE,
 ): Array<{ noun: string; color: string; x: number; y: number }> {
   const labels: Array<{ noun: string; color: string; x: number; y: number }> = [];
   const blocked: LabelRect[] = status ? [status] : [];
   const strokes = items.flatMap((item) => outlineSegments(item.draw.d, frameW, frameH, cover));
   const strokeScale = Math.max(cover.width / frameW, cover.height / frameH);
-  const strokeRadius = (OUTLINE_STROKE / 2) * strokeScale;
+  const strokeRadius = (strokeWidth / 2) * strokeScale;
   for (const item of items) {
     const outline = outlineSegments(item.draw.d, frameW, frameH, cover);
     if (!outline.length) continue;
@@ -134,17 +139,18 @@ function formatClock(seconds: number): string {
 export function PhotoFrame({
   src,
   alt,
-  sizes = "(max-width: 800px) 100vw, 640px",
+  sizes: _sizes = "(max-width: 800px) 100vw, 640px",
   overlay,
   recordedLabel = false,
   sampleChip = false,
-  priority = false,
+  priority: _priority = false,
   className = "",
   loopSrc,
   objectPosition = { x: 0.5, y: 0.5 },
   zoom = 1,
   status,
   showProgress = false,
+  durationSec,
   drawOutlines = true,
   labelMode = "centroid",
 }: {
@@ -161,6 +167,8 @@ export function PhotoFrame({
   zoom?: number;
   status?: string | null;
   showProgress?: boolean;
+  /** Stored loop length. The chip does not wait on a media event. */
+  durationSec?: number;
   /** False drops every contour. A partial outline is never drawn. */
   drawOutlines?: boolean;
   /** Tags sit in a row on the card. Centroid chips float on the object. */
@@ -173,6 +181,7 @@ export function PhotoFrame({
   const [reduced, setReduced] = useState(false);
   const [ratio, setRatio] = useState(0);
   const [clock, setClock] = useState("0:00");
+  const durationLabel = durationChipLabel(durationSec);
   const nounKey = (overlay?.nouns ?? []).map((noun) => `${noun.objectId}:${noun.requestId ?? ""}:${noun.present ? 1 : 0}`).join("|");
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
@@ -217,15 +226,18 @@ export function PhotoFrame({
           const selected = selectMaskRecord(file.calls, noun);
           if (!selected) continue;
           try {
-            const draw = framePathFromPayload(selected.mask, selected.box);
+            const frameW = selected.box.frameW || SAM_FRAME.width;
+            const frameH = selected.box.frameH || SAM_FRAME.height;
+            const imageBox = scaleFrameBox(selected.box, frameW, frameH, SAMPLE_STILL.width, SAMPLE_STILL.height);
+            const draw = framePathFromPayload(selected.mask, imageBox);
             if (!draw.d) continue;
             next.push({
               noun: noun.noun,
               color: noun.color || "#2dd4bf",
               draw,
-              frameW: selected.box.frameW || SAM_FRAME.width,
-              frameH: selected.box.frameH || SAM_FRAME.height,
-              box: selected.box,
+              frameW: SAMPLE_STILL.width,
+              frameH: SAMPLE_STILL.height,
+              box: imageBox,
             });
           } catch {
             // A bad payload stays empty. Never fall back to a box.
@@ -239,10 +251,11 @@ export function PhotoFrame({
     return () => controller.abort();
   }, [nounKey, overlay?.samUrl]);
 
-  const frameW = items[0]?.frameW || SAM_FRAME.width;
-  const frameH = items[0]?.frameH || SAM_FRAME.height;
+  const frameW = SAMPLE_STILL.width;
+  const frameH = SAMPLE_STILL.height;
+  const stillScale = frameW / MASK_FRAME.width;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
-    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
+    ? sharedStillRect(view.w, view.h, objectPosition, zoom)
     : null;
   const showRecorded = recordedLabel && !status;
   const statusText = status ? status : showRecorded ? RECORDED_SAM_LABEL : sampleChip ? "Sample" : null;
@@ -250,12 +263,13 @@ export function PhotoFrame({
   const gapBelow = cover ? view.h - (cover.top + cover.height) : 0;
   const mediaBottom = gapBelow > 8 ? gapBelow + 14 : 16;
   const visible = cover ? visibleFrameRect(frameW, frameH, view.w, view.h, cover) : null;
+  const strokeInset = EDGE_STROKE_INSET * stillScale;
   const clipRect = visible
     ? {
-        x1: visible.x1 + 6,
-        y1: visible.y1 + 6,
-        x2: visible.x2 - 6,
-        y2: visible.y2 - 6,
+        x1: visible.x1 + strokeInset,
+        y1: visible.y1 + strokeInset,
+        x2: visible.x2 - strokeInset,
+        y2: visible.y2 - strokeInset,
       }
     : null;
 
@@ -276,7 +290,7 @@ export function PhotoFrame({
             loop
             playsInline
             autoPlay
-            style={{ objectFit: "cover", maxWidth: "none" }}
+            style={{ objectFit: "fill", maxWidth: "none" }}
             onTimeUpdate={(event) => {
               const video = event.currentTarget;
               if (!video.duration) return;
@@ -284,39 +298,29 @@ export function PhotoFrame({
               setClock(formatClock(video.currentTime));
             }}
           />
-        ) : (
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            sizes={sizes}
-            priority={priority}
-            loading={priority ? undefined : "eager"}
-            unoptimized
-            style={{ objectFit: "cover", maxWidth: "none" }}
-          />
-        )}
-        {items.length ? (
-          <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="6" />
-              </filter>
-            </defs>
-            {items.map((item) => {
-              if (!drawOutlines || (visible && !boxFullyInside(item.box, visible))) return null;
-              const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
-              if (!d) return null;
-              return (
-                <g key={item.noun} data-noun={item.noun}>
-                  <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
-                  <path d={d} fill="none" stroke={item.color} strokeWidth={14} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
-                  <path d={d} fill="none" stroke={item.color} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round" />
-                </g>
-              );
-            })}
-          </svg>
         ) : null}
+        <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" role="img" aria-label={playLoop ? undefined : alt}>
+          <defs>
+            <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation={6 * stillScale} />
+            </filter>
+          </defs>
+          {playLoop ? null : (
+            <image href={src} x="0" y="0" width={frameW} height={frameH} preserveAspectRatio="none" />
+          )}
+          {items.map((item) => {
+            if (!drawOutlines || (visible && !boxFullyInside(item.box, visible))) return null;
+            const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
+            if (!d) return null;
+            return (
+              <g key={item.noun} data-noun={item.noun}>
+                <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
+                <path d={d} fill="none" stroke={item.color} strokeWidth={14 * stillScale} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
+                <path d={d} fill="none" stroke={item.color} strokeWidth={4.5 * stillScale} strokeLinejoin="round" strokeLinecap="round" />
+              </g>
+            );
+          })}
+        </svg>
       </div>
       {labelMode === "tags" ? (
         <div className="noun-tags">
@@ -324,7 +328,7 @@ export function PhotoFrame({
             <span key={noun.noun} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
           ))}
         </div>
-      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null).map((label) => (
+      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null, OUTLINE_STROKE * stillScale).map((label) => (
           <span
             key={label.noun}
             className="noun-chip"
@@ -343,6 +347,7 @@ export function PhotoFrame({
       {!status && !showRecorded && sampleChip ? (
         <span className="reel-status" style={labelMode === "tags" ? { top: 10, bottom: "auto", height: "auto", width: "max-content", alignSelf: "start" } : { bottom: mediaBottom }}>Sample</span>
       ) : null}
+      {durationLabel ? <span className="reel-status is-duration">{durationLabel}</span> : null}
       {showProgress && playLoop ? (
         <div className="reel-progress" style={{ bottom: Math.max(0, mediaBottom - 28) }}>
           <span style={{ width: `${Math.min(100, ratio * 100)}%` }} />

@@ -1,0 +1,86 @@
+{
+  "demo": "origami",
+  "title": "Sample \u00b7 Fold an origami crane",
+  "label": "Sample \u00b7 recorded SAM output",
+  "sourceClip": {
+    "file": "pexels-origami.mp4",
+    "page": "https://www.pexels.com/video/a-person-making-origami-6364305/",
+    "author": "Yogendra Singh",
+    "license": "Pexels License"
+  },
+  "hero": {
+    "image": "hero.jpg",
+    "samNoun": "paper",
+    "samStep": 1
+  },
+  "steps": [
+    {
+      "index": 0,
+      "id": "step_01_fold",
+      "title": "Fold the patterned paper",
+      "instruction": "Crease the green patterned paper into a clean fold. Keep the paper fully in frame.",
+      "hinglishPrompt": "Paper dikhao.",
+      "keyframe": "step-1.jpg",
+      "samFile": "sam/step-1.json",
+      "nouns": [
+        {
+          "objectId": "obj_paper",
+          "noun": "paper",
+          "samPrompt": "paper",
+          "color": "#E88C30",
+          "present": true,
+          "maskOrdinal": "6",
+          "requestId": "22246bfd-82ab-4e8e-b2b7-bca8e730895c",
+          "verified": true
+        }
+      ],
+      "keepFullyInFrame": [
+        "paper"
+      ]
+    },
+    {
+      "index": 1,
+      "id": "step_02_crease",
+      "title": "Press a clean triangle crease",
+      "instruction": "Flatten the fold into a triangle beside the heart. Keep the heart fully in frame.",
+      "hinglishPrompt": "Heart dikhao.",
+      "keyframe": "step-2.jpg",
+      "samFile": "sam/step-2.json",
+      "nouns": [
+        {
+          "objectId": "obj_heart",
+          "noun": "heart",
+          "samPrompt": "paper heart",
+          "color": "#B450A0",
+          "present": true,
+          "requestId": "ddd9b238-bdf3-4e08-88ba-38248bb406ca",
+          "verified": true
+        }
+      ],
+      "keepFullyInFrame": [
+        "heart"
+      ]
+    },
+    {
+      "index": 2,
+      "id": "step_03_crane",
+      "title": "Keep folding",
+      "instruction": "Continue the folds with the finished piece in view.",
+      "hinglishPrompt": "Fold jaari rakho.",
+      "keyframe": "step-3.jpg",
+      "samFile": "sam/step-3.json",
+      "nouns": [
+        {
+          "objectId": "obj_crane",
+          "noun": "crane",
+          "samPrompt": "origami crane",
+          "color": "#50A0E6",
+          "present": true,
+          "verified": false,
+          "requestId": "e8a6e9b7-206b-4651-8ab8-5e2d82be14b3"
+        }
+      ],
+      "keepFullyInFrame": []
+    }
+  ]
+}

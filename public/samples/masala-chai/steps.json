@@ -30,7 +30,8 @@
           "samPrompt": "mortar",
           "color": "#E88C30",
           "present": true,
-          "requestId": "98b5fe17-38f5-45bb-8c33-c8c6354ab727"
+          "requestId": "98b5fe17-38f5-45bb-8c33-c8c6354ab727",
+          "verified": true
         },
         {
           "objectId": "obj_pestle",
@@ -38,16 +39,17 @@
           "samPrompt": "pestle",
           "color": "#2DB4AA",
           "present": true,
-          "requestId": "d0f8d0f0-6d6f-4000-9cd0-dd386ab6ad12"
+          "requestId": "d0f8d0f0-6d6f-4000-9cd0-dd386ab6ad12",
+          "verified": true
         }
       ]
     },
     {
       "index": 1,
       "id": "step_02_crush",
-      "title": "Crush the spice mix",
-      "instruction": "Use your hands to crush and mix the dried spices inside the mortar.",
-      "hinglishPrompt": "Spices haath se crush karo.",
+      "title": "Crush with your hand",
+      "instruction": "Use your hands to crush and mix.",
+      "hinglishPrompt": "Haath se crush karo.",
       "keyframe": "step-2.jpg",
       "samFile": "sam/step-2.json",
       "nouns": [
@@ -57,7 +59,8 @@
           "samPrompt": "spices",
           "color": "#B450A0",
           "present": true,
-          "requestId": "d71d0c0b-3dd1-4854-adb6-225b596d3c36"
+          "requestId": "d71d0c0b-3dd1-4854-adb6-225b596d3c36",
+          "verified": false
         },
         {
           "objectId": "obj_hand",
@@ -65,16 +68,17 @@
           "samPrompt": "hand",
           "color": "#50A0E6",
           "present": true,
-          "requestId": "9fdfb2ec-af0f-46d0-9781-3be7c68a5e79"
+          "requestId": "9fdfb2ec-af0f-46d0-9781-3be7c68a5e79",
+          "verified": true
         }
       ]
     },
     {
       "index": 2,
       "id": "step_03_add_herbs",
-      "title": "Drop dried herbs into the mortar",
-      "instruction": "Strip dried herbs into the mortar so the spice mix is ready for chai.",
-      "hinglishPrompt": "Dried herbs mortar mein daalo.",
+      "title": "Drop the dried herbs",
+      "instruction": "Strip the dried herbs in so the mix is ready for chai.",
+      "hinglishPrompt": "Dried herbs daalo.",
       "keyframe": "step-3.jpg",
       "samFile": "sam/step-3.json",
       "nouns": [
@@ -84,7 +88,8 @@
           "samPrompt": "spices",
           "color": "#B450A0",
           "present": true,
-          "requestId": "3f2fec2b-d033-447e-8cc1-a90c23bfbb5f"
+          "requestId": "3f2fec2b-d033-447e-8cc1-a90c23bfbb5f",
+          "verified": false
         }
       ]
     }

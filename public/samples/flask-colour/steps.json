@@ -1,0 +1,119 @@
+{
+  "demo": "flask-colour",
+  "title": "Sample \u00b7 Flask colour reaction",
+  "label": "Sample \u00b7 recorded SAM output",
+  "sourceClip": {
+    "file": "chemistry-balloon.mp4",
+    "page": "https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/",
+    "author": "AlexKopeykin",
+    "license": "Pixabay Content License"
+  },
+  "hero": {
+    "image": "hero.jpg",
+    "samNoun": "flask",
+    "samStep": 1
+  },
+  "steps": [
+    {
+      "index": 0,
+      "id": "step_01_pour",
+      "title": "Pour powder into the flask",
+      "instruction": "Tilt the white bottle and pour the powder into the flask. Keep the flask and bottle fully in frame. Grown-up supervision.",
+      "hinglishPrompt": "Flask aur bottle dikhao.",
+      "keyframe": "step-1.jpg",
+      "samFile": "sam/step-1.json",
+      "nouns": [
+        {
+          "objectId": "obj_flask",
+          "noun": "flask",
+          "samPrompt": "flask",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "9baffec5-6e6f-4a3b-9e1a-82cca92727fb",
+          "verified": true
+        },
+        {
+          "objectId": "obj_bottle",
+          "noun": "bottle",
+          "samPrompt": "bottle",
+          "color": "#2DB4AA",
+          "present": true,
+          "requestId": "17e3459b-89bc-4f50-aa6e-570a292dda9d",
+          "verified": true,
+          "maskOrdinal": "2"
+        }
+      ],
+      "keepFullyInFrame": [
+        "flask",
+        "bottle"
+      ]
+    },
+    {
+      "index": 1,
+      "id": "step_02_colour",
+      "title": "Watch the colour change",
+      "instruction": "Hold the bottle by the flask and watch the mix turn bright yellow. Keep the flask and bottle fully in frame.",
+      "hinglishPrompt": "Flask aur bottle frame mein rakho.",
+      "keyframe": "step-2.jpg",
+      "samFile": "sam/step-2.json",
+      "nouns": [
+        {
+          "objectId": "obj_flask",
+          "noun": "flask",
+          "samPrompt": "flask",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "0cd78863-9093-4408-bed2-b47753779be4",
+          "verified": true
+        },
+        {
+          "objectId": "obj_bottle",
+          "noun": "bottle",
+          "samPrompt": "bottle",
+          "color": "#2DB4AA",
+          "present": true,
+          "requestId": "ab23c68a-f7ad-4114-9720-c98771d8a864",
+          "verified": true,
+          "maskOrdinal": "3"
+        }
+      ],
+      "keepFullyInFrame": [
+        "flask",
+        "bottle"
+      ]
+    },
+    {
+      "index": 2,
+      "id": "step_03_set_aside",
+      "title": "Set the flask in view",
+      "instruction": "Leave the flask with the yellow mix settled. Keep the flask fully in frame.",
+      "hinglishPrompt": "Flask dikhao.",
+      "keyframe": "step-3.jpg",
+      "samFile": "sam/step-3.json",
+      "nouns": [
+        {
+          "objectId": "obj_rod",
+          "noun": "rod",
+          "samPrompt": "stirring rod",
+          "color": "#B450A0",
+          "present": true,
+          "requestId": "dfc45833-29c0-4db3-b541-6b3a7bd0b3c2",
+          "verified": false
+        },
+        {
+          "objectId": "obj_flask",
+          "noun": "flask",
+          "samPrompt": "flask",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "3e963e25-6b53-4155-950a-059ab4a00058",
+          "verified": true
+        }
+      ],
+      "keepFullyInFrame": [
+        "flask"
+      ]
+    }
+  ],
+  "safetyNote": "Grown-up supervision"
+}

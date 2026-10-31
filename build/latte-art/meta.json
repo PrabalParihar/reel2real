@@ -1,0 +1,302 @@
+{
+  "title": "Pour latte art",
+  "slug": "latte-art",
+  "domain": "cafe_craft",
+  "steps": [
+    {
+      "title": "Start filling the cup",
+      "instruction": "Pour milk into the green cup of espresso. Keep the cup fully in frame.",
+      "nouns": [
+        "cup"
+      ],
+      "samPrompts": [
+        "cup"
+      ],
+      "keepFullyInFrame": [
+        "cup"
+      ]
+    },
+    {
+      "title": "Build a foam circle in the cup",
+      "instruction": "Keep a steady pour into the cup so a white foam circle forms. Keep the cup fully in frame.",
+      "nouns": [
+        "cup"
+      ],
+      "samPrompts": [
+        "cup"
+      ],
+      "keepFullyInFrame": [
+        "cup"
+      ]
+    },
+    {
+      "title": "Finish the foam on the cup",
+      "instruction": "Finish the foam pattern on top of the cup. Keep the cup fully in frame.",
+      "nouns": [
+        "cup"
+      ],
+      "samPrompts": [
+        "cup"
+      ],
+      "keepFullyInFrame": [
+        "cup"
+      ]
+    }
+  ],
+  "segment": {
+    "source": "latte-art.mp4",
+    "startSec": 4.0,
+    "endSec": 12.0,
+    "durationSec": 8.0,
+    "stepTimestampsSec": [
+      5.0,
+      6.5,
+      11.0
+    ],
+    "step2Note": "retimed to 6.5s for bigger unoccluded milk jug after milk jug miss on 8.0s"
+  },
+  "shape": {
+    "id": "4:5",
+    "aspect": 0.8,
+    "forcedByStep": 0,
+    "margins": [
+      {
+        "minClearancePx": 12.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      },
+      {
+        "minClearancePx": 2.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      },
+      {
+        "minClearancePx": 5.0,
+        "requiredPadPx": 16.2,
+        "ok": false
+      }
+    ],
+    "requiredAspects": [
+      0.7267901599407196,
+      0.7243210077285767,
+      0.6946913599967957
+    ],
+    "stepCrops": [
+      {
+        "position": {
+          "x": 0.24494949494949494,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.7058080808080808,
+          "y": 0.5
+        },
+        "zoom": 1
+      },
+      {
+        "position": {
+          "x": 0.20833333333333334,
+          "y": 0.5
+        },
+        "zoom": 1
+      }
+    ],
+    "fitBoxes": [
+      [
+        {
+          "x1": 128,
+          "y1": 12,
+          "x2": 390,
+          "y2": 288
+        }
+      ],
+      [
+        {
+          "x1": 311,
+          "y1": 130,
+          "x2": 572,
+          "y2": 403
+        }
+      ],
+      [
+        {
+          "x1": 120,
+          "y1": 166,
+          "x2": 369,
+          "y2": 400
+        }
+      ]
+    ]
+  },
+  "credit": {
+    "creator": "franklandgrave",
+    "sourceUrl": "https://mixkit.co/free-stock-video/latte-art-810/",
+    "licenseName": "Mixkit Stock Video Free License",
+    "licenseUrl": "https://mixkit.co/license/#videoFree"
+  },
+  "safetyNote": null,
+  "sam": {
+    "label": "Sample \u00b7 recorded SAM output",
+    "batch2Used": 10,
+    "batch2Max": 10,
+    "allHits": [
+      {
+        "n": 16,
+        "step": 1,
+        "noun": "pitcher",
+        "present": false,
+        "requestId": "d45d9c85-3c5f-4eb5-9c89-1bc358e8872e",
+        "batch": 1
+      },
+      {
+        "n": 17,
+        "step": 1,
+        "noun": "cup",
+        "present": true,
+        "requestId": "07c487f0-09ec-4272-b213-a082be8e3a9c",
+        "batch": 1
+      },
+      {
+        "n": 18,
+        "step": 3,
+        "noun": "cup",
+        "present": true,
+        "requestId": "843ab4e9-586e-47c3-b0e2-5e1f7eee58ed",
+        "batch": 1
+      },
+      {
+        "n": 20,
+        "step": 2,
+        "noun": "milk jug",
+        "present": false,
+        "requestId": "7df7c6ca-9fec-45a1-82dd-85a2cc1cd741",
+        "batch": 2
+      },
+      {
+        "n": 21,
+        "step": 2,
+        "noun": "milk jug",
+        "present": false,
+        "requestId": "ebb20206-02be-4030-8e95-6fba4671f213",
+        "batch": 2
+      },
+      {
+        "n": 22,
+        "step": 2,
+        "noun": "cup",
+        "present": true,
+        "requestId": "5aa4009f-4637-4249-bb06-40d943b36ced",
+        "batch": 2
+      },
+      {
+        "n": 28,
+        "step": 1,
+        "noun": "steel jug",
+        "present": false,
+        "requestId": "fa64042f-24f5-4cd8-ba51-7c511ec1bcbf",
+        "batch": 2
+      }
+    ],
+    "batch2Calls": [
+      {
+        "n": 20,
+        "batch2": 2,
+        "demo": "latte-art",
+        "step": 2,
+        "noun": "milk jug",
+        "objectId": "obj_pitcher",
+        "image": "latte-art_step-2.jpg",
+        "status": 200,
+        "ms": 1232,
+        "requestId": "7df7c6ca-9fec-45a1-82dd-85a2cc1cd741",
+        "route": "model-api-rust",
+        "present": false,
+        "hasMask": false,
+        "maskCount": 0,
+        "boxCount": 0,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 21,
+        "batch2": 3,
+        "demo": "latte-art",
+        "step": 2,
+        "noun": "milk jug",
+        "objectId": "obj_pitcher",
+        "image": "latte-art_step-2.jpg",
+        "status": 200,
+        "ms": 1284,
+        "requestId": "ebb20206-02be-4030-8e95-6fba4671f213",
+        "route": "model-api-rust",
+        "present": false,
+        "hasMask": false,
+        "maskCount": 0,
+        "boxCount": 0,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 22,
+        "batch2": 4,
+        "demo": "latte-art",
+        "step": 2,
+        "noun": "cup",
+        "objectId": "obj_cup",
+        "image": "latte-art_step-2.jpg",
+        "status": 200,
+        "ms": 5904,
+        "requestId": "5aa4009f-4637-4249-bb06-40d943b36ced",
+        "route": "model-api-rust",
+        "present": true,
+        "hasMask": true,
+        "maskCount": 1,
+        "boxCount": 1,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      },
+      {
+        "n": 28,
+        "batch2": 10,
+        "demo": "latte-art",
+        "step": 1,
+        "noun": "steel jug",
+        "objectId": "obj_pitcher",
+        "image": "latte-art_step-1.jpg",
+        "status": 200,
+        "ms": 2137,
+        "requestId": "fa64042f-24f5-4cd8-ba51-7c511ec1bcbf",
+        "route": "model-api-rust",
+        "present": false,
+        "hasMask": false,
+        "maskCount": 0,
+        "boxCount": 0,
+        "parseErr": null,
+        "renameOf": null,
+        "batch": 2
+      }
+    ]
+  },
+  "files": {
+    "heroLoop": "hero-loop.mp4",
+    "hero": "hero.jpg",
+    "steps": [
+      "step-1.jpg",
+      "step-2.jpg",
+      "step-3.jpg"
+    ],
+    "sam": [
+      "sam/step-1.json",
+      "sam/step-2.json",
+      "sam/step-3.json"
+    ],
+    "stepsJson": "steps.json"
+  },
+  "gaps": []
+}

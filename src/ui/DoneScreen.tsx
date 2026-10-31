@@ -36,15 +36,15 @@ export function DoneScreen() {
                 const crop = published?.stepCrops[index] ?? published?.crop;
                 return (
                   <li key={step.id}>
-                    <div className={`reel-tile${published ? ` ${shapeClass(published.shape)}` : ""}`}>
+                    <div className={`reel-tile${published?.stepFullFrame[index] ? " is-source" : published ? ` ${shapeClass(published.shape)}` : ""}`}>
                       {scene?.steps[index] ? (
                         <PhotoFrame
                           className="is-fill"
                           src={sceneAsset(scene, scene.steps[index].keyframe)}
                           alt={scene.steps[index].title}
                           sizes="140px"
-                          objectPosition={crop}
-                          zoom={published?.stepZooms[index] ?? published?.zoom ?? 1}
+                          objectPosition={published?.stepFullFrame[index] ? { x: 0.5, y: 0.5 } : crop}
+                          zoom={published?.stepFullFrame[index] ? 1 : published?.stepZooms[index] ?? published?.zoom ?? 1}
                         />
                       ) : null}
                     </div>

@@ -21,9 +21,14 @@ export interface PublishedSample {
   stepCrops: ObjectPosition[];
   stepZooms: number[];
   stepTitle: Array<"overlay" | "below">;
+  stepFullFrame: boolean[];
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
+  /** Loop file length. Unset when the card shows a still and must not render a time chip. */
+  loopDurationSec?: number;
+  /** Grown-up note for demos that need one. Empty when the catalog entry has none. */
+  safetyNote?: string;
   demo: DemoDefinition;
 }
 
@@ -34,7 +39,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     frame: "reel",
     creatorName: demo.credit.name,
     scene: demo.scene,
-    tutorial: tutorialFromScene(demo.scene),
+    tutorial: tutorialFromScene(demo.scene, demo.domain),
     clip: demo.clip,
     poster: demo.poster,
     shape: demo.shape,
@@ -43,9 +48,12 @@ function publish(demo: DemoDefinition): PublishedSample {
     stepCrops: demo.stepCrops,
     stepZooms: demo.stepZooms,
     stepTitle: demo.stepTitle,
+    stepFullFrame: demo.stepFullFrame,
     cardCrop: demo.cardCrop,
     cardZoom: demo.cardZoom,
     cardOutlines: demo.cardOutlines,
+    loopDurationSec: demo.cardOutlines ? undefined : demo.loopDurationSec,
+    safetyNote: demo.safetyNote,
     demo,
   };
 }

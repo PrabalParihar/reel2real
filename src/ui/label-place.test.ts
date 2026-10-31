@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EDGE_STROKE_INSET } from "./PhotoFrame";
 import { chooseLabelPosition, strokeClearance } from "./label-place";
 
 describe("label clearance", () => {
@@ -87,5 +88,34 @@ describe("label clearance", () => {
     expect(rect.x1).toBeGreaterThanOrEqual(4);
     expect(rect.y2).toBeLessThanOrEqual(196);
     expect(strokeClearance(rect, strokes)).toBeGreaterThanOrEqual(8);
+  });
+
+  it("keeps an edge object's chip inside the frame and clear of the stroke", () => {
+    const strokes: Array<[{ x: number; y: number }, { x: number; y: number }]> = [
+      [{ x: 700, y: 30 }, { x: 710, y: 370 }],
+    ];
+    const placed = chooseLabelPosition({
+      viewW: 720,
+      viewH: 405,
+      labelW: 64,
+      labelH: 24,
+      bounds: { minX: 700, minY: 30, maxX: 710, maxY: 370 },
+      strokes,
+      strokeRadius: 14,
+      clearance: 4,
+    });
+    expect(placed).not.toBeNull();
+    const rect = {
+      x1: placed!.x - 32,
+      y1: placed!.y - 12,
+      x2: placed!.x + 32,
+      y2: placed!.y + 12,
+    };
+    expect(rect.x1).toBeGreaterThanOrEqual(4);
+    expect(rect.y1).toBeGreaterThanOrEqual(4);
+    expect(rect.x2).toBeLessThanOrEqual(716);
+    expect(rect.y2).toBeLessThanOrEqual(401);
+    expect(strokeClearance(rect, strokes)).toBeGreaterThanOrEqual(18);
+    expect(EDGE_STROKE_INSET).toBe(20);
   });
 });

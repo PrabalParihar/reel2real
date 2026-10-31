@@ -6,12 +6,13 @@ import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { heroSamFile, heroStep, presentNouns, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
+import { heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
+import { SafetyNote } from "./SafetyNote";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
 
-const CHAI = PUBLISHED_SAMPLES[0];
+const CHAI = PUBLISHED_SAMPLES.find((sample) => sample.id === "masala-chai") ?? PUBLISHED_SAMPLES[0];
 const HERO_STEPS = CHAI.tutorial.steps.map((step) => step.instructionText);
 
 function frameSrc(scene: SampleScene, file: string): string {
@@ -125,7 +126,7 @@ export function Landing() {
       <section className="section wrap" id="demos">
         <p className="kicker">Demos</p>
         <h2>Sample tutorials</h2>
-        <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : ""}`}>
+        <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : " is-set"}`}>
           {PUBLISHED_SAMPLES.map((sample) => {
             const tags = presentNouns(heroStep(sample.scene) ?? sample.scene.steps[0]);
             return (
@@ -133,26 +134,28 @@ export function Landing() {
                 <div className="reel-phone card-frame">
                   <PhotoFrame
                     className="is-fill"
-                    src={frameSrc(sample.scene, sample.poster)}
+                    src={frameSrc(sample.scene, sample.cardOutlines ? recordedFrameFile(sample.scene, Math.max(0, (sample.scene.hero.samStep ?? 1) - 1)) : sample.poster)}
                     alt={`${sample.tutorial.title} sample frame`}
-                    loopSrc={frameSrc(sample.scene, sample.clip)}
+                    loopSrc={sample.cardOutlines ? undefined : frameSrc(sample.scene, sample.clip)}
                     objectPosition={sample.cardCrop}
                     zoom={sample.cardZoom}
                     sampleChip
-                    showProgress
+                    showProgress={false}
+                    durationSec={sample.cardOutlines ? undefined : sample.loopDurationSec}
                     drawOutlines={sample.cardOutlines}
                     overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
                   />
                 </div>
                 <div className="demo-body">
                   <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
+                  <SafetyNote note={sample.safetyNote} />
                   <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
-                  {tags.length ? (
+                  {!sample.cardOutlines && tags.length ? (
                     <ul className="demo-tags">
                       {tags.map((noun) => <li key={noun.noun} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
                     </ul>
                   ) : null}
-                  {PUBLISHED_SAMPLES.length === 1 ? <SceneCredit scene={sample.scene} /> : null}
+                  <SceneCredit scene={sample.scene} />
                   <ol className="step-list">
                     {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
                   </ol>
@@ -175,7 +178,7 @@ export function Landing() {
           </article>
           <article className="panel model-card">
             <h3>SAM 3.1</h3>
-            <p>Keyframe highlights for 2–4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
+            <p>Keyframe highlights for 2 to 4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>
@@ -210,7 +213,10 @@ function heroOverlay(scene: SampleScene) {
   const file = heroSamFile(scene);
   const step = heroStep(scene);
   if (!file || !step) return null;
-  return { samUrl: sceneAsset(scene, file), nouns: presentNouns(step) };
+  return {
+    samUrl: sceneAsset(scene, file),
+    nouns: presentNouns(step).filter((noun) => noun.verified !== false),
+  };
 }
 
 function HeroStage({ scene }: { scene: SampleScene }) {

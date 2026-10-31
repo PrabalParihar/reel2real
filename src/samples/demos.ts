@@ -1,16 +1,25 @@
 import { fitDemo, type FrameShapeId } from "@/src/samples/frame-fit";
 import type { FrameBox, ObjectPosition } from "@/src/samples/mask-geometry";
-import { sceneByDemo, type SampleScene } from "@/src/samples/scene";
+import type { SampleScene } from "@/src/samples/scene";
 import type { TutorialSteps } from "@/src/schema/types";
+import recordedBoxes from "@/src/samples/recorded-boxes.json";
+import chaiSceneJson from "../../public/samples/masala-chai/steps.json";
+import flaskSceneJson from "../../public/samples/flask-colour/steps.json";
+import origamiSceneJson from "../../public/samples/origami/steps.json";
+import seedSceneJson from "../../public/samples/seed-planting/steps.json";
+import latteSceneJson from "../../public/samples/latte-art/steps.json";
 
 /**
  * One record per Sample reel. Adding a demo is a new entry here plus files under public/samples/<slug>/.
- * See docs/ADD-A-DEMO.md. Shape and crops come from fitDemo, not from hand-tuned numbers.
+ * Boxes come from src/samples/recorded-boxes.json, which scripts/sync-sample-boxes.ts rebuilds from the sam files.
+ * Shape and crops come from fitDemo. See docs/ADD-A-DEMO.md.
  */
 export interface DemoCredit {
   name: string;
   license: string;
   href: string;
+  /** Licence summary page. The card links this when it is set. */
+  licenseHref?: string;
 }
 
 export interface DemoDefinition {
@@ -30,60 +39,136 @@ export interface DemoDefinition {
   stepCrops: ObjectPosition[];
   stepZooms: number[];
   stepTitle: Array<"overlay" | "below">;
+  /** True when that step shows the whole source frame instead of a cover crop. */
+  stepFullFrame: boolean[];
   /** Demo grid cards are always 4:5. Outlines are omitted when they would be cut. */
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
+  /**
+   * Length of hero-loop.mp4 from ffprobe. Absent when the grid card is a still.
+   * Origami is 8.008s and the chip rounds down to 0:08.
+   */
+  loopDurationSec?: number;
+  /** Shown on the demo card and the coach. Kids science uses "Grown-up supervision". */
+  safetyNote?: string;
 }
 
-const chai = sceneByDemo("masala-chai");
-if (!chai) throw new Error("masala-chai steps.json is missing");
+interface DemoInput {
+  slug: string;
+  domain: DemoDefinition["domain"];
+  scene: SampleScene;
+  credit: DemoCredit;
+  safetyNote?: string;
+  loopDurationSec?: number;
+}
 
-/** Present-noun boxes from public/samples/masala-chai/sam/step-*.json. The catalog test checks this list. */
-const CHAI_BOXES: FrameBox[][] = [
-  [
-    { x1: 221, y1: 85, x2: 568, y2: 380 },
-    { x1: 100, y1: 0, x2: 217, y2: 250 },
-  ],
-  [
-    { x1: 286, y1: 287, x2: 303, y2: 304 },
-    { x1: 297, y1: 185, x2: 491, y2: 341 },
-    { x1: 424, y1: 343, x2: 438, y2: 372 },
-    { x1: 553, y1: 0, x2: 720, y2: 129 },
-    { x1: 265, y1: 15, x2: 451, y2: 195 },
-  ],
-  [
-    { x1: 395, y1: 309, x2: 408, y2: 336 },
-    { x1: 389, y1: 197, x2: 467, y2: 306 },
-  ],
-];
+function boxesFor(slug: string): FrameBox[][] {
+  const rows = (recordedBoxes as Record<string, FrameBox[][]>)[slug];
+  if (!rows) {
+    throw new Error(`Recorded boxes missing for ${slug}. Run: npx tsx scripts/sync-sample-boxes.ts`);
+  }
+  return rows;
+}
 
-const chaiFit = fitDemo(CHAI_BOXES);
+export function defineDemo(input: DemoInput): DemoDefinition {
+  if (input.scene.demo !== input.slug) {
+    throw new Error(`${input.slug} steps.json says demo ${input.scene.demo}`);
+  }
+  const boxes = boxesFor(input.slug);
+  const cardStep = Math.max(0, (input.scene.hero.samStep ?? 1) - 1);
+  const fit = fitDemo(boxes, 720, 405, cardStep);
+  return {
+    slug: input.slug,
+    title: input.scene.title,
+    domain: input.domain,
+    clip: "hero-loop.mp4",
+    poster: input.scene.hero.image,
+    credit: input.credit,
+    scene: input.scene,
+    boxes,
+    shape: fit.shape,
+    crop: fit.steps[0]?.position ?? { x: 0.5, y: 0.5 },
+    zoom: fit.steps[0]?.zoom ?? 1,
+    stepCrops: fit.steps.map((step) => step.position),
+    stepZooms: fit.steps.map((step) => step.zoom),
+    stepTitle: fit.stepTitle,
+    stepFullFrame: fit.steps.map((step) => step.fullFrame === true),
+    cardCrop: fit.card.position,
+    cardZoom: fit.card.zoom,
+    cardOutlines: fit.card.outlines,
+    loopDurationSec: input.loopDurationSec,
+    safetyNote: input.safetyNote?.trim() || undefined,
+  };
+}
+
+const chai = chaiSceneJson as SampleScene;
+const flask = flaskSceneJson as SampleScene;
+const origami = origamiSceneJson as SampleScene;
+const seed = seedSceneJson as SampleScene;
+const latte = latteSceneJson as SampleScene;
 
 export const DEMOS: DemoDefinition[] = [
-  {
+  defineDemo({
     slug: "masala-chai",
-    title: chai.title,
     domain: "indian_recipe",
-    clip: "hero-loop.mp4",
-    poster: chai.hero.image,
+    scene: chai,
     credit: {
       name: "Pexels contributor",
       license: "Pexels License",
       href: "https://www.pexels.com/video/5480225/",
+      licenseHref: "https://www.pexels.com/license/",
     },
-    scene: chai,
-    boxes: CHAI_BOXES,
-    shape: chaiFit.shape,
-    crop: chaiFit.steps[0]?.position ?? { x: 0.5, y: 0.5 },
-    zoom: chaiFit.steps[0]?.zoom ?? 1,
-    stepCrops: chaiFit.steps.map((step) => step.position),
-    stepZooms: chaiFit.steps.map((step) => step.zoom),
-    stepTitle: chaiFit.stepTitle,
-    cardCrop: chaiFit.card.position,
-    cardZoom: chaiFit.card.zoom,
-    cardOutlines: chaiFit.card.outlines,
-  },
+    loopDurationSec: 5,
+  }),
+  defineDemo({
+    slug: "flask-colour",
+    domain: "other",
+    scene: flask,
+    credit: {
+      name: "AlexKopeykin",
+      license: "Pixabay Content License",
+      href: "https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/",
+      licenseHref: "https://pixabay.com/service/license-summary/",
+    },
+    safetyNote: "Grown-up supervision",
+    loopDurationSec: 10,
+  }),
+  defineDemo({
+    slug: "origami",
+    domain: "non_cooking_diy",
+    scene: origami,
+    credit: {
+      name: "Yogendra Singh",
+      license: "Pexels License",
+      href: "https://www.pexels.com/video/a-person-making-origami-6364305/",
+      licenseHref: "https://www.pexels.com/license/",
+    },
+    loopDurationSec: 8.008,
+  }),
+  defineDemo({
+    slug: "seed-planting",
+    domain: "non_cooking_diy",
+    scene: seed,
+    credit: {
+      name: "Tima Miroshnichenko",
+      license: "Pexels License",
+      href: "https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/",
+      licenseHref: "https://www.pexels.com/license/",
+    },
+    loopDurationSec: 8,
+  }),
+  defineDemo({
+    slug: "latte-art",
+    domain: "other",
+    scene: latte,
+    credit: {
+      name: "franklandgrave",
+      license: "Mixkit Stock Video Free License",
+      href: "https://mixkit.co/free-stock-video/latte-art-810/",
+      licenseHref: "https://mixkit.co/license/#videoFree",
+    },
+  }),
 ];
 
 export function demoBySlug(slug: string | null | undefined): DemoDefinition | undefined {

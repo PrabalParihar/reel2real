@@ -1,4 +1,4 @@
-import { DEMOS } from "@/src/samples/demos";
+import { demoBySlug, DEMOS } from "@/src/samples/demos";
 import { type SampleScene } from "@/src/samples/scene";
 
 function shortAuthor(author: string): string {
@@ -14,10 +14,16 @@ export function SceneCredit({ scene }: { scene: SampleScene }) {
       </p>
     );
   }
-  const author = shortAuthor(scene.sourceClip.author);
+  const demo = demoBySlug(scene.demo);
+  const author = shortAuthor(demo?.credit.name || scene.sourceClip.author);
+  const href = demo?.credit.href || scene.sourceClip.page;
+  const license = demo?.credit.license || scene.sourceClip.license || "Pexels License";
+  const licenseHref = demo?.credit.licenseHref;
   return (
     <p className="credit">
-      Credit · <a href={scene.sourceClip.page}>{author}</a> · Pexels License
+      Credit · <a href={href}>{author}</a>
+      {" · "}
+      {licenseHref ? <a href={licenseHref}>{license}</a> : license}
     </p>
   );
 }
@@ -31,7 +37,9 @@ export function SampleCredit({ className = "sample-credits" }: { className?: str
         <span key={demo.slug}>
           {index > 0 ? "; " : null}
           <a href={demo.credit.href}>{shortAuthor(demo.credit.name)}</a>
-          {" "}({demo.credit.license})
+          {" "}(
+          {demo.credit.licenseHref ? <a href={demo.credit.licenseHref}>{demo.credit.license}</a> : demo.credit.license}
+          )
         </span>
       ))}. Overlays labelled Sample · recorded SAM output.
     </p>
