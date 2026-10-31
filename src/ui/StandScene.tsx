@@ -71,11 +71,11 @@ export function BikeScene() {
   );
 }
 
-export function StillFrame({ kind, tall = false }: { kind: "chai" | "bike"; tall?: boolean }) {
+export function StillFrame({ kind, tall = false, label = true }: { kind: "chai" | "bike"; tall?: boolean; label?: boolean }) {
   return (
     <div className={tall ? "still-frame tall" : "still-frame"}>
       {kind === "chai" ? <StandScene compact /> : <BikeScene />}
-      <Chip>Sample</Chip>
+      {label ? <Chip>Sample</Chip> : null}
     </div>
   );
 }
