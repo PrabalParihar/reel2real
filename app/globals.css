@@ -719,6 +719,53 @@ p { margin: 0; color: var(--ink-2); }
   .coach-mock { left: 16px; right: 16px; }
   .phone-ghost { opacity: 0.35; }
 }
+@media (max-width: 1023px) {
+  .app-shell:has(.screen.coach) {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app-shell:has(.screen.coach) .app-bar { flex: none; }
+  .app-shell:has(.screen.coach) .screen.coach {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+  .app-shell:has(.screen.coach) .stage-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app-shell:has(.screen.coach) .reel-phone {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+  .app-shell:has(.screen.coach) .stage-note,
+  .app-shell:has(.screen.coach) .filmstrip,
+  .app-shell:has(.screen.coach) .coach-side,
+  .app-shell:has(.screen.coach) .step-card { flex: none; }
+  .app-shell:has(.screen.coach) .dock {
+    position: static;
+    flex: none;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(9, 10, 12, 0.96);
+    border-top: 1px solid var(--line-strong);
+  }
+}
 
 @keyframes pulse { 50% { opacity: 0.5; } }
 @keyframes mask-in {
