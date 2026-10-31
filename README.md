@@ -70,8 +70,8 @@ npm run gate0 -- clips/your-clip.mp4
 
 ## Sample data
 
-Fixtures in `src/fixtures/` are labelled Sample and point at placeholder paths. No creator media is in the repo. Filming notes are in `docs/demo-script.md`. Gate 0 missed a cup that was out of frame. The coach shows a hint when an expected object is not highlighted.
+Published Sample steps, keyframes, and recorded SAM masks live in `public/samples/`. Titles and nouns come from each demo's `steps.json`. Filming notes are in `docs/demo-script.md`. The coach shows a hint when an expected object is not highlighted. A step with no recorded hit shows that honestly and does not invent a box.
 
 ## Safety rule
 
-On the chai cup step, and on the aloo jeera “knife down” step, a knife that is not required for the step raises `safety_halt`. Next stays disabled until Retry.
+On the aloo jeera knife-down step, a knife that is not required for the step raises `safety_halt`. Next stays disabled until Retry. The published chai sample does not claim a cup, ginger, or cardamom.

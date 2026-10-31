@@ -1,7 +1,6 @@
 import aloo from "@/src/fixtures/sample-aloo-jeera.steps.json";
-import chai from "@/src/fixtures/sample-masala-chai.steps.json";
-import bike from "@/src/fixtures/sample-bike-chain.steps.json";
 import { PUBLISHED_SAMPLES, SECOND_DOMAIN } from "@/src/domains/catalog";
+import { tutorialFromScene } from "@/src/samples/scene";
 import { validateTutorialSteps } from "@/src/schema/validate";
 import type { TutorialSteps } from "@/src/schema/types";
 
@@ -14,8 +13,14 @@ function load(value: unknown, name: string): TutorialSteps {
 }
 
 export const SAMPLE_ALOO = load(aloo, "Aloo jeera");
-export const SAMPLE_CHAI = load(chai, "Masala chai");
-export const SAMPLE_BIKE = load(bike, "Second domain");
+export const SAMPLE_CHAI = load(
+  tutorialFromScene(PUBLISHED_SAMPLES[0].scene),
+  "Masala chai",
+);
+export const SAMPLE_BIKE = load(
+  tutorialFromScene(SECOND_DOMAIN.scene),
+  "Second domain",
+);
 
 export function sampleById(id: string | undefined): TutorialSteps {
   const published = PUBLISHED_SAMPLES.find((item) => item.id === id || item.tutorial.tutorialId === id);

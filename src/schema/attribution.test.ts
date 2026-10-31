@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import chai from "@/src/fixtures/sample-masala-chai.steps.json";
+import { SAMPLE_SCENES, tutorialFromScene } from "@/src/samples/scene";
 import { tutorialFromSparkPayload } from "./attribution";
+
+const chai = tutorialFromScene(SAMPLE_SCENES[0]);
 
 describe("user attribution", () => {
   it("discards attribution invented by the model", () => {

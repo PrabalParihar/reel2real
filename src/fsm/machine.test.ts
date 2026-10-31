@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SAMPLE_CHAI } from "@/src/server/fixtures";
+import { SAMPLE_ALOO, SAMPLE_CHAI } from "@/src/server/fixtures";
 import { coachHonesty, coachStatusChip, headerChip, highlightsChip, honestyChip, missingObjectHint, stateChip } from "./ui";
 import { evaluateCheck } from "./evaluate";
 import { createCoach, transition } from "./machine";
@@ -31,7 +31,7 @@ describe("step fsm", () => {
 
   it("does not advance when a required object is skipped", () => {
     let machine = boot();
-    const absent = { obj_mortar: false, obj_pestle: false, obj_ginger: false, obj_cardamom: false };
+    const absent = { obj_mortar: false, obj_pestle: false };
     machine = check(machine, absent);
     machine = check(machine, absent);
     expect(machine.state).not.toBe("skip_detected");
@@ -45,7 +45,7 @@ describe("step fsm", () => {
   });
 
   it("reaches success without changing step until Next", () => {
-    const machine = check(boot(), { obj_mortar: true, obj_pestle: true, obj_ginger: true, obj_cardamom: false });
+    const machine = check(boot(), { obj_mortar: true, obj_pestle: true });
     expect(machine.state).toBe("success");
     expect(machine.context.stepIndex).toBe(0);
     const next = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_CHAI).machine;
@@ -54,14 +54,18 @@ describe("step fsm", () => {
   });
 
   it("prioritises safety, then out of order", () => {
-    let machine = boot();
-    machine = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_CHAI).machine;
-    machine = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_CHAI).machine;
-    machine = transition(machine, { type: "READY" }, SAMPLE_CHAI).machine;
-    machine = check(machine, { obj_cup: true, obj_mortar: true, obj_knife: true });
+    let machine = createCoach(SAMPLE_ALOO);
+    machine = transition(machine, { type: "START_COACH" }, SAMPLE_ALOO).machine;
+    machine = transition(machine, { type: "CAMERA_GRANTED" }, SAMPLE_ALOO).machine;
+    machine = transition(machine, { type: "READY" }, SAMPLE_ALOO).machine;
+    machine = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_ALOO).machine;
+    machine = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_ALOO).machine;
+    machine = transition(machine, { type: "READY" }, SAMPLE_ALOO).machine;
+    const tracking = transition(machine, { type: "CADENCE_TICK" }, SAMPLE_ALOO).machine;
+    machine = transition(tracking, { type: "SAM_RESULT", presence: { obj_onion_pieces: true, obj_board: true, obj_knife: true } }, SAMPLE_ALOO).machine;
     expect(machine.state).toBe("safety_halt");
     expect(machine.context.stepIndex).toBe(2);
-    const retried = transition(machine, { type: "USER_RETRY" }, SAMPLE_CHAI);
+    const retried = transition(machine, { type: "USER_RETRY" }, SAMPLE_ALOO);
     expect(retried.trail).toContain("retry");
     expect(retried.machine.state).toBe("waiting");
   });
@@ -95,7 +99,7 @@ describe("step fsm", () => {
 
   it("lets Skip and Next leave out of order without another SAM result", () => {
     let machine = boot();
-    const early = { obj_mortar: false, obj_pestle: false, obj_ginger: false, obj_cardamom: true };
+    const early = { obj_mortar: false, obj_pestle: false, obj_hand: true };
     machine = check(machine, early);
     machine = check(machine, early);
     expect(machine.state).toBe("out_of_order");
@@ -108,7 +112,7 @@ describe("step fsm", () => {
 
   it("flags out of order before a silent advance", () => {
     let machine = boot();
-    const early = { obj_mortar: false, obj_pestle: false, obj_ginger: false, obj_cardamom: true };
+    const early = { obj_mortar: false, obj_pestle: false, obj_hand: true };
     machine = check(machine, early);
     expect(machine.state).toBe("waiting");
     machine = check(machine, early);
@@ -135,11 +139,12 @@ describe("step fsm", () => {
 
   it("tells the cook when an expected object is not highlighted", () => {
     const step = SAMPLE_CHAI.steps[2];
-    const hint = missingObjectHint(step, { obj_cup: false, obj_mortar: true, obj_knife: false });
-    expect(hint).toMatch(/cup/i);
+    const hint = missingObjectHint(step, { obj_spices: false });
+    expect(hint).toMatch(/spices/i);
     expect(hint).toMatch(/highlighted/i);
     expect(hint?.toLowerCase().includes("mask")).toBe(false);
-    expect(missingObjectHint(step, { obj_cup: true, obj_mortar: true })).toBeNull();
+    expect(missingObjectHint(step, { obj_spices: true })).toBeNull();
+    expect(missingObjectHint({ ...step, objects: [], successCheck: { ...step.successCheck, requiredObjectIds: [] } }, null)).toMatch(/No highlight/i);
     expect(stateChip("mask_lost")).toBe("Highlight lost");
     expect(coachStatusChip("tracking", true)).toBe("Manual, press Next");
     expect(coachStatusChip("tracking", false)).toBe("Checking…");
@@ -165,12 +170,12 @@ describe("step fsm", () => {
 
 describe("evaluate priority", () => {
   it("lets safety beat skip, mask loss, and success", () => {
-    const step = SAMPLE_CHAI.steps[2];
+    const step = SAMPLE_ALOO.steps[2];
     const result = evaluateCheck({
       step,
       laterObjectIds: [],
-      presence: { obj_cup: false, obj_mortar: false, obj_knife: true },
-      counters: { stableHits: 2, skipDwell: 3, oooDwell: 2, maskMisses: { obj_cup: 3 }, lockedObjectIds: ["obj_cup"] },
+      presence: { obj_onion_pieces: false, obj_board: false, obj_knife: true },
+      counters: { stableHits: 2, skipDwell: 3, oooDwell: 2, maskMisses: { obj_onion_pieces: 3 }, lockedObjectIds: ["obj_onion_pieces"] },
     });
     expect(result.signal?.type).toBe("SAFETY_SIGNAL");
   });

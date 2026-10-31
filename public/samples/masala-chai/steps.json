@@ -1,0 +1,92 @@
+{
+  "demo": "masala-chai",
+  "title": "Sample \u00b7 Crush a chai spice mix",
+  "label": "Sample \u00b7 recorded SAM output",
+  "sourceClip": {
+    "file": "chai-mortar-kitchen-5480225.mp4",
+    "pexelsId": "5480225",
+    "page": "https://www.pexels.com/video/5480225/",
+    "author": "Pexels contributor (mortar/pestle kitchen series)",
+    "license": "Pexels License"
+  },
+  "hero": {
+    "image": "hero.jpg",
+    "samNoun": "mortar",
+    "samStep": 1
+  },
+  "steps": [
+    {
+      "index": 0,
+      "id": "step_01_layout",
+      "title": "Set out the mortar and pestle",
+      "instruction": "Place the stone mortar and pestle fully in frame on the board.",
+      "hinglishPrompt": "Mortar aur pestle dikhao.",
+      "keyframe": "step-1.jpg",
+      "samFile": "sam/step-1.json",
+      "nouns": [
+        {
+          "objectId": "obj_mortar",
+          "noun": "mortar",
+          "samPrompt": "mortar",
+          "color": "#E88C30",
+          "present": true,
+          "requestId": "98b5fe17-38f5-45bb-8c33-c8c6354ab727"
+        },
+        {
+          "objectId": "obj_pestle",
+          "noun": "pestle",
+          "samPrompt": "pestle",
+          "color": "#2DB4AA",
+          "present": true,
+          "requestId": "d0f8d0f0-6d6f-4000-9cd0-dd386ab6ad12"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "step_02_crush",
+      "title": "Crush the spice mix",
+      "instruction": "Use your hands to crush and mix the dried spices inside the mortar.",
+      "hinglishPrompt": "Spices haath se crush karo.",
+      "keyframe": "step-2.jpg",
+      "samFile": "sam/step-2.json",
+      "nouns": [
+        {
+          "objectId": "obj_spices",
+          "noun": "spices",
+          "samPrompt": "spices",
+          "color": "#B450A0",
+          "present": true,
+          "requestId": "d71d0c0b-3dd1-4854-adb6-225b596d3c36"
+        },
+        {
+          "objectId": "obj_hand",
+          "noun": "hand",
+          "samPrompt": "hand",
+          "color": "#50A0E6",
+          "present": true,
+          "requestId": "9fdfb2ec-af0f-46d0-9781-3be7c68a5e79"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "step_03_add_herbs",
+      "title": "Drop dried herbs into the mortar",
+      "instruction": "Strip dried herbs into the mortar so the spice mix is ready for chai.",
+      "hinglishPrompt": "Dried herbs mortar mein daalo.",
+      "keyframe": "step-3.jpg",
+      "samFile": "sam/step-3.json",
+      "nouns": [
+        {
+          "objectId": "obj_spices",
+          "noun": "spices",
+          "samPrompt": "spices",
+          "color": "#B450A0",
+          "present": true,
+          "requestId": "3f2fec2b-d033-447e-8cc1-a90c23bfbb5f"
+        }
+      ]
+    }
+  ]
+}

@@ -13,6 +13,7 @@
     "gate0": "tsx scripts/gate0.ts"
   },
   "dependencies": {
+    "@meta-sam/parser": "^0.1.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "lucide-react": "^0.468.0",

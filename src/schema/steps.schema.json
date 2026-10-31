@@ -190,7 +190,7 @@
         },
         "objects": {
           "type": "array",
-          "minItems": 2,
+          "minItems": 0,
           "maxItems": 4,
           "items": { "$ref": "#/$defs/samObject" }
         },

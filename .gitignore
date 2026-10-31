@@ -5,6 +5,11 @@ placeholders/
 
 # Audio and video. The india-check still PNG is intentionally not ignored.
 *.mp4
+!public/samples/
+!public/samples/**
+!public/samples/**/*.mp4
+!src/samples/
+!src/samples/**
 *.m4v
 *.mov
 *.webm

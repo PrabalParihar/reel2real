@@ -60,6 +60,7 @@ export function missingObjectHint(step: TutorialStep, presence: Record<string, b
     ? step.successCheck.requiredObjectIds
     : step.objects.filter((object) => object.role === "required_present").map((object) => object.objectId);
   const label = (id: string) => step.objects.find((object) => object.objectId === id)?.noun.replaceAll("_", " ") ?? id;
+  if (!required.length) return "No highlight on this frame. Press Next when the step looks right.";
   if (!presence) {
     return `Keep these fully in frame: ${required.map(label).join(", ")}.`;
   }
