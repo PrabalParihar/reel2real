@@ -140,7 +140,8 @@ export function Landing() {
                     objectPosition={sample.cardCrop}
                     zoom={sample.cardZoom}
                     sampleChip
-                    showProgress={sample.cardOutlines ? false : true}
+                    showProgress={false}
+                    showDuration={!sample.cardOutlines}
                     drawOutlines={sample.cardOutlines}
                     overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
                   />

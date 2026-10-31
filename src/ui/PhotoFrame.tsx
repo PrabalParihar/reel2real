@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { readableChipColor } from "@/src/ui/chip-color";
+import { durationChipLabel } from "@/src/ui/duration-chip";
 import { chooseLabelPosition, LABEL_CLEARANCE, type LabelRect } from "@/src/ui/label-place";
 import { clipPathToRect, framePathFromPayload, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, sharedStillRect, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
 import {
@@ -149,6 +150,7 @@ export function PhotoFrame({
   zoom = 1,
   status,
   showProgress = false,
+  showDuration = false,
   drawOutlines = true,
   labelMode = "centroid",
 }: {
@@ -165,6 +167,8 @@ export function PhotoFrame({
   zoom?: number;
   status?: string | null;
   showProgress?: boolean;
+  /** Show the file length only. A still with no known duration stays blank. */
+  showDuration?: boolean;
   /** False drops every contour. A partial outline is never drawn. */
   drawOutlines?: boolean;
   /** Tags sit in a row on the card. Centroid chips float on the object. */
@@ -177,6 +181,7 @@ export function PhotoFrame({
   const [reduced, setReduced] = useState(false);
   const [ratio, setRatio] = useState(0);
   const [clock, setClock] = useState("0:00");
+  const [durationLabel, setDurationLabel] = useState<string | null>(null);
   const nounKey = (overlay?.nouns ?? []).map((noun) => `${noun.objectId}:${noun.requestId ?? ""}:${noun.present ? 1 : 0}`).join("|");
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
@@ -286,6 +291,10 @@ export function PhotoFrame({
             playsInline
             autoPlay
             style={{ objectFit: "fill", maxWidth: "none" }}
+            onLoadedMetadata={(event) => {
+              if (!showDuration) return;
+              setDurationLabel(durationChipLabel(event.currentTarget.duration));
+            }}
             onTimeUpdate={(event) => {
               const video = event.currentTarget;
               if (!video.duration) return;
@@ -342,6 +351,7 @@ export function PhotoFrame({
       {!status && !showRecorded && sampleChip ? (
         <span className="reel-status" style={labelMode === "tags" ? { top: 10, bottom: "auto", height: "auto", width: "max-content", alignSelf: "start" } : { bottom: mediaBottom }}>Sample</span>
       ) : null}
+      {durationLabel ? <span className="reel-status is-duration">{durationLabel}</span> : null}
       {showProgress && playLoop ? (
         <div className="reel-progress" style={{ bottom: Math.max(0, mediaBottom - 28) }}>
           <span style={{ width: `${Math.min(100, ratio * 100)}%` }} />

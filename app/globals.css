@@ -372,6 +372,7 @@ p { margin: 0; color: var(--ink-2); }
   font-family: var(--font-mono);
   font-size: 11px;
 }
+.reel-status.is-duration { left: auto; right: 12px; width: max-content; }
 .reel-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255, 255, 255, 0.22); z-index: 4; }
 .reel-progress span { display: block; height: 100%; background: #fff; }
 .reel-progress em { position: absolute; right: 8px; bottom: 8px; font-style: normal; font-family: var(--font-mono); font-size: 11px; color: #fff; }
