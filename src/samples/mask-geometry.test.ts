@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { decodeMaskToRaster } from "@meta-sam/parser";
-import { contourLoops, coverTransform, framePathFromPayload, framePathFromRaster, frameToView, objectPositionForPoint, smoothMask } from "./mask-geometry";
+import { clipPathToRect, contourLoops, coverTransform, framePathFromPayload, framePathFromRaster, frameToView, objectPositionForPoint, smoothMask, visibleFrameRect } from "./mask-geometry";
 import { heroNouns, SAMPLE_SCENES, selectMaskRecord, tutorialFromScene, type SamStepFile, type SceneNoun } from "./scene";
 
 function loadSam(demo: string, file: string): SamStepFile {
@@ -94,6 +94,51 @@ describe("vertical crop", () => {
     expect(pinned.left).toBeCloseTo(0);
     const end = coverTransform(720, 405, 360, 640, { x: 1, y: 0.5 });
     expect(end.left).toBeCloseTo(360 - end.width);
+  });
+
+  it("fills the view in both dimensions at zoom 1", () => {
+    const views: Array<[number, number]> = [[280, 224], [360, 288], [390, 312], [390, 844], [500, 400], [1440, 900]];
+    for (const [viewW, viewH] of views) {
+      const cover = coverTransform(720, 405, viewW, viewH, { x: 0.38, y: 0.5 }, 1);
+      expect(cover.width).toBeGreaterThanOrEqual(viewW - 0.01);
+      expect(cover.height).toBeGreaterThanOrEqual(viewH - 0.01);
+    }
+  });
+
+  it("keeps the mortar and pestle inside a 5:4 cover", () => {
+    const position = { x: 0.3784, y: 0.5 };
+    const viewW = 500;
+    const viewH = 400;
+    const cover = coverTransform(720, 405, viewW, viewH, position, 1);
+    const boxes = [
+      { x1: 100, y1: 0, x2: 217, y2: 250 },
+      { x1: 221, y1: 85, x2: 568, y2: 380 },
+    ];
+    for (const box of boxes) {
+      for (const [x, y] of [[box.x1, box.y1], [box.x2, box.y1], [box.x1, box.y2], [box.x2, box.y2]] as const) {
+        const point = frameToView(x, y, 720, 405, cover);
+        expect(point.x).toBeGreaterThanOrEqual(-0.5);
+        expect(point.y).toBeGreaterThanOrEqual(-0.5);
+        expect(point.x).toBeLessThanOrEqual(viewW + 0.5);
+        expect(point.y).toBeLessThanOrEqual(viewH + 0.5);
+      }
+    }
+    const window = visibleFrameRect(720, 405, viewW, viewH, cover);
+    expect(window.x1).toBeLessThanOrEqual(100);
+    expect(window.x2).toBeGreaterThanOrEqual(568);
+  });
+
+  it("clips a contour so every point stays inside the cover window", () => {
+    const d = "M 0 10 L 100 10 L 100 80 L 0 80 Z";
+    const clipped = clipPathToRect(d, { x1: 20, y1: 0, x2: 70, y2: 100 });
+    const nums = clipped.match(/-?\d+(\.\d+)?/g)?.map(Number) ?? [];
+    expect(nums.length).toBeGreaterThan(4);
+    for (let index = 0; index < nums.length; index += 2) {
+      expect(nums[index]).toBeGreaterThanOrEqual(20);
+      expect(nums[index]).toBeLessThanOrEqual(70);
+      expect(nums[index + 1]).toBeGreaterThanOrEqual(0);
+      expect(nums[index + 1]).toBeLessThanOrEqual(100);
+    }
   });
 });
 

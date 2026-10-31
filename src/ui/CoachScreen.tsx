@@ -145,8 +145,8 @@ function CoachBody() {
                   <PhotoFrame
                     src={sceneAsset(published.scene, published.scene.steps[index]?.keyframe ?? published.poster)}
                     alt=""
-                    objectPosition={{ x: 0.35, y: 0.4 }}
-                    zoom={1}
+                    objectPosition={published.stepCrops[index] ?? published.crop}
+                    zoom={published.zoom}
                     sizes="96px"
                   />
                   <span className="film-num">{index + 1}</span>

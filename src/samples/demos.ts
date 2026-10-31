@@ -20,20 +20,25 @@ export interface DemoDefinition {
   poster: string;
   credit: DemoCredit;
   scene: SampleScene;
-  /** Cover position for the hero loop inside a 9:16 stage. */
+  /** object-position for a cover crop inside the 5:4 stage. 0 shows the left edge, 1 the right. */
   crop: ObjectPosition;
-  /** 1 is a full cover crop. Below 1 zooms out so more of the 16:9 frame stays in the phone. */
+  /** Always 1. Cover fills the frame. A value below 1 letterboxes. */
   zoom: number;
-  /** Cover position per step index, same 9:16 stage. */
+  /** Cover position per step index, same 5:4 stage. */
   stepCrops: ObjectPosition[];
 }
 
 const chai = sceneByDemo("masala-chai");
 if (!chai) throw new Error("masala-chai steps.json is missing");
 
-/** Wide enough that the pestle, mortar, and hand all stay inside the 9:16 phone. */
-const CHAI_CROP: ObjectPosition = { x: 0.02, y: 0.42 };
-const CHAI_ZOOM = 0.52;
+/**
+ * 5:4 cover of the 720×405 frame. 9:16 shows ~228px of width and 4:5 shows ~324px.
+ * The pestle and mortar together span x 100–568, so only 5:4 (about 506px) holds both,
+ * plus the hand on the crush step. Zoom stays 1 so the frame never letterboxes.
+ */
+const CHAI_LAYOUT: ObjectPosition = { x: 0.3784, y: 0.5 };
+const CHAI_CRUSH: ObjectPosition = { x: 1, y: 0.5 };
+const CHAI_ZOOM = 1;
 
 export const DEMOS: DemoDefinition[] = [
   {
@@ -48,9 +53,9 @@ export const DEMOS: DemoDefinition[] = [
       href: "https://www.pexels.com/video/5480225/",
     },
     scene: chai,
-    crop: CHAI_CROP,
+    crop: CHAI_LAYOUT,
     zoom: CHAI_ZOOM,
-    stepCrops: [CHAI_CROP, CHAI_CROP, CHAI_CROP],
+    stepCrops: [CHAI_LAYOUT, CHAI_CRUSH, CHAI_LAYOUT],
   },
 ];
 

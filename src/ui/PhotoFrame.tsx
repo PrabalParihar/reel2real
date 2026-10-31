@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { coverTransform, framePathFromPayload, frameToView, type CoverTransform, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
+import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, objectPositionForPoint, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
@@ -22,6 +22,28 @@ interface DrawItem {
   draw: MaskDraw;
   frameW: number;
   frameH: number;
+  box: FrameBox;
+}
+
+/** Catalog crops are tuned for a 5:4 stage. A taller stage recenters that same focal point. */
+function positionForFrame(position: ObjectPosition, frameW: number, frameH: number, viewW: number, viewH: number): ObjectPosition {
+  if (viewW <= 0 || viewH <= 0 || viewW / viewH >= 1.2) return position;
+  const refW = frameH * 1.25;
+  const ref = coverTransform(frameW, frameH, refW, frameH, position, 1);
+  const x0 = ((0 - ref.left) / ref.width) * frameW;
+  const x1 = ((refW - ref.left) / ref.width) * frameW;
+  const focal = {
+    x: x0 + (x1 - x0) * 0.62,
+    y: ((frameH / 2 - ref.top) / ref.height) * frameH,
+  };
+  return objectPositionForPoint(focal.x, focal.y, frameW, frameH, viewW, viewH);
+}
+
+function overlapRatio(box: FrameBox, view: FrameBox): number {
+  const width = Math.max(0, Math.min(box.x2, view.x2) - Math.max(box.x1, view.x1));
+  const height = Math.max(0, Math.min(box.y2, view.y2) - Math.max(box.y1, view.y1));
+  const area = Math.max(1, (box.x2 - box.x1) * (box.y2 - box.y1));
+  return (width * height) / area;
 }
 
 function formatClock(seconds: number): string {
@@ -117,6 +139,7 @@ export function PhotoFrame({
               draw,
               frameW: selected.box.frameW || SAM_FRAME.width,
               frameH: selected.box.frameH || SAM_FRAME.height,
+              box: selected.box,
             });
           } catch {
             // A bad payload stays empty. Never fall back to a box.
@@ -132,12 +155,25 @@ export function PhotoFrame({
 
   const frameW = items[0]?.frameW || SAM_FRAME.width;
   const frameH = items[0]?.frameH || SAM_FRAME.height;
+  const fittedPosition = view.w > 0 && view.h > 0
+    ? positionForFrame(objectPosition, frameW, frameH, view.w, view.h)
+    : objectPosition;
   const cover: CoverTransform | null = view.w > 0 && view.h > 0
-    ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
+    ? coverTransform(frameW, frameH, view.w, view.h, fittedPosition, zoom)
     : null;
   const showRecorded = recordedLabel && !status;
   const playLoop = Boolean(loopSrc) && !reduced;
-  const mediaBottom = cover ? Math.max(16, view.h - (cover.top + cover.height) + 36) : 28;
+  const gapBelow = cover ? view.h - (cover.top + cover.height) : 0;
+  const mediaBottom = gapBelow > 8 ? gapBelow + 14 : 16;
+  const visible = cover ? visibleFrameRect(frameW, frameH, view.w, view.h, cover) : null;
+  const clipRect = visible
+    ? {
+        x1: visible.x1 + 6,
+        y1: visible.y1 + 6,
+        x2: visible.x2 - 6,
+        y2: visible.y2 - 6,
+      }
+    : null;
 
   return (
     <div className={`photo-frame${className ? ` ${className}` : ""}`} ref={setHost}>
@@ -156,6 +192,7 @@ export function PhotoFrame({
             loop
             playsInline
             autoPlay
+            style={{ objectFit: "cover", maxWidth: "none" }}
             onTimeUpdate={(event) => {
               const video = event.currentTarget;
               if (!video.duration) return;
@@ -172,7 +209,7 @@ export function PhotoFrame({
             priority={priority}
             loading={priority ? undefined : "eager"}
             unoptimized
-            style={{ objectFit: "fill" }}
+            style={{ objectFit: "cover", maxWidth: "none" }}
           />
         )}
         {items.length ? (
@@ -182,26 +219,44 @@ export function PhotoFrame({
                 <feGaussianBlur stdDeviation="6" />
               </filter>
             </defs>
-            {items.map((item) => (
-              <g key={item.noun}>
-                <path d={item.draw.d} fill={item.color} fillOpacity={0.2} stroke="none" />
-                <path d={item.draw.d} fill="none" stroke={item.color} strokeWidth={14} strokeOpacity={0.55} filter={`url(#${glowId})`} />
-                <path d={item.draw.d} fill="none" stroke={item.color} strokeWidth={4.5} />
-              </g>
-            ))}
+            {items.map((item) => {
+              if (visible && overlapRatio(item.box, visible) < 0.62) return null;
+              const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
+              if (!d) return null;
+              return (
+                <g key={item.noun}>
+                  <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
+                  <path d={d} fill="none" stroke={item.color} strokeWidth={14} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
+                  <path d={d} fill="none" stroke={item.color} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round" />
+                </g>
+              );
+            })}
           </svg>
         ) : null}
       </div>
       {cover ? items.map((item) => {
         if (!item.draw.centroid) return null;
         const point = frameToView(item.draw.centroid.x, item.draw.centroid.y, frameW, frameH, cover);
+        if (!visible || overlapRatio(item.box, visible) < 0.62) return null;
+        if (point.x < 12 || point.y < 12 || point.x > view.w - 12 || point.y > view.h - 12) return null;
+        const labelW = Math.max(64, item.noun.length * 7.2 + 22);
+        const labelH = 26;
+        const halfW = labelW / 2;
+        const halfH = labelH / 2;
+        let x = Math.min(view.w - halfW - 8, Math.max(halfW + 8, point.x));
+        let y = Math.min(view.h - halfH - 8, Math.max(halfH + 8, point.y));
+        const chipTop = view.h - 78;
+        const chipRight = Math.min(view.w - 8, 248);
+        if (y + halfH > chipTop && x - halfW < chipRight) {
+          y = Math.max(halfH + 8, chipTop - halfH - 4);
+        }
         return (
           <span
             key={item.noun}
             className="noun-chip"
             style={{
-              left: Math.min(view.w - 36, Math.max(36, point.x)),
-              top: Math.min(view.h - 40, Math.max(28, point.y)),
+              left: x,
+              top: y,
               borderColor: item.color,
               color: item.color,
             }}

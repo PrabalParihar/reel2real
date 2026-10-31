@@ -9,7 +9,7 @@ The landing, demos section, coach, and done screen read `DEMOS` in `src/samples/
    - `title`, `domain`, `clip`, `poster`
    - `credit` with the creator name, licence, and source URL
    - `scene` imported from that `steps.json`
-   - `crop`, `zoom`, and `stepCrops`: object-position (`x` and `y` from 0 to 1) and a zoom (1 is full cover, lower shows more of the frame) so the recorded nouns stay inside the 9:16 phone
+   - `crop`, `zoom`, and `stepCrops`: object-position (`x` and `y` from 0 to 1) for the 5:4 phone. `zoom` stays 1. A lower zoom letterboxes the 16:9 clip inside the frame.
 4. Mention the clip in `public/samples/CREDITS.md`.
 
-`objectPositionForPoint` in `src/samples/mask-geometry.ts` turns a frame focal point into that crop for a 9:16 stage. The mask overlay uses the same cover math, so the contour follows the crop.
+`objectPositionForPoint` in `src/samples/mask-geometry.ts` turns a frame focal point into that crop for a 5:4 stage (`viewW / viewH = 1.25`). The mask overlay uses the same cover math against the rendered box, so the contour follows the crop. If a 5:4 cover cannot hold the nouns, widen the phone. Do not letterbox.

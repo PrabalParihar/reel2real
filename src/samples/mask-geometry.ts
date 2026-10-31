@@ -53,8 +53,10 @@ export function coverTransform(
   }
   const fit = Math.max(viewW / frameW, viewH / frameH);
   const scale = fit * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
-  const width = frameW * scale;
-  const height = frameH * scale;
+  let width = frameW * scale;
+  let height = frameH * scale;
+  if (width + 1 >= viewW) width = Math.max(width, viewW);
+  if (height + 1 >= viewH) height = Math.max(height, viewH);
   return {
     scale,
     width,
@@ -90,6 +92,81 @@ export function frameToView(x: number, y: number, frameW: number, frameH: number
     x: cover.left + (frameW === 0 ? 0 : (x / frameW) * cover.width),
     y: cover.top + (frameH === 0 ? 0 : (y / frameH) * cover.height),
   };
+}
+
+/** Source rectangle that object-fit: cover actually shows inside the view. */
+export function visibleFrameRect(
+  frameW: number,
+  frameH: number,
+  viewW: number,
+  viewH: number,
+  cover: CoverTransform,
+): FrameBox {
+  const xAt = (viewX: number) => (cover.width === 0 ? 0 : ((viewX - cover.left) / cover.width) * frameW);
+  const yAt = (viewY: number) => (cover.height === 0 ? 0 : ((viewY - cover.top) / cover.height) * frameH);
+  return { x1: xAt(0), y1: yAt(0), x2: xAt(viewW), y2: yAt(viewH) };
+}
+
+function parseSubpaths(d: string): Point[][] {
+  const tokens = d.match(/[MLZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
+  if (!tokens) return [];
+  const paths: Point[][] = [];
+  let current: Point[] | null = null;
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token === "M" || token === "L") {
+      const x = Number(tokens[index + 1]);
+      const y = Number(tokens[index + 2]);
+      index += 2;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      if (!current) current = [];
+      current.push({ x, y });
+    } else if (token === "Z" || token === "z") {
+      if (current && current.length >= 3) paths.push(current);
+      current = null;
+    }
+  }
+  if (current && current.length >= 3) paths.push(current);
+  return paths;
+}
+
+function clipEdge(points: Point[], inside: (point: Point) => boolean, cross: (a: Point, b: Point) => Point): Point[] {
+  if (!points.length) return [];
+  const out: Point[] = [];
+  let prev = points[points.length - 1];
+  let prevIn = inside(prev);
+  for (const curr of points) {
+    const currIn = inside(curr);
+    if (currIn) {
+      if (!prevIn) out.push(cross(prev, curr));
+      out.push(curr);
+    } else if (prevIn) {
+      out.push(cross(prev, curr));
+    }
+    prev = curr;
+    prevIn = currIn;
+  }
+  return out;
+}
+
+function lerpEdge(a: Point, b: Point, axis: "x" | "y", at: number): Point {
+  const delta = b[axis] - a[axis];
+  const t = delta === 0 ? 0 : (at - a[axis]) / delta;
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+/** Keep contour vertices inside the visible cover window so they cannot run past the frame. */
+export function clipPathToRect(d: string, rect: FrameBox): string {
+  if (!(rect.x2 > rect.x1) || !(rect.y2 > rect.y1)) return "";
+  const loops = parseSubpaths(d).map((loop) => {
+    let points = loop;
+    points = clipEdge(points, (point) => point.x >= rect.x1, (a, b) => lerpEdge(a, b, "x", rect.x1));
+    points = clipEdge(points, (point) => point.x <= rect.x2, (a, b) => lerpEdge(a, b, "x", rect.x2));
+    points = clipEdge(points, (point) => point.y >= rect.y1, (a, b) => lerpEdge(a, b, "y", rect.y1));
+    points = clipEdge(points, (point) => point.y <= rect.y2, (a, b) => lerpEdge(a, b, "y", rect.y2));
+    return points;
+  }).filter((loop) => loop.length >= 3);
+  return loops.map(loopToPath).filter(Boolean).join(" ");
 }
 
 export function smoothMask(raster: Uint8Array, width: number, height: number, radius = 3, cutoff = 0.5): Uint8Array {
