@@ -5,8 +5,8 @@
   "domain": "non_cooking_diy",
   "sampleLabel": true,
   "attribution": {
-    "creatorName": "Sample maker (self-filmed)",
-    "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+    "creatorName": "Sample",
+    "creditLine": "Sample",
     "licence": "self_filmed_sample"
   },
   "sourceClip": {
@@ -20,7 +20,7 @@
     "mode": "muse_spark_curated",
     "modelId": "muse-spark-1.3",
     "apiBaseHint": "https://api.meta.ai/v1",
-    "generatedAtIso": "2026-10-31T06:30:00.000Z",
+    "generatedAtIso": "2026-10-31T08:30:00.000Z",
     "toolCalls": [
       {
         "tool": "muse_spark",
@@ -32,75 +32,84 @@
   },
   "runtimeHints": {
     "preferredLiveMode": "keyframe_still",
-    "maxObjectsPerStep": 4
+    "maxObjectsPerStep": 4,
+    "safetyRuleId": "hand_on_chain"
   },
   "steps": [
     {
       "id": "step_01_layout",
       "index": 0,
-      "instructionText": "Put the rear wheel, the chain, and a dry rag fully in frame.",
-      "hinglishPrompt": "Wheel, chain, aur rag dikhao.",
+      "instructionText": "Put the chain, the rag, and the brush fully in frame.",
+      "hinglishPrompt": "Chain, rag, aur brush dikhao.",
       "sourceTimeRange": { "startSec": 0, "endSec": 8 },
       "credit": {
-        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
-        "creatorName": "Sample maker (self-filmed)",
+        "creditLine": "Sample",
+        "creatorName": "Sample",
         "sampleLabel": true
       },
       "objects": [
-        { "objectId": "obj_wheel", "noun": "wheel", "role": "required_present", "samPrompt": "bicycle rear wheel", "expectedTrack": true },
         { "objectId": "obj_chain", "noun": "chain", "role": "required_present", "samPrompt": "bicycle chain", "expectedTrack": true },
-        { "objectId": "obj_rag", "noun": "rag", "role": "required_present", "samPrompt": "dry cloth rag", "expectedTrack": true }
+        { "objectId": "obj_rag", "noun": "rag", "role": "required_present", "samPrompt": "cloth rag", "expectedTrack": true },
+        { "objectId": "obj_brush", "noun": "brush", "role": "required_present", "samPrompt": "chain brush", "expectedTrack": true }
       ],
       "successCheck": {
         "kind": "all_required_present",
-        "description": "Wheel, chain, and rag are all fully visible.",
-        "requiredObjectIds": ["obj_wheel", "obj_chain", "obj_rag"],
+        "description": "Chain, rag, and brush are all fully visible.",
+        "requiredObjectIds": ["obj_chain", "obj_rag", "obj_brush"],
         "minStableChunks": 1
       }
     },
     {
       "id": "step_02_wipe",
       "index": 1,
-      "instructionText": "Pinch the rag around the chain and turn the pedal backward.",
+      "instructionText": "Pinch the rag on the chain. Keep the brush in frame.",
       "hinglishPrompt": "Rag se chain pocho.",
       "sourceTimeRange": { "startSec": 8, "endSec": 18 },
       "credit": {
-        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creditLine": "Sample",
+        "creatorName": "Sample",
         "sampleLabel": true
       },
       "objects": [
         { "objectId": "obj_chain", "noun": "chain", "role": "required_present", "samPrompt": "bicycle chain", "expectedTrack": true },
         { "objectId": "obj_rag", "noun": "rag", "role": "required_present", "samPrompt": "cloth rag on the chain", "expectedTrack": true },
-        { "objectId": "obj_pedal", "noun": "pedal", "role": "required_present", "samPrompt": "bicycle pedal", "expectedTrack": true }
+        { "objectId": "obj_brush", "noun": "brush", "role": "required_present", "samPrompt": "chain brush", "expectedTrack": true }
       ],
       "successCheck": {
         "kind": "all_required_present",
-        "description": "Chain, rag, and pedal are visible while you wipe.",
-        "requiredObjectIds": ["obj_chain", "obj_rag", "obj_pedal"],
+        "description": "The rag is on the chain and the brush is still visible.",
+        "requiredObjectIds": ["obj_chain", "obj_rag", "obj_brush"],
         "minStableChunks": 1
       }
     },
     {
-      "id": "step_03_oil",
+      "id": "step_03_lube",
       "index": 2,
-      "instructionText": "Oil one link. Take the rag off the chain first.",
-      "hinglishPrompt": "Rag hatao, ek link pe oil.",
+      "instructionText": "Touch one link with the lube bottle. Take the rag off the chain.",
+      "hinglishPrompt": "Rag hatao, bottle se ek link.",
       "sourceTimeRange": { "startSec": 18, "endSec": 28 },
       "credit": {
-        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creditLine": "Sample",
+        "creatorName": "Sample",
         "sampleLabel": true
       },
       "objects": [
         { "objectId": "obj_chain", "noun": "chain", "role": "required_present", "samPrompt": "bicycle chain", "expectedTrack": true },
-        { "objectId": "obj_oil", "noun": "oil", "role": "required_present", "samPrompt": "chain oil bottle", "expectedTrack": true },
-        { "objectId": "obj_rag", "noun": "rag", "role": "required_absent", "samPrompt": "cloth rag", "expectedTrack": false }
+        { "objectId": "obj_lube", "noun": "lube bottle", "role": "required_present", "samPrompt": "chain lube bottle", "expectedTrack": true },
+        { "objectId": "obj_rag", "noun": "rag", "role": "required_absent", "samPrompt": "cloth rag", "expectedTrack": false },
+        { "objectId": "obj_hand", "noun": "hand", "role": "safety_prop", "samPrompt": "bare hand", "expectedTrack": false }
       ],
       "successCheck": {
         "kind": "required_present_and_absent",
-        "description": "Chain and oil bottle are visible. The rag is off the chain.",
-        "requiredObjectIds": ["obj_chain", "obj_oil"],
+        "description": "Chain and lube bottle are visible. The rag is off the chain. A still cannot see the crank turn, so a visible hand is the stop.",
+        "requiredObjectIds": ["obj_chain", "obj_lube"],
         "forbiddenObjectIds": ["obj_rag"],
         "minStableChunks": 1
+      },
+      "safety": {
+        "ruleId": "hand_on_chain",
+        "triggerObjectIds": ["obj_hand"],
+        "message": "Hand is on the chain. Pull it back before the crank turns."
       }
     }
   ]

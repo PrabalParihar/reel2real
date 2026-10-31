@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SAMPLE_CHAI } from "@/src/server/fixtures";
-import { coachHonesty, highlightsChip, honestyChip, missingObjectHint, stateChip } from "./ui";
+import { coachHonesty, coachStatusChip, headerChip, highlightsChip, honestyChip, missingObjectHint, stateChip } from "./ui";
 import { evaluateCheck } from "./evaluate";
 import { createCoach, transition } from "./machine";
 import { TIMEOUTS } from "./types";
@@ -133,10 +133,20 @@ describe("step fsm", () => {
     expect(stateChip("safety_halt")).toBe("Safety");
   });
 
-  it("tells the cook when an expected object is not masked", () => {
+  it("tells the cook when an expected object is not highlighted", () => {
     const step = SAMPLE_CHAI.steps[2];
-    expect(missingObjectHint(step, { obj_cup: false, obj_mortar: true, obj_knife: false })).toMatch(/cup/i);
+    const hint = missingObjectHint(step, { obj_cup: false, obj_mortar: true, obj_knife: false });
+    expect(hint).toMatch(/cup/i);
+    expect(hint).toMatch(/highlighted/i);
+    expect(hint?.toLowerCase().includes("mask")).toBe(false);
     expect(missingObjectHint(step, { obj_cup: true, obj_mortar: true })).toBeNull();
+    expect(stateChip("mask_lost")).toBe("Highlight lost");
+    expect(coachStatusChip("tracking", true)).toBe("Manual, press Next");
+    expect(coachStatusChip("tracking", false)).toBe("Checking…");
+    expect(headerChip({ mock: false, sampleRun: true, liveClip: false })).toBe("Sample");
+    expect(headerChip({ mock: false, sampleRun: false, liveClip: true })).toBe("Live");
+    expect(headerChip({ mock: true, sampleRun: false, liveClip: true })).toBeNull();
+    expect(headerChip({ mock: true, sampleRun: false, liveClip: false })).toBeNull();
   });
 
   it("keeps voice lines short and free of questions", () => {

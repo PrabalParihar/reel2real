@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { coachHonesty, highlightsChip, missingObjectHint, stateChip } from "@/src/fsm/ui";
+import { frameForDomain } from "@/src/domains/catalog";
+import { coachHonesty, coachStatusChip, highlightsChip, missingObjectHint } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell, Chip } from "./chrome";
-import { StandScene, StillFrame } from "./StandScene";
+import { BikeScene, StandScene, StillFrame } from "./StandScene";
 import { useSession } from "./session";
 import { useCoach } from "./useCoach";
 
-const TINTS = ["teal", "violet", "amber", "rose"];
 const MODES: Array<{ id: PreferredLiveMode; label: string }> = [
   { id: "keyframe_still", label: "Keyframe" },
   { id: "chunk_video_1_2s", label: "Chunk" },
@@ -22,7 +22,7 @@ const SCENARIOS: Array<{ id: MockScenario; label: string }> = [
   { id: "skip", label: "Miss object" },
   { id: "out_of_order", label: "Out of order" },
   { id: "safety", label: "Safety" },
-  { id: "mask_lost", label: "Mask lost" },
+  { id: "mask_lost", label: "Highlight lost" },
 ];
 
 export function CoachScreen() {
@@ -35,7 +35,7 @@ export function CoachScreen() {
   }, [router, tutorial]);
 
   if (!tutorial) {
-    return <AppShell mock={session.runtime.mock}><main className="screen"><p>Opening the coach…</p></main></AppShell>;
+    return <AppShell><main className="screen"><p>Opening the coach…</p></main></AppShell>;
   }
 
   return <CoachBody />;
@@ -46,14 +46,15 @@ function CoachBody() {
   const session = useSession();
   const tutorial = session.tutorial!;
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const coach = useCoach(tutorial, videoRef);
+  const coach = useCoach(tutorial, videoRef, { mock: session.runtime.mock });
   const step = tutorial.steps[coach.machine.context.stepIndex] ?? tutorial.steps[0];
-  const chip = stateChip(coach.machine.state);
+  const cameraBlocked = coach.cameraPhase === "denied" || coach.cameraPhase === "missing" || coach.cameraPhase === "insecure";
+  const chip = coachStatusChip(coach.machine.state, cameraBlocked);
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
   const honesty = coachHonesty(coach.machine.context.liveMode, coach.machine.context.stillsArmed, sampleSteps);
   const highlights = highlightsChip(coach.machine.context.lastError);
   const hint = missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
-  const checking = coach.machine.state === "tracking" || coach.machine.state === "evaluating";
+  const checking = !cameraBlocked && (coach.machine.state === "tracking" || coach.machine.state === "evaluating");
   const tone = coach.machine.state === "safety_halt" ? "danger" : coach.machine.state === "skip_detected" || coach.machine.state === "out_of_order" ? "skip" : coach.machine.state === "success" ? "match" : checking ? "running" : "wait";
 
   const finished = useRef(false);
@@ -75,31 +76,32 @@ function CoachBody() {
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).has("debug"));
   }, []);
-  const stillKind = tutorial.domain === "non_cooking_diy" ? "bike" : "chai";
+  const stillKind = frameForDomain(tutorial.domain);
 
   return (
-    <AppShell backHref="/upload" mock={session.runtime.mock}>
+    <AppShell backHref="/upload">
       <main className="screen coach">
         <section className="stage-wrap mesh">
           <div className="stage">
             <div className="stage-chips">
               <Chip tone="wait">{honesty}</Chip>
+              {coach.highlightsPaused ? <Chip tone="skip">Highlights paused</Chip> : null}
               {highlights ? <Chip tone="skip">{highlights}</Chip> : null}
             </div>
-            <video ref={videoRef} className={coach.preview === "camera" ? "camera" : "camera is-hidden"} playsInline muted />
-            {coach.preview !== "camera" ? <StandScene /> : null}
+            <video ref={videoRef} className={coach.cameraPhase === "live" ? "camera" : "camera is-hidden"} playsInline muted />
+            {coach.cameraPhase === "live" ? null : stillKind === "bike" ? <BikeScene /> : <StandScene />}
             <div className={`mask-layer${checking ? " is-dim" : ""}`}>
-              {coach.masks.filter((mask) => mask.present && mask.box).map((mask, index) => (
+              {coach.masks.filter((mask) => mask.present && mask.box).map((mask) => (
                 <div
                   key={mask.objectId}
-                  className={`mask tint-${TINTS[index % 4]}`}
+                  className="mask"
                   style={{ left: `${mask.box!.x * 100}%`, top: `${mask.box!.y * 100}%`, width: `${mask.box!.w * 100}%`, height: `${mask.box!.h * 100}%` }}
                 >
                   <span>{mask.noun.replaceAll("_", " ")}</span>
                 </div>
               ))}
             </div>
-            {coach.preview === "illustrated" ? <p className="stage-note mono">Illustrated stand · camera unavailable</p> : null}
+            {coach.cameraNote ? <p className="stage-note mono">{coach.cameraNote}</p> : null}
           </div>
         </section>
 

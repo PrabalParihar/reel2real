@@ -3,16 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Camera, Clapperboard, ScanLine } from "lucide-react";
-import chaiSteps from "@/src/fixtures/sample-masala-chai.steps.json";
-import bikeSteps from "@/src/fixtures/sample-bike-chain.steps.json";
+import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
 import { Chip } from "./chrome";
 import { SparkMark } from "./mark";
 import { StillFrame } from "./StandScene";
 import { useSession } from "./session";
 
-const CHAI = chaiSteps.steps.map((step) => step.instructionText);
-const BIKE = bikeSteps.steps.map((step) => step.instructionText);
+const HERO_STEPS = PUBLISHED_SAMPLES[0].tutorial.steps.map((step) => step.instructionText);
 
 export function Landing() {
   const { runtime } = useSession();
@@ -63,9 +61,9 @@ export function Landing() {
             <h3>Spark writes the steps</h3>
             <p>Muse Spark reads the clip once and returns steps JSON. A short clip goes as a 2 second chunk. A longer one uses the files upload.</p>
             <div className="mini-visual">
-              <span>Masala chai · 3 steps</span>
+              <span>{PUBLISHED_SAMPLES[0].tutorial.title.replace(/^Sample · /, "")} · {HERO_STEPS.length} steps</span>
               <ol className="step-list">
-                {CHAI.map((line) => <li key={line}>{line}</li>)}
+                {HERO_STEPS.map((line) => <li key={line}>{line}</li>)}
               </ol>
             </div>
           </article>
@@ -73,7 +71,7 @@ export function Landing() {
             <span className="index">03</span>
             <ScanLine strokeWidth={1.5} />
             <h3>Coach with SAM</h3>
-            <p>SAM 3.1 checks 2–4 objects every 1–2 seconds on a keyframe. Advance, skip, out of order, one safety rule.</p>
+            <p>SAM 3.1 checks 2–4 objects about every 2 seconds on a keyframe. Advance, skip, out of order, one safety rule.</p>
             <StillFrame kind="chai" />
           </article>
         </div>
@@ -91,7 +89,7 @@ export function Landing() {
           </div>
           <div className="credit-mock">
             <StillFrame kind="chai" />
-            <p>{CHAI[1]}</p>
+            <p>{HERO_STEPS[1]}</p>
             <p>Credit · Sample cook · self-filmed</p>
           </div>
         </article>
@@ -101,30 +99,20 @@ export function Landing() {
         <p className="kicker">Demos</p>
         <h2>Two Sample tutorials</h2>
         <div className="demo-grid">
-          <article className="panel demo-card">
-            <StillFrame kind="chai" tall />
-            <div className="demo-body">
-              <Chip tone="neutral">Sample</Chip>
-              <h3>Masala chai</h3>
-              <p>Indian recipe. Keep the mortar, ginger, and cup fully in frame.</p>
-              <ol className="step-list">
-                {CHAI.map((line) => <li key={line}>{line}</li>)}
-              </ol>
-              <Link className="btn btn-primary" href="/extracting?demo=masala-chai">Open in coach</Link>
-            </div>
-          </article>
-          <article className="panel demo-card">
-            <StillFrame kind="bike" tall />
-            <div className="demo-body">
-              <Chip tone="neutral">Sample</Chip>
-              <h3>Bike chain wipe</h3>
-              <p>Non-cooking DIY. Wheel, chain, and rag stay inside the frame.</p>
-              <ol className="step-list">
-                {BIKE.map((line) => <li key={line}>{line}</li>)}
-              </ol>
-              <Link className="btn btn-ghost" href="/extracting?demo=bike-chain">Open in coach</Link>
-            </div>
-          </article>
+          {PUBLISHED_SAMPLES.map((sample) => (
+            <article className="panel demo-card" key={sample.id}>
+              <StillFrame kind={sample.frame} tall />
+              <div className="demo-body">
+                <Chip tone="neutral">Sample</Chip>
+                <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
+                <p>{sample.tutorial.steps[0]?.successCheck.description}</p>
+                <ol className="step-list">
+                  {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
+                </ol>
+                <Link className={sample.id === PUBLISHED_SAMPLES[0].id ? "btn btn-primary" : "btn btn-ghost"} href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
+              </div>
+            </article>
+          ))}
         </div>
         </section>
 
@@ -139,7 +127,7 @@ export function Landing() {
           </article>
           <article className="panel model-card">
             <h3>SAM 3.1</h3>
-            <p>Keyframe masks for 2–4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
+            <p>Keyframe highlights for 2–4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>
@@ -149,7 +137,7 @@ export function Landing() {
       <section className="closing mesh">
         <div className="orb" />
         <div className="phone-ghost ghost-back" />
-        <h2>Put the phone on a stand. Cook along.</h2>
+        <h2>Put the phone on a stand. Follow along.</h2>
         <div className="cta-row">
           <Link className="btn btn-primary" href="/upload">Try the coach</Link>
           <a className="btn btn-ghost" href="#demos">View demos</a>
@@ -181,7 +169,7 @@ function HeroStage({ mock }: { mock: boolean }) {
   }, []);
   useEffect(() => {
     if (!motion) return;
-    const timer = setInterval(() => setIndex((current) => (current + 1) % CHAI.length), 2800);
+    const timer = setInterval(() => setIndex((current) => (current + 1) % HERO_STEPS.length), 2800);
     return () => clearInterval(timer);
   }, [motion]);
   return (
@@ -193,13 +181,13 @@ function HeroStage({ mock }: { mock: boolean }) {
           <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
         </div>
         <div className={motion ? "mock-view is-loop" : "mock-view"} key={motion ? index : "still"}>
-          <span className="blob blob-a"><i />ginger</span>
-          <span className="blob blob-b"><i />pestle</span>
+          <span className="blob blob-a"><i />{PUBLISHED_SAMPLES[0].tutorial.steps[0].objects[0]?.noun}</span>
+          <span className="blob blob-b"><i />{PUBLISHED_SAMPLES[0].tutorial.steps[0].objects[1]?.noun}</span>
           <span className="checking">Checking…</span>
         </div>
-        <article className="mock-card" key={CHAI[index]}>
-          <p className="mock-kicker">Step {index + 1} of {CHAI.length} · Match</p>
-          <h2>{CHAI[index]}</h2>
+        <article className="mock-card" key={HERO_STEPS[index]}>
+          <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>
+          <h2>{HERO_STEPS[index]}</h2>
           <p>Sample cook · self-filmed</p>
         </article>
       </div>
