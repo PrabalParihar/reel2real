@@ -3,6 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { readableChipColor } from "@/src/ui/chip-color";
+import { chooseLabelPosition, LABEL_CLEARANCE, type LabelRect } from "@/src/ui/label-place";
 import { clipPathToRect, coverTransform, framePathFromPayload, frameToView, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
@@ -59,18 +60,22 @@ function outlineSegments(d: string, frameW: number, frameH: number, cover: Cover
   return segments;
 }
 
-function strokeHits(rect: { x1: number; y1: number; x2: number; y2: number }, segments: Array<[Point, Point]>, padX: number, padY: number): boolean {
-  const box = { x1: rect.x1 - padX, y1: rect.y1 - padY, x2: rect.x2 + padX, y2: rect.y2 + padY };
-  const inside = (point: Point) => point.x >= box.x1 && point.x <= box.x2 && point.y >= box.y1 && point.y <= box.y2;
-  for (const [start, end] of segments) {
-    const span = Math.hypot(end.x - start.x, end.y - start.y);
-    const steps = Math.max(1, Math.ceil(span / 3));
-    for (let step = 0; step <= steps; step += 1) {
-      const t = step / steps;
-      if (inside({ x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t })) return true;
-    }
-  }
-  return false;
+/** Outer painted contour. The 4.5 core sits inside this glow stroke. */
+const OUTLINE_STROKE = 14;
+
+function statusRect(text: string, viewW: number, viewH: number, bottom: number): LabelRect {
+  const textWidth = text.length * 7;
+  const innerMax = Math.max(40, viewW - 46);
+  const lines = Math.max(1, Math.ceil(textWidth / innerMax));
+  const width = Math.min(viewW - 24, textWidth + 22);
+  const height = lines * 18 + 14;
+  const pad = LABEL_CLEARANCE;
+  return {
+    x1: Math.max(0, 12 - pad),
+    y1: viewH - bottom - height - pad,
+    x2: Math.min(viewW, 12 + width + pad),
+    y2: Math.min(viewH, viewH - bottom + pad),
+  };
 }
 
 function placeLabels(
@@ -79,70 +84,43 @@ function placeLabels(
   frameH: number,
   cover: CoverTransform,
   view: { w: number; h: number },
+  status: LabelRect | null,
 ): Array<{ noun: string; color: string; x: number; y: number }> {
-  const placed: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
   const labels: Array<{ noun: string; color: string; x: number; y: number }> = [];
-  const chipTop = view.h - 78;
-  const chipRight = Math.min(view.w - 8, 248);
-  const padX = (4.5 * cover.width) / frameW / 2 + 3;
-  const padY = (4.5 * cover.height) / frameH / 2 + 3;
+  const blocked: LabelRect[] = status ? [status] : [];
+  const strokes = items.flatMap((item) => outlineSegments(item.draw.d, frameW, frameH, cover));
+  const strokeScale = Math.max(cover.width / frameW, cover.height / frameH);
+  const strokeRadius = (OUTLINE_STROKE / 2) * strokeScale;
   for (const item of items) {
-    if (!item.draw.centroid) continue;
-    const point = frameToView(item.draw.centroid.x, item.draw.centroid.y, frameW, frameH, cover);
     const outline = outlineSegments(item.draw.d, frameW, frameH, cover);
-    const labelW = Math.max(76, item.noun.length * 8 + 22);
-    const labelH = 28;
-    const halfW = labelW / 2;
-    const halfH = labelH / 2;
-    const clamp = (rawX: number, rawY: number) => {
-      let x = Math.min(view.w - halfW - 6, Math.max(halfW + 6, rawX));
-      let y = Math.min(view.h - halfH - 6, Math.max(halfH + 6, rawY));
-      if (y + halfH > chipTop && x - halfW < chipRight) y = Math.max(halfH + 6, chipTop - halfH - 4);
-      return { x, y };
-    };
+    if (!outline.length) continue;
     const bounds = outline.reduce((acc, [start, end]) => ({
       minX: Math.min(acc.minX, start.x, end.x),
       minY: Math.min(acc.minY, start.y, end.y),
       maxX: Math.max(acc.maxX, start.x, end.x),
       maxY: Math.max(acc.maxY, start.y, end.y),
-    }), { minX: point.x, minY: point.y, maxX: point.x, maxY: point.y });
-    const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
-    const candidates = [
-      point,
-      { x: center.x, y: bounds.minY - halfH - 8 },
-      { x: center.x, y: bounds.maxY + halfH + 8 },
-      { x: bounds.minX - halfW - 8, y: center.y },
-      { x: bounds.maxX + halfW + 8, y: center.y },
-    ];
-    for (const step of [24, 48, 72]) {
-      candidates.push(
-        { x: center.x, y: center.y - step },
-        { x: center.x, y: center.y + step },
-        { x: center.x - step, y: center.y },
-        { x: center.x + step, y: center.y },
-      );
-    }
-    for (let gy = halfH + 10; gy <= view.h - halfH - 10; gy += 18) {
-      for (let gx = halfW + 10; gx <= view.w - halfW - 10; gx += 22) candidates.push({ x: gx, y: gy });
-    }
-    let chosen = clamp(point.x, point.y);
-    let chosenHits = true;
-    let chosenDistance = Number.POSITIVE_INFINITY;
-    for (const candidate of candidates) {
-      const next = clamp(candidate.x, candidate.y);
-      const rect = { x1: next.x - halfW, y1: next.y - halfH, x2: next.x + halfW, y2: next.y + halfH };
-      if (rect.x1 < 4 || rect.y1 < 4 || rect.x2 > view.w - 4 || rect.y2 > view.h - 4) continue;
-      if (strokeHits(rect, outline, padX, padY)) continue;
-      if (placed.some((other) => rect.x1 < other.x2 && rect.x2 > other.x1 && rect.y1 < other.y2 && rect.y2 > other.y1)) continue;
-      const distance = Math.hypot(next.x - point.x, next.y - point.y);
-      if (distance < chosenDistance) {
-        chosen = next;
-        chosenHits = false;
-        chosenDistance = distance;
-      }
-    }
-    if (chosenHits) continue;
-    placed.push({ x1: chosen.x - halfW, y1: chosen.y - halfH, x2: chosen.x + halfW, y2: chosen.y + halfH });
+    }), { minX: Number.POSITIVE_INFINITY, minY: Number.POSITIVE_INFINITY, maxX: Number.NEGATIVE_INFINITY, maxY: Number.NEGATIVE_INFINITY });
+    // Matches the 12px mono chip: 7.2px a glyph, 10px padding, 1px border.
+    const labelW = item.noun.length * 7.2 + 22;
+    const labelH = 27;
+    const chosen = chooseLabelPosition({
+      viewW: view.w,
+      viewH: view.h,
+      labelW,
+      labelH,
+      bounds,
+      strokes,
+      strokeRadius,
+      clearance: LABEL_CLEARANCE,
+      blocked,
+    });
+    if (!chosen) continue;
+    blocked.push({
+      x1: chosen.x - labelW / 2,
+      y1: chosen.y - labelH / 2,
+      x2: chosen.x + labelW / 2,
+      y2: chosen.y + labelH / 2,
+    });
     labels.push({ noun: item.noun, color: readableChipColor(item.color), x: chosen.x, y: chosen.y });
   }
   return labels;
@@ -267,6 +245,7 @@ export function PhotoFrame({
     ? coverTransform(frameW, frameH, view.w, view.h, objectPosition, zoom)
     : null;
   const showRecorded = recordedLabel && !status;
+  const statusText = status ? status : showRecorded ? RECORDED_SAM_LABEL : sampleChip ? "Sample" : null;
   const playLoop = Boolean(loopSrc) && !reduced;
   const gapBelow = cover ? view.h - (cover.top + cover.height) : 0;
   const mediaBottom = gapBelow > 8 ? gapBelow + 14 : 16;
@@ -345,7 +324,7 @@ export function PhotoFrame({
             <span key={noun.noun} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
           ))}
         </div>
-      ) : cover ? placeLabels(items, frameW, frameH, cover, view).map((label) => (
+      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null).map((label) => (
           <span
             key={label.noun}
             className="noun-chip"
