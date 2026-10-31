@@ -1,0 +1,35 @@
+# Local tutorial footage. Never commit creator or sample video.
+clips/
+samples/
+placeholders/
+
+# Audio and video. The india-check still PNG is intentionally not ignored.
+*.mp4
+*.m4v
+*.mov
+*.webm
+*.mkv
+*.avi
+*.mpeg
+*.mpg
+*.m4a
+*.wav
+*.mp3
+*.aac
+*.ogg
+*.flac
+
+# Secrets. Names live in the README only.
+.env
+.env.*
+
+# Tooling
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
+*.tsbuildinfo
