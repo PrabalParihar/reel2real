@@ -88,6 +88,7 @@ export function PhotoFrame({
   status,
   showProgress = false,
   drawOutlines = true,
+  labelMode = "centroid",
 }: {
   src: string;
   alt: string;
@@ -104,6 +105,8 @@ export function PhotoFrame({
   showProgress?: boolean;
   /** False drops every contour. A partial outline is never drawn. */
   drawOutlines?: boolean;
+  /** Tags sit in a row on the card. Centroid chips float on the object. */
+  labelMode?: "centroid" | "tags";
 }) {
   const glowId = useId().replace(/:/g, "");
   const [view, setView] = useState({ w: 0, h: 0 });
@@ -198,7 +201,7 @@ export function PhotoFrame({
     : null;
 
   return (
-    <div className={`photo-frame${className ? ` ${className}` : ""}`} ref={setHost}>
+    <div className={`photo-frame${labelMode === "tags" ? " has-tags" : ""}${className ? ` ${className}` : ""}`} ref={setHost}>
       <div
         className="photo-cover"
         style={cover
@@ -246,7 +249,7 @@ export function PhotoFrame({
               const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
               if (!d) return null;
               return (
-                <g key={item.noun}>
+                <g key={item.noun} data-noun={item.noun}>
                   <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
                   <path d={d} fill="none" stroke={item.color} strokeWidth={14} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
                   <path d={d} fill="none" stroke={item.color} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round" />
@@ -256,7 +259,13 @@ export function PhotoFrame({
           </svg>
         ) : null}
       </div>
-      {cover ? placeLabels(items, frameW, frameH, cover, view).map((label) => (
+      {labelMode === "tags" ? (
+        <div className="noun-tags">
+          {(overlay?.nouns ?? []).filter((noun) => noun.present).map((noun) => (
+            <span key={noun.noun} className="noun-chip" style={{ borderColor: noun.color, color: noun.color }}>{noun.noun}</span>
+          ))}
+        </div>
+      ) : cover ? placeLabels(items, frameW, frameH, cover, view).map((label) => (
           <span
             key={label.noun}
             className="noun-chip"

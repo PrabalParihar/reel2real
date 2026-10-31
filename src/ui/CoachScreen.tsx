@@ -85,6 +85,8 @@ function CoachBody() {
   const showRecorded = Boolean(scene) && coach.cameraPhase !== "live";
   const stepCrop = published?.stepCrops[coach.machine.context.stepIndex] ?? published?.crop ?? { x: 0.5, y: 0.5 };
   const stepZoom = published?.stepZooms[coach.machine.context.stepIndex] ?? published?.zoom ?? 1;
+  const liveCamera = coach.cameraPhase === "live";
+  const titleBelow = showRecorded && (published?.stepTitle[coach.machine.context.stepIndex] ?? "below") === "below";
   const onVideoStatus = highlights
     ? highlights
     : coach.highlightsPaused
@@ -102,8 +104,8 @@ function CoachBody() {
   return (
     <AppShell backHref="/upload">
       <main className="screen coach">
-        <section className="stage-wrap">
-          <div className={`reel-phone${published ? ` ${shapeClass(published.shape)}` : ""}`}>
+        <section className={`stage-wrap${showRecorded ? " is-sample" : ""}${liveCamera ? " is-live" : ""}${titleBelow ? " title-below" : ""}`}>
+          <div className={`reel-phone${published ? ` ${shapeClass(published.shape)}` : ""}${liveCamera ? " is-live" : " is-sample"}`}>
             <video ref={videoRef} className={coach.cameraPhase === "live" ? "camera" : "camera is-hidden"} playsInline muted />
             {showRecorded && scene && sceneStep ? (
               <PhotoFrame
@@ -118,10 +120,12 @@ function CoachBody() {
               />
             ) : null}
             {!showRecorded && onVideoStatus ? <span className="reel-status">{onVideoStatus}</span> : null}
-            <div className="reel-title">
-              <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-              <h1>{step.instructionText}</h1>
-            </div>
+            {liveCamera || !titleBelow ? (
+              <div className="reel-title">
+                <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
+                <h1>{step.instructionText}</h1>
+              </div>
+            ) : null}
             {coach.cameraPhase === "live" ? (
               <div className={`mask-layer${checking ? " is-dim" : ""}`}>
                 {coach.masks.filter((mask) => mask.present && mask.box).map((mask) => (
@@ -136,6 +140,12 @@ function CoachBody() {
               </div>
             ) : null}
           </div>
+          {titleBelow ? (
+            <div className="reel-title is-below">
+              <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
+              <h1>{step.instructionText}</h1>
+            </div>
+          ) : null}
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
         </section>
 

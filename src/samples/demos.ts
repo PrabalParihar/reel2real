@@ -29,6 +29,7 @@ export interface DemoDefinition {
   zoom: number;
   stepCrops: ObjectPosition[];
   stepZooms: number[];
+  stepTitle: Array<"overlay" | "below">;
   /** Demo grid cards are always 4:5. Outlines are omitted when they would be cut. */
   cardCrop: ObjectPosition;
   cardZoom: number;
@@ -78,6 +79,7 @@ export const DEMOS: DemoDefinition[] = [
     zoom: chaiFit.steps[0]?.zoom ?? 1,
     stepCrops: chaiFit.steps.map((step) => step.position),
     stepZooms: chaiFit.steps.map((step) => step.zoom),
+    stepTitle: chaiFit.stepTitle,
     cardCrop: chaiFit.card.position,
     cardZoom: chaiFit.card.zoom,
     cardOutlines: chaiFit.card.outlines,

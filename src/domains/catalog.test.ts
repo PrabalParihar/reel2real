@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEMOS } from "@/src/samples/demos";
-import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor } from "@/src/samples/frame-fit";
-import type { FrameBox } from "@/src/samples/mask-geometry";
+import { boxInsideCrop, CARD_SHAPE, fitDemo, FRAME_SHAPES, placementFor, sampleStageSize, titlePlacementFor } from "@/src/samples/frame-fit";
+import { coverTransform, visibleFrameRect, type FrameBox } from "@/src/samples/mask-geometry";
 import type { SampleScene, SceneNoun } from "@/src/samples/scene";
 import { PUBLISHED_SAMPLES } from "./catalog";
 
@@ -93,6 +93,7 @@ describe("catalog frame shapes", () => {
       expect(demo.shape).toBe(fit.shape);
       expect(demo.stepCrops).toEqual(fit.steps.map((step) => step.position));
       expect(demo.stepZooms).toEqual(fit.steps.map((step) => step.zoom));
+      expect(demo.stepTitle).toEqual(fit.stepTitle);
       expect(demo.cardOutlines).toBe(fit.card.outlines);
       expect(demo.cardCrop).toEqual(fit.card.position);
       for (const [index, stepBoxes] of boxes.entries()) {
@@ -114,5 +115,35 @@ describe("catalog frame shapes", () => {
       }
     }
     expect(DEMOS.find((demo) => demo.slug === "masala-chai")?.shape).toBe("5:4");
+  });
+
+  it("keeps every Sample stage, including 390 no-camera, on the demo shape", () => {
+    for (const demo of DEMOS) {
+      const boxes = highlightedBoxes(demo.scene);
+      for (const width of [390, 550]) {
+        const stage = sampleStageSize(demo.shape, width);
+        expect(stage.width / stage.height).toBeCloseTo(stage.aspect, 5);
+        boxes.forEach((stepBoxes, index) => {
+          const zoom = demo.stepZooms[index] ?? 1;
+          const cover = coverTransform(720, 405, stage.width, stage.height, demo.stepCrops[index], zoom);
+          const window = visibleFrameRect(720, 405, stage.width, stage.height, cover);
+          for (const box of stepBoxes) {
+            expect(box.x1).toBeGreaterThanOrEqual(window.x1 - 0.6);
+            expect(box.y1).toBeGreaterThanOrEqual(window.y1 - 0.6);
+            expect(box.x2).toBeLessThanOrEqual(window.x2 + 0.6);
+            expect(box.y2).toBeLessThanOrEqual(window.y2 + 0.6);
+          }
+          const title = titlePlacementFor(stepBoxes, stage.width, stage.height, demo.stepCrops[index], zoom);
+          expect(demo.stepTitle[index]).toBe(title);
+          if (title === "overlay") {
+            const band = window.y1 + (window.y2 - window.y1) * 0.72;
+            expect(stepBoxes.every((box) => box.y2 <= band + 0.5)).toBe(true);
+          }
+        });
+      }
+    }
+    const chai = sampleStageSize("5:4", 390);
+    expect(chai.width).toBe(390);
+    expect(chai.height).toBeCloseTo(312, 5);
   });
 });

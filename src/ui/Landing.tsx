@@ -139,6 +139,7 @@ export function Landing() {
                   sampleChip
                   showProgress
                   drawOutlines={sample.cardOutlines}
+                  labelMode={sample.cardOutlines ? "centroid" : "tags"}
                   overlay={heroOverlay(sample.scene)}
                 />
               </div>

@@ -20,6 +20,7 @@ export interface PublishedSample {
   zoom: number;
   stepCrops: ObjectPosition[];
   stepZooms: number[];
+  stepTitle: Array<"overlay" | "below">;
   cardCrop: ObjectPosition;
   cardZoom: number;
   cardOutlines: boolean;
@@ -41,6 +42,7 @@ function publish(demo: DemoDefinition): PublishedSample {
     zoom: demo.zoom,
     stepCrops: demo.stepCrops,
     stepZooms: demo.stepZooms,
+    stepTitle: demo.stepTitle,
     cardCrop: demo.cardCrop,
     cardZoom: demo.cardZoom,
     cardOutlines: demo.cardOutlines,

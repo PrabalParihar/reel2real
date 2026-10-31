@@ -1,4 +1,4 @@
-import type { FrameBox, ObjectPosition } from "./mask-geometry";
+import { coverTransform, visibleFrameRect, type FrameBox, type ObjectPosition } from "./mask-geometry";
 
 /** Narrowest first. A demo takes the first shape whose cover holds every step. */
 export const FRAME_SHAPES = [
@@ -30,7 +30,34 @@ export interface DemoFrameFit {
   /** Step index whose boxes need the widest cover. */
   forcedByStep: number;
   steps: StepCrop[];
+  /** Glass title sits on the stage only when it misses every highlighted box. */
+  stepTitle: Array<"overlay" | "below">;
   card: StepCrop & { outlines: boolean };
+}
+
+/** Sample stages use the demo shape at every width. 390 chai is 390 by 312. */
+export function sampleStageSize(shape: FrameShapeId, width: number): { width: number; height: number; aspect: number } {
+  const aspect = FRAME_SHAPES.find((item) => item.id === shape)?.aspect ?? 1;
+  return { width, height: width / aspect, aspect };
+}
+
+/** Bottom band reserved for a glass title. Outlines that enter it push the title below the stage. */
+export const TITLE_BAND = 0.28;
+
+export function titlePlacementFor(
+  boxes: FrameBox[],
+  viewW: number,
+  viewH: number,
+  position: ObjectPosition,
+  zoom = 1,
+  frameW = 720,
+  frameH = 405,
+): "overlay" | "below" {
+  if (!boxes.length || viewW <= 0 || viewH <= 0) return "overlay";
+  const cover = coverTransform(frameW, frameH, viewW, viewH, position, zoom);
+  const window = visibleFrameRect(frameW, frameH, viewW, viewH, cover);
+  const band = window.y1 + (window.y2 - window.y1) * (1 - TITLE_BAND);
+  return boxes.some((box) => box.y2 > band + 0.5) ? "below" : "overlay";
 }
 
 function marginPx(frameH: number): number {
@@ -154,6 +181,16 @@ export function fitDemo(steps: FrameBox[][], frameW = 720, frameH = 405): DemoFr
     const placed = placementFor(boxes, chosen.aspect, 1, frameW, frameH);
     return { position: placed?.position ?? { x: 0.5, y: 0.5 }, zoom: 1 };
   });
+  const stage = sampleStageSize(chosen.id, 390);
+  const stepTitle = steps.map((boxes, index) => titlePlacementFor(
+    boxes,
+    stage.width,
+    stage.height,
+    fitted[index]?.position ?? { x: 0.5, y: 0.5 },
+    fitted[index]?.zoom ?? 1,
+    frameW,
+    frameH,
+  ));
   const cardBoxes = steps[0] ?? [];
   const cardAspect = FRAME_SHAPES.find((shape) => shape.id === CARD_SHAPE)?.aspect ?? 4 / 5;
   const cardPlaced = placementFor(cardBoxes, cardAspect, 1, frameW, frameH);
@@ -162,6 +199,7 @@ export function fitDemo(steps: FrameBox[][], frameW = 720, frameH = 405): DemoFr
     aspect: chosen.aspect,
     forcedByStep,
     steps: fitted,
+    stepTitle,
     card: cardPlaced
       ? { position: cardPlaced.position, zoom: 1, outlines: true }
       : { position: bestEffort(cardBoxes, cardAspect, frameW, frameH), zoom: 1, outlines: false },

@@ -287,6 +287,22 @@ p { margin: 0; color: var(--ink-2); }
 .photo-frame.tall { height: 180px; }
 .photo-cover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .mask-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.noun-tags {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 14px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: none;
+}
+.noun-tags .noun-chip {
+  position: static;
+  transform: none;
+}
+.photo-frame.has-tags .reel-status { top: 10px; bottom: auto; }
 .noun-chip {
   position: absolute;
   z-index: 2;
@@ -721,12 +737,13 @@ p { margin: 0; color: var(--ink-2); }
   }
 }
 @media (max-width: 800px) {
-  .screen.coach .reel-phone {
+  .screen.coach .reel-phone.is-live {
     width: 100%;
     aspect-ratio: auto;
     height: auto;
     min-height: 62dvh;
   }
+  .screen.coach .reel-phone.is-sample { width: 100%; height: auto; min-height: 0; }
   .screen.coach .filmstrip { margin-top: 8px; }
 }
 @media (min-width: 1024px) {
@@ -793,7 +810,7 @@ p { margin: 0; color: var(--ink-2); }
   }
   .app-shell:has(.screen.coach) .stage-wrap,
   .app-shell:has(.screen.coach) .coach-side { flex: none; min-height: 0; width: 100%; }
-  .app-shell:has(.screen.coach) .reel-phone {
+  .app-shell:has(.screen.coach) .reel-phone.is-live {
     flex: 1 1 auto;
     width: 100%;
     min-height: 62dvh;
@@ -802,12 +819,32 @@ p { margin: 0; color: var(--ink-2); }
     aspect-ratio: auto;
     border-radius: 0;
   }
+  .app-shell:has(.screen.coach) .reel-phone.is-sample {
+    flex: none;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    border-radius: 0;
+  }
+  .app-shell:has(.screen.coach) .reel-phone.is-sample.shape-4-5 { aspect-ratio: 4 / 5; }
+  .app-shell:has(.screen.coach) .reel-phone.is-sample.shape-1-1 { aspect-ratio: 1 / 1; }
+  .app-shell:has(.screen.coach) .reel-phone.is-sample.shape-5-4 { aspect-ratio: 5 / 4; }
+  .app-shell:has(.screen.coach) .stage-wrap:has(.is-sample) { flex: none; }
+  .app-shell:has(.screen.coach) .screen.coach:has(.is-sample) .coach-side {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .app-shell:has(.screen.coach) .screen.coach:has(.is-sample) .dock { margin-top: auto; }
   .app-shell:has(.screen.coach) .stage-wrap {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
+  .app-shell:has(.screen.coach) .stage-wrap:has(.is-sample) { flex: none; }
   .app-shell:has(.screen.coach) .stage-note {
     position: absolute;
     top: 10px;
@@ -833,6 +870,21 @@ p { margin: 0; color: var(--ink-2); }
     background: rgba(9, 10, 12, 0.96);
     border-top: 1px solid var(--line-strong);
   }
+  .app-shell:has(.screen.coach) .screen.coach:has(.is-sample) .dock { margin-top: auto; }
+  .app-shell:has(.screen.coach) .stage-wrap.is-sample .stage-note,
+  .app-shell:has(.screen.coach) .stage-wrap.title-below .stage-note {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin: 8px 12px 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink-3);
+    backdrop-filter: none;
+  }
   .reel-title {
     display: block;
     position: absolute;
@@ -846,6 +898,11 @@ p { margin: 0; color: var(--ink-2); }
     border: 1px solid rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(12px);
     pointer-events: none;
+  }
+  .reel-title.is-below {
+    position: static;
+    margin: 8px 12px 0;
+    bottom: auto;
   }
   .reel-title h1 { color: #fff; font-size: 26px; line-height: 1.05; }
   .reel-title .mono { color: rgba(255, 255, 255, 0.78); }
