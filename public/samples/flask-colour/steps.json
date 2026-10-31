@@ -39,7 +39,8 @@
           "color": "#2DB4AA",
           "present": true,
           "requestId": "17e3459b-89bc-4f50-aa6e-570a292dda9d",
-          "verified": true
+          "verified": true,
+          "maskOrdinal": "2"
         }
       ],
       "keepFullyInFrame": [
@@ -72,7 +73,8 @@
           "color": "#2DB4AA",
           "present": true,
           "requestId": "ab23c68a-f7ad-4114-9720-c98771d8a864",
-          "verified": true
+          "verified": true,
+          "maskOrdinal": "3"
         }
       ],
       "keepFullyInFrame": [

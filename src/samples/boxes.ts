@@ -13,7 +13,7 @@ interface SamFile {
     noun?: string;
     requestId?: string;
     present?: boolean;
-    records?: Array<{ box?: SamBox }>;
+    records?: Array<{ box?: SamBox; verified?: boolean }>;
   }>;
 }
 
@@ -41,6 +41,7 @@ export function highlightedBoxes(scene: SampleScene, files: Record<string, unkno
       const call = matchingCall(file, noun);
       if (!call || call.present === false) continue;
       for (const record of call.records ?? []) {
+        if (record.verified === false) continue;
         const box = record.box;
         if (!box || box.x1 == null || box.y1 == null || box.x2 == null || box.y2 == null) continue;
         if (![box.x1, box.y1, box.x2, box.y2].every((value) => Number.isFinite(value))) continue;

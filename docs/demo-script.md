@@ -80,7 +80,7 @@ Say: "If SAM does not answer, we say so. Next still moves the step. We do not dr
 Open each remaining demo from the landing cards. Spend about 15 seconds on each. Read the step title. Do not invent a noun that is not on the chip.
 
 - Origami. Yogendra Singh, Pexels. Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding beside the crane". The paper highlight is the sheet being folded. Step 1 names only paper. Step 3 has no outline and no Sample chip. The hint is "Keep the crane fully in frame."
-- Seed planting. Tima Miroshnichenko, Pexels. Read: "Poke cells in the seed tray", "Work across the tray beside the pot", "Finish with the jar in view". Highlights: gloves and tray, then gloves, then jar and gloves.
+- Seed planting. Tima Miroshnichenko, Pexels. Read: "Poke cells in the seed tray", "Move along the tray", "Finish with the jar in view". Highlights: gloves and tray, then gloves, then jar and gloves.
 - Latte art. franklandgrave, Mixkit. Read: "Start filling the cup", "Build a foam circle in the cup", "Finish the foam on the cup". Step 2 shows the cup. Steps 1 and 3 have no outline and no Sample chip. The only hint is "Keep the cup fully in frame." The second still is the retimed frame.
 - Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Read: "Pour powder into the flask", "Watch the colour change", "Set the flask and rod in view". Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. Highlights: flask and bottle, then flask and bottle, then rod and flask. Do not name a chemical.
 

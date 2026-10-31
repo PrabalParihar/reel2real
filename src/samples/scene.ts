@@ -88,10 +88,12 @@ export interface SamRecord {
   maskPayload?: SamMaskPayload;
   /**
    * The box was rebuilt after the original bounds were dropped.
-   * Some rebuilt boxes still sit on the object (origami hands and crane).
+   * Some rebuilt boxes still sit on the object (seed gloves).
    * A step sets noun.verified false when the rebuilt box is the wrong object.
    */
   boxRecovered?: boolean;
+  /** False when this instance was checked and does not sit on the noun. */
+  verified?: boolean;
 }
 
 export interface SamCall {
@@ -291,6 +293,7 @@ export function selectMaskRecord(calls: SamCall[] | undefined, noun: SceneNoun):
     seen.add(call);
     if (call.present === false) continue;
     for (const record of call.records ?? []) {
+      if (record.verified === false) continue;
       if (noun.maskOrdinal != null && String(record.ordinal) !== String(noun.maskOrdinal)) continue;
       const mask = record.maskPayload;
       if (!mask?.payload || !mask.width || !mask.height) continue;

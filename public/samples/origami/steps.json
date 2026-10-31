@@ -18,7 +18,7 @@
       "index": 0,
       "id": "step_01_fold",
       "title": "Fold the patterned paper",
-      "instruction": "Crease the green patterned paper with both hands. Keep the paper fully in frame.",
+      "instruction": "Crease the green patterned paper into a clean fold. Keep the paper fully in frame.",
       "hinglishPrompt": "Paper dikhao.",
       "keyframe": "step-1.jpg",
       "samFile": "sam/step-1.json",

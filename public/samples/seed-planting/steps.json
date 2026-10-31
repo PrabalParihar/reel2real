@@ -50,8 +50,8 @@
     {
       "index": 1,
       "id": "step_02_pots",
-      "title": "Work across the tray beside the pot",
-      "instruction": "Move along the tray with gloves on while a small pot stays in view. Keep the gloves fully in frame.",
+      "title": "Move along the tray",
+      "instruction": "Move along the tray with gloves on. Keep the gloves fully in frame.",
       "hinglishPrompt": "Gloves dikhao.",
       "keyframe": "step-2.jpg",
       "samFile": "sam/step-2.json",

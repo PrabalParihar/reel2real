@@ -120,6 +120,29 @@ describe("mask to path", () => {
       expect(cup.verified).toBe(false);
       expect(selectMaskRecord(file.calls, cup)).toBeNull();
     }
+    const flask = SAMPLE_SCENES.find((scene) => scene.demo === "flask-colour");
+    const bottleOnTable = [
+      { step: 0, ordinal: "2", box: { x1: 391, y1: 235, x2: 472, y2: 405 } },
+      { step: 1, ordinal: "3", box: { x1: 391, y1: 235, x2: 472, y2: 405 } },
+    ];
+    for (const expected of bottleOnTable) {
+      const step = flask!.steps[expected.step];
+      const noun = step.nouns.find((item) => item.noun === "bottle");
+      const file = loadSam("flask-colour", step.samFile);
+      const selected = selectMaskRecord(file.calls, noun!);
+      expect(selected?.record.ordinal).toBe(expected.ordinal);
+      expect(selected?.record.verified).toBe(true);
+      expect(selected?.box.x1).toBe(expected.box.x1);
+      expect(selected?.box.y1).toBe(expected.box.y1);
+      expect(selected?.box.x2).toBe(expected.box.x2);
+      expect(selected?.box.y2).toBe(expected.box.y2);
+      const call = file.calls?.find((item) => item.noun === "bottle");
+      for (const record of call?.records ?? []) {
+        expect(record.verified).toBe(String(record.ordinal) === expected.ordinal);
+      }
+    }
+    expect(flask!.steps[2].nouns.some((noun) => noun.noun === "bottle")).toBe(false);
+
     const verifiedCup = latte!.steps[1].nouns[0];
     const step2 = loadSam("latte-art", latte!.steps[1].samFile);
     expect(selectMaskRecord(step2.calls, verifiedCup)?.box.x1).toBeGreaterThan(200);

@@ -229,7 +229,8 @@
             "top": 310,
             "right": 532,
             "bottom": 405
-          }
+          },
+          "verified": false
         },
         {
           "ordinal": "1",
@@ -264,7 +265,8 @@
             "top": 267,
             "right": 720,
             "bottom": 402
-          }
+          },
+          "verified": false
         },
         {
           "ordinal": "2",
@@ -299,7 +301,8 @@
             "top": 76,
             "right": 393,
             "bottom": 371
-          }
+          },
+          "verified": false
         },
         {
           "ordinal": "3",
@@ -334,7 +337,8 @@
             "top": 235,
             "right": 472,
             "bottom": 405
-          }
+          },
+          "verified": true
         }
       ],
       "hasMaskToken": true,

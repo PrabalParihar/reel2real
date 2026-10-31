@@ -266,4 +266,34 @@ describe("catalog frame shapes", () => {
     expect(origami?.scene.steps[0].nouns.find((noun) => noun.noun === "paper")?.maskOrdinal).toBe("6");
     expect(origami?.stepFullFrame[0]).toBe(true);
   });
+
+  it("does not name a dropped noun in that step's copy", () => {
+    const dropped: Record<string, string[][]> = {
+      origami: [["hands"], [], []],
+      "seed-planting": [[], ["pot"], []],
+    };
+    const docs = ["docs/demo-script.md", "README.md", "docs/SUBMISSION-DRAFT.md"].map((file) => readFileSync(file, "utf8")).join("\n");
+    expect(docs).not.toMatch(/both hands/i);
+    expect(docs).not.toMatch(/beside the pot/i);
+    expect(docs).not.toMatch(/small pot/i);
+    expect(docs).not.toMatch(/\u2013|\u2014/);
+    for (const demo of DEMOS) {
+      demo.scene.steps.forEach((step, index) => {
+        const copy = [
+          step.title,
+          step.instruction,
+          step.hinglishPrompt ?? "",
+          ...(step as { keepFullyInFrame?: string[] }).keepFullyInFrame ?? [],
+        ].join("\n");
+        expect(copy).not.toMatch(/\u2013|\u2014/);
+        for (const noun of dropped[demo.slug]?.[index] ?? []) {
+          expect(copy, `${demo.slug} step ${index + 1}`).not.toMatch(new RegExp(`\\b${noun}s?\\b`, "i"));
+        }
+        const unverified = step.nouns.filter((noun) => noun.present && noun.verified === false).map((noun) => noun.noun);
+        if (!unverified.length) return;
+        const hint = `Keep the ${unverified.join(" and ")} fully in frame`;
+        expect(hint === "Keep the cup fully in frame" || hint === "Keep the crane fully in frame").toBe(true);
+      });
+    }
+  });
 });
