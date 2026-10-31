@@ -85,9 +85,9 @@
     {
       "index": 2,
       "id": "step_03_set_aside",
-      "title": "Set the flask and rod in view",
-      "instruction": "Leave the flask with the yellow mix settled and the stirring rod beside it. Keep the flask and rod fully in frame.",
-      "hinglishPrompt": "Flask aur rod dikhao.",
+      "title": "Set the flask in view",
+      "instruction": "Leave the flask with the yellow mix settled. Keep the flask fully in frame.",
+      "hinglishPrompt": "Flask dikhao.",
       "keyframe": "step-3.jpg",
       "samFile": "sam/step-3.json",
       "nouns": [
@@ -98,7 +98,7 @@
           "color": "#B450A0",
           "present": true,
           "requestId": "dfc45833-29c0-4db3-b541-6b3a7bd0b3c2",
-          "verified": true
+          "verified": false
         },
         {
           "objectId": "obj_flask",
@@ -111,7 +111,6 @@
         }
       ],
       "keepFullyInFrame": [
-        "rod",
         "flask"
       ]
     }

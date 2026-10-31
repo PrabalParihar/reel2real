@@ -240,7 +240,7 @@ describe("scene tutorials", () => {
       expect(tutorial.sourceClip.localUri?.startsWith("http")).toBe(false);
       scene.steps.forEach((step, index) => {
         expect(tutorial.steps[index].objects.map((object) => object.samPrompt)).toEqual(
-          step.nouns.filter((noun) => noun.present).map((noun) => noun.samPrompt),
+          step.nouns.filter((noun) => noun.present && noun.verified !== false).map((noun) => noun.samPrompt),
         );
       });
     }

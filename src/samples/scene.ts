@@ -206,7 +206,7 @@ export function tutorialFromScene(
       maxObjectsPerStep: 4,
     },
     steps: scene.steps.map((step, index) => {
-      const nouns = presentNouns(step);
+      const nouns = presentNouns(step).filter((noun) => noun.verified !== false);
       const objects = nouns.map((noun) => ({
         objectId: noun.objectId,
         noun: noun.noun,

@@ -240,7 +240,7 @@ describe("catalog frame shapes", () => {
           return;
         }
         expect(boxes[index].length).toBeGreaterThan(0);
-        expect(missingObjectHint(tutorial.steps[index], null)).toBe(`Keep these fully in frame: ${nouns.join(", ")}.`);
+        expect(missingObjectHint(tutorial.steps[index], null)).toBe(`Keep these fully in frame: ${drawnNames.join(", ")}.`);
         expect(demo!.scene.label).toBe("Sample · recorded SAM output");
       });
     }

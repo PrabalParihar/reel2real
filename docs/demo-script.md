@@ -82,7 +82,7 @@ Open each remaining demo from the landing cards. Spend about 15 seconds on each.
 - Origami. Yogendra Singh, Pexels. Read: "Fold the patterned paper", "Press a clean triangle crease", "Keep folding". The paper highlight is the sheet being folded. Step 1 names only paper. Step 3 has no outline and no Sample chip. The hint is "Keep the crane fully in frame."
 - Seed planting. Tima Miroshnichenko, Pexels. Read: "Poke cells in the seed tray", "Work down the row", "Finish with the jar in view". Highlights: gloves and tray, then gloves, then jar and gloves.
 - Latte art. franklandgrave, Mixkit. Read: "Start the pour", "Build a foam circle in the cup", "Finish the foam". Step 2 shows the cup. Steps 1 and 3 have no outline and no Sample chip. The only hint is "Keep the cup fully in frame." The second still is the retimed frame.
-- Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Read: "Pour powder into the flask", "Watch the colour change", "Set the flask and rod in view". Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. Highlights: flask and bottle, then flask and bottle, then rod and flask. Do not name a chemical.
+- Flask colour, last, so the supervision note is the closer. AlexKopeykin, Pixabay. Read: "Pour powder into the flask", "Watch the colour change", "Set the flask in view". Say: "Kids science. A grown-up stays with you. The steps only talk about what you can see." Show the yellow Grown-up supervision note. Highlights: flask and bottle, then flask and bottle, then the flask. Do not name a chemical.
 
 Read the title on the glass. Latte steps 1 and 3 show no outline and no Sample chip. The only hint is "Keep the cup fully in frame." Do not draw a box for them.
 
@@ -103,7 +103,7 @@ If the coach says a noun is not highlighted, stop and reframe.
 | Demo | What the clip shows | Credit |
 | --- | --- | --- |
 | masala-chai | One kitchen, mortar and pestle, spices, herbs | Pexels contributor, Pexels License, https://www.pexels.com/video/5480225/ |
-| flask-colour | Flask, bottle, then a rod with the flask. No chemical names | AlexKopeykin, Pixabay Content License. Source and licence links are on the card |
+| flask-colour | Flask and bottle, then the flask. No chemical names | AlexKopeykin, Pixabay Content License. Source and licence links are on the card |
 | origami | Paper, then a heart, then a crane | Yogendra Singh, Pexels License, Pexels 6364305 |
 | seed-planting | Gloves with a tray, a pot, then a jar | Tima Miroshnichenko, Pexels License, Pexels 6508485 |
 | latte-art | A cup, including the retimed second still | franklandgrave, Mixkit Stock Video Free License, Mixkit 810 |

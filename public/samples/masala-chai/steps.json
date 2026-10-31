@@ -47,9 +47,9 @@
     {
       "index": 1,
       "id": "step_02_crush",
-      "title": "Crush the spice mix",
-      "instruction": "Use your hands to crush and mix the dried spices.",
-      "hinglishPrompt": "Spices haath se crush karo.",
+      "title": "Crush with your hand",
+      "instruction": "Use your hands to crush and mix.",
+      "hinglishPrompt": "Haath se crush karo.",
       "keyframe": "step-2.jpg",
       "samFile": "sam/step-2.json",
       "nouns": [
@@ -60,7 +60,7 @@
           "color": "#B450A0",
           "present": true,
           "requestId": "d71d0c0b-3dd1-4854-adb6-225b596d3c36",
-          "verified": true
+          "verified": false
         },
         {
           "objectId": "obj_hand",
@@ -77,8 +77,8 @@
       "index": 2,
       "id": "step_03_add_herbs",
       "title": "Drop the dried herbs",
-      "instruction": "Strip the dried herbs onto the spices so the mix is ready for chai.",
-      "hinglishPrompt": "Dried herbs spices par daalo.",
+      "instruction": "Strip the dried herbs in so the mix is ready for chai.",
+      "hinglishPrompt": "Dried herbs daalo.",
       "keyframe": "step-3.jpg",
       "samFile": "sam/step-3.json",
       "nouns": [
@@ -89,7 +89,7 @@
           "color": "#B450A0",
           "present": true,
           "requestId": "3f2fec2b-d033-447e-8cc1-a90c23bfbb5f",
-          "verified": true
+          "verified": false
         }
       ]
     }
