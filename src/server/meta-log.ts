@@ -1,16 +1,6 @@
 import { RESPONSES_PATH } from "@/src/models";
 import { redactSecrets } from "./redact";
 
-export const META_USER_AGENT = "reel2real/0.1 (+server)";
-
-export function metaJsonHeaders(key: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${key}`,
-    "Content-Type": "application/json",
-    "User-Agent": META_USER_AGENT,
-  };
-}
-
 export interface UpstreamIds {
   requestId: string;
   route: string;

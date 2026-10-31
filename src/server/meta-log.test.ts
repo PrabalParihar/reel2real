@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { META_USER_AGENT, metaJsonHeaders, metaUpstreamLog, parseMetaError, readUpstreamHeaders, samFailureLog, sparkFailureLog } from "./meta-log";
-import { samRequestHeaders } from "./sam-request";
+import { metaUpstreamLog, parseMetaError, readUpstreamHeaders, samFailureLog, sparkFailureLog } from "./meta-log";
 
 const secret = "sk-live-secret";
 const envelope = JSON.stringify({
@@ -78,12 +77,5 @@ describe("Meta upstream logs", () => {
       Authorization: `Bearer ${secret}`,
     });
     expect(readUpstreamHeaders(headers)).toEqual({ requestId: "req_header", route: "meta-route" });
-  });
-
-  it("sets the server user agent on Meta JSON headers", () => {
-    expect(META_USER_AGENT).toBe("reel2real/0.1 (+server)");
-    expect(metaJsonHeaders("test-key")["User-Agent"]).toBe(META_USER_AGENT);
-    expect(samRequestHeaders("test-key")["User-Agent"]).toBe(META_USER_AGENT);
-    expect(samRequestHeaders("test-key").Accept).toBe("text/event-stream");
   });
 });
