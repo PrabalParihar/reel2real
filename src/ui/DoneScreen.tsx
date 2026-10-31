@@ -16,7 +16,7 @@ export function DoneScreen() {
   const kind = frameForDomain(tutorial?.domain);
   const showTiming = !session.runtime.mock && session.stepsSource === "clip" && session.sparkLatencyMs != null && session.sparkLatencyMs > 0;
   return (
-    <AppShell mock={session.runtime.mock}>
+    <AppShell>
       <main className="screen done">
         <article className="panel done-card">
           <div className="chip-row">

@@ -124,7 +124,7 @@ export function ExtractingScreen() {
   const active = order.indexOf(stage);
 
   return (
-    <AppShell backHref="/upload" mock={session.runtime.mock}>
+    <AppShell backHref="/upload">
       <main className="screen extract">
         <section className="extract-stage panel">
           <div className="ring is-idle">

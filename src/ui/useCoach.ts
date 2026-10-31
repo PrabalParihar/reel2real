@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cameraBlockMessage, classifyCameraError, openRearCamera, type CameraBlock } from "@/src/coach/camera";
+import { cameraBlockMessage, classifyCameraError, openRearCamera, shouldPollSam, type CameraBlock } from "@/src/coach/camera";
 import { grabJpeg } from "@/src/coach/keyframe";
 import { capturePlan, promptsForStep } from "@/src/coach/prompts";
 import {
@@ -130,13 +130,12 @@ export function useCoach(
 
     const attempt = () => {
       if (cancelled) return;
+      if (!shouldPollSam(cameraPhase)) return;
       const frame = cameraPhase === "live" && videoRef.current ? grabJpeg(videoRef.current) : undefined;
-      const canSendWithoutFrame = mockRef.current || cameraPhase === "mock";
-      if (cameraPhase === "starting" || (cameraPhase === "live" && !frame)) {
+      if (cameraPhase === "live" && !frame) {
         timer = window.setTimeout(attempt, 250);
         return;
       }
-      if (!frame && !canSendWithoutFrame) return;
       const decision = decideSamPoll({
         now: performance.now(),
         state: schedulerRef.current,

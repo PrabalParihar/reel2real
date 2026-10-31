@@ -127,7 +127,7 @@ export function Landing() {
           </article>
           <article className="panel model-card">
             <h3>SAM 3.1</h3>
-            <p>Keyframe masks for 2–4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
+            <p>Keyframe highlights for 2–4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>
@@ -137,7 +137,7 @@ export function Landing() {
       <section className="closing mesh">
         <div className="orb" />
         <div className="phone-ghost ghost-back" />
-        <h2>Put the phone on a stand. Cook along.</h2>
+        <h2>Put the phone on a stand. Follow along.</h2>
         <div className="cta-row">
           <Link className="btn btn-primary" href="/upload">Try the coach</Link>
           <a className="btn btn-ghost" href="#demos">View demos</a>

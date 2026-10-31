@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cameraBlockMessage, classifyCameraError, FALLBACK_CAMERA_CONSTRAINTS, openRearCamera, REAR_CAMERA_CONSTRAINTS } from "./camera";
+import { cameraBlockMessage, classifyCameraError, FALLBACK_CAMERA_CONSTRAINTS, openRearCamera, REAR_CAMERA_CONSTRAINTS, shouldPollSam } from "./camera";
 import { KEYFRAME_JPEG_QUALITY, KEYFRAME_LONGEST_PX, keyframeSize } from "./keyframe";
 
 describe("rear camera", () => {
@@ -34,6 +34,12 @@ describe("rear camera", () => {
     expect(cameraBlockMessage("denied")).toMatch(/permission/i);
     expect(cameraBlockMessage("missing")).toMatch(/No camera/);
     expect(cameraBlockMessage("insecure")).toMatch(/secure page/);
+    expect(shouldPollSam("denied")).toBe(false);
+    expect(shouldPollSam("missing")).toBe(false);
+    expect(shouldPollSam("insecure")).toBe(false);
+    expect(shouldPollSam("starting")).toBe(false);
+    expect(shouldPollSam("live")).toBe(true);
+    expect(shouldPollSam("mock")).toBe(true);
   });
 });
 

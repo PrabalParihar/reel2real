@@ -9,7 +9,7 @@ export function StandScene({ compact = false }: { compact?: boolean }) {
   const board = `board-${raw}`;
   const stone = `stone-${raw}`;
   return (
-    <svg className={compact ? "stand-scene is-compact" : "stand-scene"} viewBox="0 0 360 480" role="img" aria-label="Illustrated chai stand">
+    <svg className={compact ? "stand-scene is-compact" : "stand-scene"} viewBox="0 0 360 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Illustrated chai stand">
       <defs>
         <radialGradient id={light} cx="50%" cy="42%" r="55%">
           <stop offset="0%" stopColor="#3a342c" />
@@ -47,7 +47,7 @@ export function BikeScene() {
   const light = `bike-light-${raw}`;
   const metal = `bike-metal-${raw}`;
   return (
-    <svg className="bike-scene" viewBox="0 0 360 480" role="img" aria-label="Illustrated bike chain">
+    <svg className="bike-scene" viewBox="0 0 360 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Illustrated bike chain">
       <defs>
         <radialGradient id={light} cx="50%" cy="40%" r="60%">
           <stop offset="0%" stopColor="#2a3140" />

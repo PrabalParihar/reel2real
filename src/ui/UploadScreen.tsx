@@ -101,12 +101,12 @@ export function UploadScreen() {
   const ready = Boolean((file || sampleId) && licence && creatorName.trim());
 
   return (
-    <AppShell backHref="/" mock={session.runtime.mock}>
+    <AppShell backHref="/">
       <main className="screen upload-screen">
+        <h1>Upload a tutorial</h1>
+        <p className="lead">A clip you filmed, or one you have permission to use.</p>
         <div className="upload-grid">
           <section>
-            <h1>Upload a tutorial</h1>
-            <p className="lead">A clip you filmed, or one you have permission to use.</p>
             <label
               className={`drop${over ? " is-over" : ""}`}
               onDragOver={(event) => { event.preventDefault(); setOver(true); }}

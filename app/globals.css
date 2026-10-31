@@ -313,7 +313,8 @@ p { margin: 0; color: var(--ink-2); }
 .bar-end { display: flex; align-items: center; gap: 8px; }
 .screen { width: min(1120px, calc(100% - 28px)); margin: 0 auto; padding-bottom: 28px; }
 .upload-screen h1, .step-card h1, .done-card h1, .error-panel h1 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.035em; margin-bottom: 8px; }
-.upload-grid { display: grid; gap: 16px; }
+.upload-grid { display: grid; gap: 16px; align-items: start; }
+.upload-screen > .lead { margin-bottom: 16px; }
 .drop {
   position: relative;
   display: grid;
@@ -321,7 +322,7 @@ p { margin: 0; color: var(--ink-2); }
   place-items: center;
   text-align: center;
   min-height: 180px;
-  margin: 16px 0;
+  margin: 0 0 16px;
   padding: 20px;
   border-radius: 20px;
   border: 1px dashed var(--line-strong);
@@ -399,7 +400,10 @@ p { margin: 0; color: var(--ink-2); }
 .demo-controls[open] { padding-bottom: 12px; }
 .dock { grid-template-columns: 1fr 1fr; }
 .upload-dock { position: static; background: transparent; padding: 16px 0 0; }
-.tips { padding: 18px; display: grid; gap: 10px; }
+.tips { padding: 18px; display: grid; gap: 10px; align-self: start; }
+@media (min-width: 1024px) {
+  .tips { position: sticky; top: 16px; }
+}
 .tips h2 { font-size: 22px; }
 .extract { display: grid; gap: 16px; min-height: calc(100vh - 150px); align-content: center; }
 .extract-stage { padding: 22px; display: grid; justify-items: center; gap: 8px; text-align: center; }

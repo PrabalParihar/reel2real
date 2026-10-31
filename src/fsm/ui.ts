@@ -37,7 +37,7 @@ export function stateChip(state: CoachStateId): string | null {
     case "safety_halt":
       return "Safety";
     case "mask_lost":
-      return "Mask lost";
+      return "Highlight lost";
     case "retry":
       return "Retry";
     case "user_skip":
@@ -66,6 +66,18 @@ export function missingObjectHint(step: TutorialStep, presence: Record<string, b
   const missing = required.filter((id) => !presence[id]);
   if (!missing.length) return null;
   const names = missing.map(label);
-  if (names.length === 1) return `${names[0]} isn't masked. Bring the whole object into frame.`;
-  return `Not masked: ${names.join(", ")}. Frame each one fully.`;
+  if (names.length === 1) return `${names[0]} isn't highlighted. Bring the whole object into frame.`;
+  return `Not highlighted: ${names.join(", ")}. Frame each one fully.`;
+}
+
+export function coachStatusChip(state: CoachStateId, cameraBlocked: boolean): string | null {
+  if (cameraBlocked) return "Manual, press Next";
+  return stateChip(state);
+}
+
+/** Live only for a real uploaded clip on the live runtime. Sample runs stay Sample. */
+export function headerChip(input: { mock: boolean; sampleRun: boolean; liveClip: boolean }): "Live" | "Sample" | null {
+  if (input.sampleRun) return "Sample";
+  if (!input.mock && input.liveClip) return "Live";
+  return null;
 }

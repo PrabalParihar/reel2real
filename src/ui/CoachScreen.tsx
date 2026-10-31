@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { frameForDomain } from "@/src/domains/catalog";
-import { coachHonesty, highlightsChip, missingObjectHint, stateChip } from "@/src/fsm/ui";
+import { coachHonesty, coachStatusChip, highlightsChip, missingObjectHint } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
@@ -22,7 +22,7 @@ const SCENARIOS: Array<{ id: MockScenario; label: string }> = [
   { id: "skip", label: "Miss object" },
   { id: "out_of_order", label: "Out of order" },
   { id: "safety", label: "Safety" },
-  { id: "mask_lost", label: "Mask lost" },
+  { id: "mask_lost", label: "Highlight lost" },
 ];
 
 export function CoachScreen() {
@@ -35,7 +35,7 @@ export function CoachScreen() {
   }, [router, tutorial]);
 
   if (!tutorial) {
-    return <AppShell mock={session.runtime.mock}><main className="screen"><p>Opening the coach…</p></main></AppShell>;
+    return <AppShell><main className="screen"><p>Opening the coach…</p></main></AppShell>;
   }
 
   return <CoachBody />;
@@ -48,12 +48,13 @@ function CoachBody() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const coach = useCoach(tutorial, videoRef, { mock: session.runtime.mock });
   const step = tutorial.steps[coach.machine.context.stepIndex] ?? tutorial.steps[0];
-  const chip = stateChip(coach.machine.state);
+  const cameraBlocked = coach.cameraPhase === "denied" || coach.cameraPhase === "missing" || coach.cameraPhase === "insecure";
+  const chip = coachStatusChip(coach.machine.state, cameraBlocked);
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
   const honesty = coachHonesty(coach.machine.context.liveMode, coach.machine.context.stillsArmed, sampleSteps);
   const highlights = highlightsChip(coach.machine.context.lastError);
   const hint = missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
-  const checking = coach.machine.state === "tracking" || coach.machine.state === "evaluating";
+  const checking = !cameraBlocked && (coach.machine.state === "tracking" || coach.machine.state === "evaluating");
   const tone = coach.machine.state === "safety_halt" ? "danger" : coach.machine.state === "skip_detected" || coach.machine.state === "out_of_order" ? "skip" : coach.machine.state === "success" ? "match" : checking ? "running" : "wait";
 
   const finished = useRef(false);
@@ -78,7 +79,7 @@ function CoachBody() {
   const stillKind = frameForDomain(tutorial.domain);
 
   return (
-    <AppShell backHref="/upload" mock={session.runtime.mock}>
+    <AppShell backHref="/upload">
       <main className="screen coach">
         <section className="stage-wrap mesh">
           <div className="stage">

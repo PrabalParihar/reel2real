@@ -19,6 +19,10 @@ export function classifyCameraError(error: unknown): CameraBlock {
   return "missing";
 }
 
+export function shouldPollSam(phase: "starting" | "live" | "mock" | CameraBlock): boolean {
+  return phase === "live" || phase === "mock";
+}
+
 export function cameraBlockMessage(block: CameraBlock): string {
   if (block === "denied") return "Camera permission is blocked. Press Next to move the step.";
   if (block === "insecure") return "Camera needs a secure page (https). Press Next to move the step.";
