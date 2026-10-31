@@ -9,7 +9,7 @@ import { heroNouns, heroSamFile, heroStep, sceneAsset, type SampleScene } from "
 import { Chip } from "./chrome";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
-import { SampleCredit } from "./SampleCredit";
+import { SampleCredit, SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 
 const CHAI = PUBLISHED_SAMPLES[0];
@@ -110,7 +110,7 @@ export function Landing() {
               sampleChip
             />
             <p>{HERO_STEPS[1]}</p>
-            <p>Credit · {chai.sourceClip.author} · Pexels License</p>
+            <SceneCredit scene={chai} />
           </div>
         </article>
       </section>
@@ -201,27 +201,27 @@ function HeroStage({ mock, scene }: { mock: boolean; scene: SampleScene }) {
     return () => clearInterval(timer);
   }, [motion]);
   return (
-    <div className="hero-stage">
-      <PhotoFrame
-        className="is-fill"
-        src={frameSrc(scene, heroStill)}
-        alt="Stone mortar and pestle in one kitchen, sample hero frame"
-        sizes="(max-width: 800px) 100vw, 720px"
-        priority
-        recordedLabel
-        overlay={samFile ? { samUrl: sceneAsset(scene, samFile), nouns: heroNouns(scene) } : null}
-      />
-      <div className="hero-overlay">
-        <div className="mock-top">
-          <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
-          <span className="checking">Checking…</span>
-        </div>
-        <article className="mock-card" key={HERO_STEPS[index]}>
-          <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>
-          <h2>{HERO_STEPS[index]}</h2>
-          <p>Credit · {scene.sourceClip.author} · Pexels License</p>
-        </article>
+    <div className="hero-media">
+      <div className="hero-chip-stack">
+        <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
+        <span className="checking">Checking…</span>
       </div>
+      <div className="hero-stage">
+        <PhotoFrame
+          className="is-fill"
+          src={frameSrc(scene, heroStill)}
+          alt="Stone mortar and pestle in one kitchen, sample hero frame"
+          sizes="(max-width: 800px) 100vw, 720px"
+          priority
+          recordedLabel
+          overlay={samFile ? { samUrl: sceneAsset(scene, samFile), nouns: heroNouns(scene) } : null}
+        />
+      </div>
+      <article className="mock-card is-below" key={HERO_STEPS[index]}>
+        <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>
+        <h2>{HERO_STEPS[index]}</h2>
+        <SceneCredit scene={scene} />
+      </article>
     </div>
   );
 }

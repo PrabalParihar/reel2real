@@ -145,8 +145,9 @@ p { margin: 0; color: var(--ink-2); }
 .nav-links { display: flex; gap: 16px; margin: 0 auto; }
 .nav-links a { color: var(--ink-2); text-decoration: none; font-size: 14px; }
 .nav-actions { display: flex; gap: 8px; }
-.landing { padding-bottom: 32px; }
-.hero-bleed { width: min(1280px, calc(100% - 24px)); margin: 12px auto 0; }
+.landing { padding-bottom: 32px; max-width: 100%; min-width: 0; overflow-x: clip; }
+.hero-bleed { width: min(1280px, calc(100% - 24px)); max-width: 100%; min-width: 0; margin: 12px auto 0; }
+.wrap, .section, .hero, .hero-media, .nav, .nav-wrap, .bento { min-width: 0; max-width: 100%; }
 .hero {
   display: grid;
   gap: 20px;
@@ -157,6 +158,10 @@ p { margin: 0; color: var(--ink-2); }
 .hero-copy .lead { max-width: 34rem; }
 .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .honesty { margin-top: 14px; }
+.hero-media { display: grid; gap: 10px; min-width: 0; max-width: 100%; }
+.hero-chip-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; max-width: 100%; }
+.hero-chip-stack .chip { max-width: 100%; white-space: normal; }
+.hero-chip-stack .checking { position: static; }
 .hero-stage {
   position: relative;
   min-height: 0;
@@ -165,6 +170,7 @@ p { margin: 0; color: var(--ink-2); }
   background: var(--panel);
   box-shadow: var(--inset-highlight), var(--shadow-float);
   overflow: hidden;
+  max-width: 100%;
 }
 .dot-grid {
   position: absolute;
@@ -244,10 +250,11 @@ p { margin: 0; color: var(--ink-2); }
   background: rgba(28, 32, 48, 0.92);
   box-shadow: var(--inset-highlight), var(--shadow-float);
 }
+.mock-card.is-below { position: static; left: auto; right: auto; bottom: auto; max-width: 100%; }
 .mock-card h2 { font-size: 18px; line-height: 1.25; margin: 4px 0 8px; }
 .mock-kicker { color: var(--match); font-family: var(--font-mono); font-size: 11px; }
-.bento { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; max-width: 100%; }
-.bento article { flex: 0 0 86%; scroll-snap-align: start; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.bento { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; width: 100%; min-width: 0; max-width: 100%; }
+.bento article { flex: 0 0 min(86%, 100%); scroll-snap-align: start; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .bento svg { color: var(--saffron); }
 .index { font-family: var(--font-mono); color: var(--saffron); font-size: 12px; }
 .mini-dock {
@@ -312,9 +319,11 @@ p { margin: 0; color: var(--ink-2); }
   inset: 0;
   width: 100%;
   height: 100%;
+  max-width: 100%;
   border: 0;
   border-radius: inherit;
 }
+.clip-card .photo-frame { height: 160px; width: 100%; }
 .extract-photo { width: min(100%, 520px); height: 240px; margin: 0 auto 8px; }
 .frame-examples { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .frame-examples .photo-frame { height: 120px; }
@@ -344,7 +353,8 @@ p { margin: 0; color: var(--ink-2); }
 .footer-links { display: flex; gap: 14px; }
 .footer-links a { color: var(--ink-2); }
 
-.app-shell { min-height: 100vh; }
+.app-shell { min-height: 100vh; max-width: 100%; min-width: 0; overflow-x: clip; }
+.screen { max-width: 100%; min-width: 0; }
 .app-bar {
   display: flex;
   align-items: center;

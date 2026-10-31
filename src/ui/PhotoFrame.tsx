@@ -119,7 +119,16 @@ export function PhotoFrame({
           ? { left: cover.left, top: cover.top, width: cover.width, height: cover.height }
           : undefined}
       >
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} style={{ objectFit: "fill" }} />
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          loading={priority ? undefined : "eager"}
+          unoptimized
+          style={{ objectFit: "fill" }}
+        />
         {items.length ? (
           <svg className="mask-svg" viewBox={`0 0 ${frameW} ${frameH}`} preserveAspectRatio="none" aria-hidden="true">
             <defs>

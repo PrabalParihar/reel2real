@@ -10,6 +10,7 @@ import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell, Chip } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
+import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 import { useCoach } from "./useCoach";
 
@@ -154,7 +155,7 @@ function CoachBody() {
               ) : null}
               <p className="mono">{step.sourceTimeRange.startSec}s – {step.sourceTimeRange.endSec}s</p>
             </div>
-            <p className="credit">{scene ? `Credit · ${scene.sourceClip.author} · Pexels License` : formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>
+            {scene ? <SceneCredit scene={scene} /> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
             {coach.machine.state === "safety_halt" ? <p className="safety-copy">{step.safety?.message}</p> : null}
           </article>
 

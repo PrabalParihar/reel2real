@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { previewDecision } from "@/src/server/preview-auth";
+import { previewPathIsGated } from "@/src/server/preview-gate";
 
 export const config = {
   runtime: "nodejs",
+  // Pages and API routes stay gated. Sample files and the image optimizer must
+  // stay public: the optimizer fetches /samples/* without the preview password.
+  matcher: [
+    "/((?!_next/static|_next/image|samples/|favicon.ico|icon.svg|robots.txt).*)",
+  ],
 };
 
 export function middleware(request: NextRequest) {
+  if (!previewPathIsGated(request.nextUrl.pathname)) return NextResponse.next();
   const decision = previewDecision({
     password: process.env.PREVIEW_PASSWORD,
     authorization: request.headers.get("authorization"),

@@ -7,7 +7,7 @@ import { formatCredit } from "@/src/schema/attribution";
 import { sceneAsset } from "@/src/samples/scene";
 import { AppShell, Chip } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
-import { SampleCredit } from "./SampleCredit";
+import { SampleCredit, SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 
 export function DoneScreen() {
@@ -54,7 +54,7 @@ export function DoneScreen() {
               })}
             </ol>
           ) : null}
-          <p className="credit">{scene ? `Credit · ${scene.sourceClip.author} · Pexels License` : tutorial ? formatCredit(tutorial.attribution) : "Credit · Sample cook · self-filmed"}</p>
+          {scene ? <SceneCredit scene={scene} /> : <p className="credit">{tutorial ? formatCredit(tutorial.attribution) : "Credit · Sample cook · self-filmed"}</p>}
           {scene ? <SampleCredit /> : null}
           <div className="cta-row">
             <Link className="btn btn-primary" href="/coach">Run again</Link>
