@@ -51,7 +51,7 @@ On `web-preview`:
 
 Save the variables, then redeploy both services. Do not copy the values into logs, shell history, or chat.
 
-`/api/internal/segment` still uses the same per-IP limit as `/api/segment` (20 requests per minute) and the same daily Meta call cap. The forward copies `x-forwarded-for` and `x-real-ip` so that limit sees the same client. It copies no other incoming header. The daily cap is counted on `web-preview`, because that is the service that calls Meta.
+`/api/segment` checks the per-IP limit, then the 8MB body limit, then the daily cap, and only then forwards. A spent cap returns 429 and does not forward. `/api/internal/segment` checks the shared secret, then the same per-IP limit and 8MB body limit. Its daily cap is reserved inside the segment call, before any Meta request. The forward copies `x-forwarded-for` and `x-real-ip` so the per-IP limit (20 requests per minute) sees the same client. It copies no other incoming header. A body over 8MB returns 413 and is not forwarded or sent upstream.
 
 If `SAM_FORWARD_SECRET` is unset on `web-preview`, or the header is missing or wrong, the internal route returns 404 with an empty body.
 

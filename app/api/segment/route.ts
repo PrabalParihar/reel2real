@@ -1,6 +1,6 @@
-import { guardMetaRoute } from "@/src/server/meta-guard";
+import { guardMetaRoute, reserveSegmentCap } from "@/src/server/meta-guard";
 import { forwardSamRequest, samForwardEnabled } from "@/src/server/sam-forward";
-import { executeSegment } from "@/src/server/segment-run";
+import { executeSegment, readSegmentBody, segmentTooLargeResponse } from "@/src/server/segment-run";
 import type { SegmentRequest } from "@/src/server/types";
 
 export const dynamic = "force-dynamic";
@@ -8,8 +8,11 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
+  const rawBody = await readSegmentBody(request);
+  if (rawBody === null) return segmentTooLargeResponse();
   if (samForwardEnabled(process.env)) {
-    const rawBody = await request.text();
+    const capped = reserveSegmentCap(rawBody);
+    if (capped) return capped;
     return forwardSamRequest({
       rawBody,
       env: process.env,
@@ -18,6 +21,5 @@ export async function POST(request: Request) {
       realIp: request.headers.get("x-real-ip"),
     });
   }
-  const body = (await request.json()) as SegmentRequest;
-  return executeSegment(body);
+  return executeSegment(JSON.parse(rawBody) as SegmentRequest);
 }

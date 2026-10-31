@@ -11,6 +11,7 @@ import {
   samForwardEnabled,
   secretsEqual,
 } from "./sam-forward";
+import { SEGMENT_MAX_BODY_BYTES } from "./segment-run";
 
 const SECRET = "test-forward-secret";
 const FORWARD_URL = "http://web-preview.railway.internal:8080/api/internal/segment";
@@ -253,17 +254,56 @@ describe("internal segment limits", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("keeps the daily cap and does not call Meta", async () => {
+  it("does not forward or call upstream when the daily cap is hit", async () => {
+    process.env.SAM_FORWARD_ENABLED = "1";
+    process.env.SAM_FORWARD_URL = FORWARD_URL;
     process.env.SAM_FORWARD_SECRET = SECRET;
     process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
     process.env.META_DAILY_CALL_CAP = "0";
-    const response = await internalPost(segmentRequest(RAW_BODY, {
+    const fetchMock = vi.fn(async () => {
+      throw new Error("upstream should not be called");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const forwarded = await segmentPost(segmentRequest(RAW_BODY, {}, "203.0.113.70"));
+    expect(forwarded.status).toBe(429);
+    const forwardedBody = await forwarded.json();
+    expect(forwardedBody.error).toBe("daily_cap");
+    expect(JSON.stringify(forwardedBody)).not.toContain(SECRET);
+    expect(JSON.stringify(forwardedBody)).not.toContain("test-only-not-a-meta-key");
+
+    const internal = await internalPost(segmentRequest(RAW_BODY, {
       [SAM_FORWARD_SECRET_HEADER]: SECRET,
-    }, "203.0.113.45"));
-    expect(response.status).toBe(429);
-    const body = await response.json();
-    expect(body.error).toBe("daily_cap");
-    expect(JSON.stringify(body)).not.toContain("test-only-not-a-meta-key");
-    expect(fetch).not.toHaveBeenCalled();
+    }, "203.0.113.71"));
+    expect(internal.status).toBe(429);
+    const internalBody = await internal.json();
+    expect(internalBody.error).toBe("daily_cap");
+    expect(JSON.stringify(internalBody)).not.toContain(SECRET);
+    expect(JSON.stringify(internalBody)).not.toContain("test-only-not-a-meta-key");
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 413 for an oversized body and does not call upstream", async () => {
+    process.env.SAM_FORWARD_ENABLED = "1";
+    process.env.SAM_FORWARD_URL = FORWARD_URL;
+    process.env.SAM_FORWARD_SECRET = SECRET;
+    process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
+    const fetchMock = vi.fn(async () => {
+      throw new Error("upstream should not be called");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const oversized = "x".repeat(SEGMENT_MAX_BODY_BYTES + 1);
+
+    const forwarded = await segmentPost(segmentRequest(oversized, {}, "203.0.113.80"));
+    const internal = await internalPost(segmentRequest(oversized, {
+      [SAM_FORWARD_SECRET_HEADER]: SECRET,
+    }, "203.0.113.81"));
+
+    expect(forwarded.status).toBe(413);
+    expect(internal.status).toBe(413);
+    expect(await forwarded.text()).toBe("");
+    expect(await internal.text()).toBe("");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
