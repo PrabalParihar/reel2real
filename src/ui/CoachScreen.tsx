@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { coachHonesty, missingObjectHint, stateChip } from "@/src/fsm/ui";
+import { coachHonesty, highlightsChip, missingObjectHint, stateChip } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
@@ -51,6 +51,7 @@ function CoachBody() {
   const chip = stateChip(coach.machine.state);
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
   const honesty = coachHonesty(coach.machine.context.liveMode, coach.machine.context.stillsArmed, sampleSteps);
+  const highlights = highlightsChip(coach.machine.context.lastError);
   const hint = missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
   const checking = coach.machine.state === "tracking" || coach.machine.state === "evaluating";
   const tone = coach.machine.state === "safety_halt" ? "danger" : coach.machine.state === "skip_detected" || coach.machine.state === "out_of_order" ? "skip" : coach.machine.state === "success" ? "match" : checking ? "running" : "wait";
@@ -83,6 +84,7 @@ function CoachBody() {
           <div className="stage">
             <div className="stage-chips">
               <Chip tone="wait">{honesty}</Chip>
+              {highlights ? <Chip tone="skip">{highlights}</Chip> : null}
             </div>
             <video ref={videoRef} className={coach.preview === "camera" ? "camera" : "camera is-hidden"} playsInline muted />
             {coach.preview !== "camera" ? <StandScene /> : null}

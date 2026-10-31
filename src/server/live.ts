@@ -2,9 +2,10 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { SAM_MODEL_ID, SPARK_MODEL_ID, RESPONSES_URL, API_ORIGIN } from "@/src/models";
+import { SAM_MODEL_ID, SPARK_MODEL_ID, API_ORIGIN } from "@/src/models";
 import { tutorialFromSparkPayload, type UserAttribution } from "@/src/schema/attribution";
 import { parseSamBoxes } from "./sam-parse";
+import { buildSamResponsesBody, responsesUrl, samFailureLog, samMaskPresent, samOutputText, samRequestHeaders } from "./sam-request";
 import { redactSecrets } from "./redact";
 import { buildSparkResponsesBody, chooseSparkMediaPlan, SPARK_STEPS_INSTRUCTION } from "./spark-request";
 import { sampleById } from "./fixtures";
@@ -20,22 +21,25 @@ function reserveMetaCall() {
   if (!result.ok) throw new DailyCapError(result.message);
 }
 
-async function postResponses(key: string, body: unknown, timeoutMs: number): Promise<{ status: number; text: string }> {
+async function postResponses(
+  key: string,
+  body: unknown,
+  timeoutMs: number,
+  headers: Record<string, string> = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+): Promise<{ status: number; text: string; url: string }> {
   reserveMetaCall();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const url = responsesUrl(process.env);
   try {
-    const response = await fetch(RESPONSES_URL, {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal,
     });
     const text = await response.text();
-    return { status: response.status, text: redactSecrets(text, [key]) };
+    return { status: response.status, text: redactSecrets(text, [key]), url };
   } finally {
     clearTimeout(timer);
   }
@@ -294,40 +298,31 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
         }
         if (!base64) throw new Error("No frame was attached");
         const mime = input.mimeType || (input.inputKind === "video_chunk" ? "video/mp4" : "image/jpeg");
-        const mediaPart = input.inputKind === "video_chunk"
-          ? { type: "input_video", video_url: dataUrl(mime, base64) }
-          : { type: "input_image", image_url: dataUrl(mime, base64) };
+        const encoded = dataUrl(mime, base64);
         for (const prompt of prompts) {
           const response = await postResponses(
             key,
-            {
-              model: SAM_MODEL_ID,
-              input: [
-                {
-                  type: "message",
-                  role: "user",
-                  content: [
-                    { type: "input_text", text: prompt.samPrompt },
-                    mediaPart,
-                  ],
-                },
-              ],
-            },
+            input.inputKind === "video_chunk"
+              ? buildSamResponsesBody({ prompt: prompt.noun, videoDataUrl: encoded })
+              : buildSamResponsesBody({ prompt: prompt.noun, imageDataUrl: encoded }),
             input.timeoutMs,
+            samRequestHeaders(key),
           );
           status = response.status;
           if (response.status < 200 || response.status >= 300) {
+            console.error(samFailureLog(response.status, response.url, response.text));
             failed = `SAM failed (HTTP ${response.status}).`;
             masks.push({ objectId: prompt.objectId, noun: prompt.noun, present: false });
             continue;
           }
-          const boxes = parseSamBoxes(outputText(response.text));
-          const present = boxes.length > 0;
+          const text = samOutputText(response.text);
+          const boxes = parseSamBoxes(text);
+          const present = samMaskPresent(text);
           masks.push({
             objectId: prompt.objectId,
             noun: prompt.noun,
             present,
-            trackId: present ? `f${boxes[0].frame}-o${boxes[0].ordinal}` : undefined,
+            trackId: present && boxes[0] ? `f${boxes[0].frame}-o${boxes[0].ordinal}` : undefined,
             box: boxes[0]?.box,
           });
         }

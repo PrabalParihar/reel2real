@@ -151,7 +151,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
         });
         const withCounters: MachineState = {
           state: "evaluating",
-          context: { ...context, ...evaluation.counters },
+          context: { ...context, ...evaluation.counters, lastError: undefined },
         };
         if (!evaluation.signal) {
           next = { state: "waiting", context: { ...withCounters.context, tick: context.tick + 1 } };
@@ -215,7 +215,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
       }
       break;
     case "USER_SKIP":
-      if (state === "skip_detected" || state === "step_ready" || state === "waiting" || state === "mask_lost" || state === "out_of_order" || state === "success" || state === "tracking" || state === "evaluating") {
+      if (state === "skip_detected" || state === "step_ready" || state === "waiting" || state === "mask_lost" || state === "out_of_order" || state === "success" || state === "tracking" || state === "evaluating" || state === "error_recoverable") {
         next = { state: "user_skip", context };
       }
       break;
@@ -223,7 +223,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
     case "STEP_LOADED":
       if (state === "skip_detected") {
         next = { state: "user_skip", context };
-      } else if (state === "success" || state === "step_ready" || state === "waiting" || state === "out_of_order" || state === "mask_lost" || state === "tracking" || state === "evaluating") {
+      } else if (state === "success" || state === "step_ready" || state === "waiting" || state === "out_of_order" || state === "mask_lost" || state === "tracking" || state === "evaluating" || state === "error_recoverable") {
         next = advance(context, false);
       }
       break;

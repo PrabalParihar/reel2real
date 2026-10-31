@@ -12,6 +12,11 @@ export function coachHonesty(mode: PreferredLiveMode, stillsArmed: boolean, samp
   return sampleSteps ? `${base} · Sample steps` : `${base} · Steps from clip`;
 }
 
+export function highlightsChip(lastError?: string): string | null {
+  if (!lastError || lastError === "camera_denied") return null;
+  return "Highlights unavailable";
+}
+
 export function stateChip(state: CoachStateId): string | null {
   switch (state) {
     case "awaiting_camera":

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SAMPLE_CHAI } from "@/src/server/fixtures";
-import { coachHonesty, honestyChip, missingObjectHint, stateChip } from "./ui";
+import { coachHonesty, highlightsChip, honestyChip, missingObjectHint, stateChip } from "./ui";
 import { evaluateCheck } from "./evaluate";
 import { createCoach, transition } from "./machine";
 import { TIMEOUTS } from "./types";
@@ -64,6 +64,46 @@ describe("step fsm", () => {
     const retried = transition(machine, { type: "USER_RETRY" }, SAMPLE_CHAI);
     expect(retried.trail).toContain("retry");
     expect(retried.machine.state).toBe("waiting");
+  });
+
+  it("advances on Next from error_recoverable without a SAM result", () => {
+    let machine = boot();
+    machine = transition(machine, { type: "CADENCE_TICK" }, SAMPLE_CHAI).machine;
+    expect(machine.state).toBe("tracking");
+    const moved = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_CHAI).machine;
+    expect(moved.context.stepIndex).toBe(1);
+    expect(moved.state).toBe("step_ready");
+
+    machine = boot();
+    for (let attempt = 0; attempt < TIMEOUTS.ERROR_AUTO_RETRY; attempt += 1) {
+      machine = transition(machine, { type: "CADENCE_TICK" }, SAMPLE_CHAI).machine;
+      expect(machine.state).toBe("tracking");
+      machine = transition(machine, { type: "SAM_ERROR", message: "SAM failed (HTTP 404)." }, SAMPLE_CHAI).machine;
+      expect(machine.state).toBe("waiting");
+    }
+    machine = transition(machine, { type: "CADENCE_TICK" }, SAMPLE_CHAI).machine;
+    machine = transition(machine, { type: "SAM_ERROR", message: "SAM failed (HTTP 404)." }, SAMPLE_CHAI).machine;
+    expect(machine.state).toBe("error_recoverable");
+    expect(highlightsChip(machine.context.lastError)).toBe("Highlights unavailable");
+    const next = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_CHAI).machine;
+    expect(next.state).toBe("step_ready");
+    expect(next.context.stepIndex).toBe(1);
+    const skipped = transition(machine, { type: "USER_SKIP" }, SAMPLE_CHAI).machine;
+    expect(skipped.context.stepIndex).toBe(1);
+    expect(skipped.context.skippedStepIds).toHaveLength(1);
+  });
+
+  it("lets Skip and Next leave out of order without another SAM result", () => {
+    let machine = boot();
+    const early = { obj_mortar: false, obj_pestle: false, obj_ginger: false, obj_cardamom: true };
+    machine = check(machine, early);
+    machine = check(machine, early);
+    expect(machine.state).toBe("out_of_order");
+    const next = transition(machine, { type: "USER_ADVANCE" }, SAMPLE_CHAI).machine;
+    expect(next.context.stepIndex).toBe(1);
+    expect(next.state).toBe("step_ready");
+    const skipped = transition(machine, { type: "USER_SKIP" }, SAMPLE_CHAI).machine;
+    expect(skipped.context.skippedStepIds).toHaveLength(1);
   });
 
   it("flags out of order before a silent advance", () => {
