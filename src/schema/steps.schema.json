@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reel2real.local/steps.schema.json",
+  "title": "Reel2RealTutorialSteps",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tutorialId",
+    "title",
+    "sampleLabel",
+    "attribution",
+    "sourceClip",
+    "generation",
+    "steps"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Product schema version (not a Meta API version)."
+    },
+    "tutorialId": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "domain": {
+      "type": "string",
+      "enum": ["indian_recipe", "non_cooking_diy", "other"]
+    },
+    "sampleLabel": { "type": "boolean" },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["creatorName", "creditLine", "licence"],
+      "properties": {
+        "creatorName": { "type": "string", "minLength": 1 },
+        "creditLine": { "type": "string", "minLength": 1 },
+        "licence": {
+          "type": "string",
+          "enum": ["self_filmed_sample", "written_permission", "other_cleared"]
+        },
+        "permissionDocPath": { "type": "string" }
+      }
+    },
+    "sourceClip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mediaType", "durationSec"],
+      "properties": {
+        "mediaType": { "type": "string", "enum": ["video/mp4", "video/webm"] },
+        "durationSec": { "type": "number", "exclusiveMinimum": 0 },
+        "localUri": { "type": "string" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "modelId", "toolCalls"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["muse_spark_live", "muse_spark_curated", "hand_authored"]
+        },
+        "modelId": { "type": "string" },
+        "apiBaseHint": { "type": "string" },
+        "promptDigest": { "type": "string" },
+        "generatedAtIso": { "type": "string", "format": "date-time" },
+        "toolCalls": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/toolCall" }
+        }
+      }
+    },
+    "runtimeHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferredLiveMode": {
+          "type": "string",
+          "enum": ["chunk_video_1_2s", "keyframe_still", "stills_only"]
+        },
+        "maxObjectsPerStep": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 4,
+          "default": 4
+        },
+        "safetyRuleId": { "type": "string" }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "$defs": {
+    "toolCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "modelId", "purpose"],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "enum": ["muse_spark", "sam_3_1", "tts", "other"]
+        },
+        "modelId": { "type": "string" },
+        "purpose": { "type": "string" },
+        "requestId": { "type": "string" },
+        "inputKind": {
+          "type": "string",
+          "enum": ["transcript", "clip", "image", "video_chunk", "text"]
+        },
+        "latencyMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "samObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectId", "noun", "role", "samPrompt"],
+      "properties": {
+        "objectId": { "type": "string" },
+        "noun": { "type": "string", "minLength": 1 },
+        "role": {
+          "type": "string",
+          "enum": ["required_present", "required_absent", "optional", "safety_prop"]
+        },
+        "samPrompt": { "type": "string", "minLength": 1 },
+        "expectedTrack": { "type": "boolean", "default": true }
+      }
+    },
+    "successCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "description"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "all_required_present",
+            "required_present_and_absent",
+            "ordered_presence",
+            "manual_confirm_only"
+          ]
+        },
+        "description": { "type": "string" },
+        "requiredObjectIds": { "type": "array", "items": { "type": "string" } },
+        "forbiddenObjectIds": { "type": "array", "items": { "type": "string" } },
+        "orderObjectIds": { "type": "array", "items": { "type": "string" } },
+        "minStableChunks": { "type": "integer", "minimum": 1, "default": 1 }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index",
+        "instructionText",
+        "sourceTimeRange",
+        "credit",
+        "objects",
+        "successCheck"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "index": { "type": "integer", "minimum": 0 },
+        "instructionText": { "type": "string", "minLength": 1 },
+        "hinglishPrompt": { "type": "string" },
+        "sourceTimeRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["startSec", "endSec"],
+          "properties": {
+            "startSec": { "type": "number", "minimum": 0 },
+            "endSec": { "type": "number", "exclusiveMinimum": 0 },
+            "description": { "type": "string" }
+          }
+        },
+        "credit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["creditLine"],
+          "properties": {
+            "creditLine": { "type": "string" },
+            "creatorName": { "type": "string" },
+            "sampleLabel": { "type": "boolean" }
+          }
+        },
+        "objects": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/samObject" }
+        },
+        "successCheck": { "$ref": "#/$defs/successCheck" },
+        "safety": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ruleId": { "type": "string" },
+            "triggerObjectIds": { "type": "array", "items": { "type": "string" } },
+            "message": { "type": "string" }
+          }
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "modelId": { "type": "string" },
+            "toolCalls": { "type": "array", "items": { "$ref": "#/$defs/toolCall" } },
+            "curatedByHuman": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
