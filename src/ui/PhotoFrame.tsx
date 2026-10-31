@@ -281,7 +281,9 @@ export function PhotoFrame({
       )) : null}
       {status ? <span className="reel-status" style={{ bottom: mediaBottom }}>{status}</span> : null}
       {showRecorded ? <span className="reel-status" style={{ bottom: mediaBottom }}>{RECORDED_SAM_LABEL}</span> : null}
-      {!status && !showRecorded && sampleChip ? <span className="reel-status" style={{ bottom: mediaBottom }}>Sample</span> : null}
+      {!status && !showRecorded && sampleChip ? (
+        <span className="reel-status" style={labelMode === "tags" ? { top: 10, bottom: "auto", height: "auto", width: "max-content", alignSelf: "start" } : { bottom: mediaBottom }}>Sample</span>
+      ) : null}
       {showProgress && playLoop ? (
         <div className="reel-progress" style={{ bottom: Math.max(0, mediaBottom - 28) }}>
           <span style={{ width: `${Math.min(100, ratio * 100)}%` }} />

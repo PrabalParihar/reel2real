@@ -302,7 +302,16 @@ p { margin: 0; color: var(--ink-2); }
   position: static;
   transform: none;
 }
-.photo-frame.has-tags .reel-status { top: 10px; bottom: auto; }
+.photo-frame.has-tags .reel-status {
+  top: 10px;
+  bottom: auto;
+  left: 12px;
+  right: auto;
+  height: auto;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  align-self: start;
+}
 .noun-chip {
   position: absolute;
   z-index: 2;
