@@ -76,6 +76,11 @@ export function coachStatusChip(state: CoachStateId, cameraBlocked: boolean): st
   return stateChip(state);
 }
 
+/** Hide the step-panel still when the stage is already showing that Sample frame. */
+export function showStepPanelFrame(stageShowsRecordedSample: boolean): boolean {
+  return !stageShowsRecordedSample;
+}
+
 /** Live only for a real uploaded clip on the live runtime. Sample runs stay Sample. */
 export function headerChip(input: { mock: boolean; sampleRun: boolean; liveClip: boolean }): "Live" | "Sample" | null {
   if (input.sampleRun) return "Sample";

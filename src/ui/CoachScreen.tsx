@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sceneForPublishedId } from "@/src/domains/catalog";
-import { coachHonesty, coachStatusChip, highlightsChip, missingObjectHint } from "@/src/fsm/ui";
+import { coachHonesty, coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { presentNouns, sceneAsset } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
@@ -143,18 +143,20 @@ function CoachBody() {
             <h1>{step.instructionText}</h1>
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
-            <div className="clip-card">
-              {clip ? (
-                <video src={clip} muted playsInline preload="metadata" />
-              ) : scene && sceneStep ? (
-                <PhotoFrame
-                  src={sceneAsset(scene, sceneStep.keyframe)}
-                  alt={sceneStep.title}
-                  sampleChip
-                />
-              ) : null}
-              <p className="mono">{step.sourceTimeRange.startSec}s – {step.sourceTimeRange.endSec}s</p>
-            </div>
+            {showStepPanelFrame(showRecorded) ? (
+              <div className="clip-card">
+                {clip ? (
+                  <video src={clip} muted playsInline preload="metadata" />
+                ) : scene && sceneStep ? (
+                  <PhotoFrame
+                    src={sceneAsset(scene, sceneStep.keyframe)}
+                    alt={sceneStep.title}
+                    sampleChip
+                  />
+                ) : null}
+                <p className="mono">{step.sourceTimeRange.startSec}s – {step.sourceTimeRange.endSec}s</p>
+              </div>
+            ) : null}
             {scene ? <SceneCredit scene={scene} /> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
             {coach.machine.state === "safety_halt" ? <p className="safety-copy">{step.safety?.message}</p> : null}
           </article>

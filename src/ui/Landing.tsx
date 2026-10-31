@@ -134,7 +134,7 @@ export function Landing() {
                 <ol className="step-list">
                   {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
                 </ol>
-                <Link className={sample.id === PUBLISHED_SAMPLES[0].id ? "btn btn-primary" : "btn btn-ghost"} href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
+                <Link className="btn btn-primary" href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
               </div>
             </article>
           ))}
@@ -204,7 +204,7 @@ function HeroStage({ mock, scene }: { mock: boolean; scene: SampleScene }) {
     <div className="hero-media">
       <div className="hero-chip-stack">
         <Chip tone="wait">{mock ? "Keyframe stills · Sample steps" : "Keyframe stills · Steps from clip"}</Chip>
-        <span className="checking">Checking…</span>
+        <Chip tone="running">Checking…</Chip>
       </div>
       <div className="hero-stage">
         <PhotoFrame

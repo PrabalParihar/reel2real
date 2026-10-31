@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SAMPLE_ALOO, SAMPLE_CHAI } from "@/src/server/fixtures";
-import { coachHonesty, coachStatusChip, headerChip, highlightsChip, honestyChip, missingObjectHint, stateChip } from "./ui";
+import { coachHonesty, coachStatusChip, headerChip, highlightsChip, honestyChip, missingObjectHint, showStepPanelFrame, stateChip } from "./ui";
 import { evaluateCheck } from "./evaluate";
 import { createCoach, transition } from "./machine";
 import { TIMEOUTS } from "./types";
@@ -152,6 +152,8 @@ describe("step fsm", () => {
     expect(headerChip({ mock: false, sampleRun: false, liveClip: true })).toBe("Live");
     expect(headerChip({ mock: true, sampleRun: false, liveClip: true })).toBeNull();
     expect(headerChip({ mock: true, sampleRun: false, liveClip: false })).toBeNull();
+    expect(showStepPanelFrame(true)).toBe(false);
+    expect(showStepPanelFrame(false)).toBe(true);
   });
 
   it("keeps voice lines short and free of questions", () => {
