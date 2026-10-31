@@ -2,7 +2,9 @@
 
 Reel2Real is a phone-on-a-stand browser coach. Upload a short tutorial you filmed. The app turns that clip into steps, then highlights the objects in each step while you follow along on camera.
 
-Five Sample demos are included so the coach can be shown from recorded output: masala chai, a kids science flask, origami, seed planting, and latte art. The landing hero stays on masala chai. Sample runs are labelled Sample. They are not a live camera call.
+Five Sample demos are included so the coach can be shown from recorded output: masala chai, flask colour, origami, seed planting, and latte art. The landing hero stays on masala chai. Sample outlines are labelled `Sample · recorded SAM output`. They are never labelled Live.
+
+The team is Prabal Pratap Singh, Nikhil Verma, and Neha Singh. The planned track is Indie Developer. A draft write-up is in `docs/SUBMISSION-DRAFT.md`. Do not submit it from this repo.
 
 ## Setup
 
@@ -28,25 +30,21 @@ Names only. Never commit values, and never print them.
 - `META_API_BASE` (optional, default `https://api.meta.ai/v1`)
 - `NEXT_PUBLIC_SAM_MIN_INTERVAL_MS` (optional, default 2000). The coach will not start a second SAM call until this gap has passed, and it keeps at most one call in flight.
 - `NEXT_PUBLIC_SAM_SESSION_CAP` (optional, default 60). After that many coach calls, polling stops and the stage shows Highlights paused. Next still moves the step.
-- `SAM_FORWARD_ENABLED` (optional, default off). Set to `1` only on prod `web` to forward SAM. Any other value leaves the direct path.
-- `SAM_FORWARD_URL` (optional). Where that forward goes. See `docs/SAM-FORWARD.md`.
-- `SAM_FORWARD_SECRET` (optional shared secret). Never print it.
-
 If neither model key is set, Spark and SAM use the mock clients. The UI shows a Mock chip. Sample tutorials stay labelled Sample.
 
 ## Architecture
 
 This is a Next.js app. The browser talks to same-origin routes. It does not call Meta directly.
 
-- `/api/spark` runs once, while steps are extracted.
-- `/api/segment` is the server route for live highlights. It sends the keyframe to Meta.
-- Live model calls go to `POST https://api.meta.ai/v1/responses`. SAM uses model id `sam-3.1`. Spark uses model id `muse-spark-1.3`.
-- Sample demos do not use those routes for their outlines. Each demo is a folder of stills plus recorded SAM output under `public/samples/<slug>/`. The label on those outlines is `Sample · recorded SAM output`.
-- If a live highlight never arrives, Next and Skip still move the step and the stage shows Highlights unavailable. The app does not invent a box.
+- `/api/spark` runs once, while steps are extracted. It calls Muse Spark (`muse-spark-1.3`).
+- `/api/segment` is the server route for live highlights. The browser never holds the model key. The public app accepts the same-origin request, then sends it through a private, authenticated server-side forward to a worker service on the host's private network. That worker calls SAM 3.1 (`sam-3.1`) and returns the result.
+- Live model calls use `POST https://api.meta.ai/v1/responses`.
+- Sample demos do not use that live path for their outlines. Each demo is a folder of stills plus recorded SAM output under `public/samples/<slug>/`. The label on those outlines is `Sample · recorded SAM output`.
+- If the forward or the Meta call fails, Next and Skip still move the step and the stage shows Highlights unavailable. The app does not invent a box.
 
 `/api/spark` and `/api/segment` allow 20 requests per minute per IP. That limit is ours, not a Meta quota. The daily cap counts outbound Meta calls in process memory and answers 429 when it is spent. The UI then shows cached steps for that file, or a Sample tutorial, with a chip that says the cap was reached.
 
-`POST /api/segment` can forward to `web-preview` when `SAM_FORWARD_ENABLED=1`. The default is off, and the direct SAM path is unchanged until then. Setup for both Railway services is in `docs/SAM-FORWARD.md`. Values for the forward secret and the model key are never logged.
+Some Sample steps show no outline. The recorded masks for those steps failed verification (size and position checks), so the step shows a plain hint instead of a guessed outline, and it does not show a Sample chip that would imply a highlight. On current main that includes latte art steps 1 and 3, masala chai step 3, and origami step 3. Other steps keep only the masks that passed. Chai step 2 keeps the hand. Flask step 3 keeps the flask.
 
 ## Models
 
@@ -78,7 +76,19 @@ The flask-colour demo is kids science. Its steps name only what you can see. The
 
 ## Sample demos
 
-Published order: masala-chai, flask-colour, origami, seed-planting, latte-art. Filming notes are in `docs/demo-script.md`. A draft submission write-up is in `docs/SUBMISSION-DRAFT.md`. That file is a draft. Do not submit it from this repo.
+Published order: masala-chai, flask-colour, origami, seed-planting, latte-art. Filming notes are in `docs/demo-script.md`. Prod is https://web-production-d1454.up.railway.app. A draft submission write-up is in `docs/SUBMISSION-DRAFT.md`. That file is a draft. Do not submit it from this repo.
+
+Credits match `public/samples/CREDITS.md`:
+
+| Demo | Clip | Author | Source | Licence |
+| --- | --- | --- | --- | --- |
+| masala-chai | chai-mortar-kitchen-5480225.mp4 | Pexels contributor | https://www.pexels.com/video/5480225/ | [Pexels License](https://www.pexels.com/license/) |
+| flask-colour | hero-loop.mp4 | AlexKopeykin | https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/ | [Pixabay Content License](https://pixabay.com/service/license-summary/) |
+| origami | hero-loop.mp4 | Yogendra Singh | https://www.pexels.com/video/a-person-making-origami-6364305/ | [Pexels License](https://www.pexels.com/license/) |
+| seed-planting | hero-loop.mp4 | Tima Miroshnichenko | https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/ | [Pexels License](https://www.pexels.com/license/) |
+| latte-art | hero-loop.mp4 | franklandgrave | https://mixkit.co/free-stock-video/latte-art-810/ | [Mixkit Stock Video Free License](https://mixkit.co/license/#videoFree) |
+
+The chai credit line is Pexels contributor. flask-colour shows Grown-up supervision and does not name a chemical. No Wikimedia CC BY-SA images are used in this Sample set.
 
 ## Railway
 
