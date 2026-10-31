@@ -121,8 +121,8 @@ function CoachBody() {
                 ))}
               </div>
             ) : null}
-            {coach.cameraNote ? <p className="stage-note mono">{coach.cameraNote}</p> : null}
           </div>
+          {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
         </section>
 
         <section className="coach-side">

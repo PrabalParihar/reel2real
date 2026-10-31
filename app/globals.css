@@ -534,7 +534,7 @@ p { margin: 0; color: var(--ink-2); }
 .tint-violet { border-color: var(--mask-secondary); background: rgba(167, 139, 250, 0.28); box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.35); }
 .tint-amber { border-color: var(--wait); background: rgba(229, 168, 75, 0.28); }
 .tint-rose { border-color: var(--rose); background: rgba(251, 113, 133, 0.28); }
-.stage-note { position: absolute; left: 10px; bottom: 10px; z-index: 3; margin: 0; }
+.stage-note { margin: 0; text-align: left; }
 .coach-side { display: grid; gap: 12px; align-content: start; }
 .rail { list-style: none; margin: 0; padding: 0; display: none; gap: 8px; }
 .rail li {
@@ -586,7 +586,6 @@ p { margin: 0; color: var(--ink-2); }
 @media (max-width: 1023px) {
   .stage { height: auto; aspect-ratio: 16 / 9; min-height: 0; }
   .recorded-label { white-space: normal; max-width: calc(100% - 16px); }
-  .stage-note { bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(9, 10, 12, 0.72); }
   .still-frame, .photo-frame { height: 148px; }
   .demo-card .photo-frame.tall { height: 180px; }
   .coach {
