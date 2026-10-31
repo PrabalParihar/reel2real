@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.0.0",
+  "tutorialId": "sample_masala_chai_v1",
+  "title": "Sample · Masala chai",
+  "domain": "indian_recipe",
+  "sampleLabel": true,
+  "attribution": {
+    "creatorName": "Sample cook (self-filmed)",
+    "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+    "licence": "self_filmed_sample"
+  },
+  "sourceClip": {
+    "mediaType": "video/mp4",
+    "durationSec": 36,
+    "localUri": "placeholders/sample-masala-chai.mp4",
+    "width": 1080,
+    "height": 1920
+  },
+  "generation": {
+    "mode": "muse_spark_curated",
+    "modelId": "muse-spark-1.3",
+    "apiBaseHint": "https://api.meta.ai/v1",
+    "generatedAtIso": "2026-10-31T06:30:00.000Z",
+    "toolCalls": [
+      {
+        "tool": "muse_spark",
+        "modelId": "muse-spark-1.3",
+        "purpose": "tutorial_transcript_to_steps_json",
+        "inputKind": "transcript"
+      }
+    ]
+  },
+  "runtimeHints": {
+    "preferredLiveMode": "keyframe_still",
+    "maxObjectsPerStep": 4,
+    "safetyRuleId": "knife_near_cup"
+  },
+  "steps": [
+    {
+      "id": "step_01_mise",
+      "index": 0,
+      "instructionText": "Place the mortar, pestle, and ginger fully in frame.",
+      "hinglishPrompt": "Mortar, pestle, aur ginger dikhao.",
+      "sourceTimeRange": { "startSec": 0, "endSec": 8 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creatorName": "Sample cook (self-filmed)",
+        "sampleLabel": true
+      },
+      "objects": [
+        { "objectId": "obj_mortar", "noun": "mortar", "role": "required_present", "samPrompt": "stone mortar", "expectedTrack": true },
+        { "objectId": "obj_pestle", "noun": "pestle", "role": "required_present", "samPrompt": "stone pestle", "expectedTrack": true },
+        { "objectId": "obj_ginger", "noun": "ginger", "role": "required_present", "samPrompt": "fresh ginger root", "expectedTrack": true }
+      ],
+      "successCheck": {
+        "kind": "all_required_present",
+        "description": "Mortar, pestle, and ginger are all fully visible.",
+        "requiredObjectIds": ["obj_mortar", "obj_pestle", "obj_ginger"],
+        "minStableChunks": 1
+      }
+    },
+    {
+      "id": "step_02_crush",
+      "index": 1,
+      "instructionText": "Crush the ginger and cardamom in the mortar.",
+      "hinglishPrompt": "Ginger aur cardamom crush karo.",
+      "sourceTimeRange": { "startSec": 8, "endSec": 20 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "sampleLabel": true
+      },
+      "objects": [
+        { "objectId": "obj_mortar", "noun": "mortar", "role": "required_present", "samPrompt": "stone mortar", "expectedTrack": true },
+        { "objectId": "obj_pestle", "noun": "pestle", "role": "required_present", "samPrompt": "stone pestle", "expectedTrack": true },
+        { "objectId": "obj_ginger", "noun": "ginger", "role": "required_present", "samPrompt": "crushed ginger", "expectedTrack": true },
+        { "objectId": "obj_cardamom", "noun": "cardamom", "role": "required_present", "samPrompt": "green cardamom pods", "expectedTrack": true }
+      ],
+      "successCheck": {
+        "kind": "all_required_present",
+        "description": "Mortar, pestle, ginger, and cardamom are visible together.",
+        "requiredObjectIds": ["obj_mortar", "obj_pestle", "obj_ginger", "obj_cardamom"],
+        "minStableChunks": 1
+      }
+    },
+    {
+      "id": "step_03_cup",
+      "index": 2,
+      "instructionText": "Set the cup beside the mortar. The whole cup stays inside the frame.",
+      "hinglishPrompt": "Cup poora frame mein rakho.",
+      "sourceTimeRange": { "startSec": 20, "endSec": 32 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "sampleLabel": true
+      },
+      "objects": [
+        { "objectId": "obj_cup", "noun": "cup", "role": "required_present", "samPrompt": "tea cup", "expectedTrack": true },
+        { "objectId": "obj_mortar", "noun": "mortar", "role": "required_present", "samPrompt": "stone mortar", "expectedTrack": true },
+        { "objectId": "obj_knife", "noun": "knife", "role": "safety_prop", "samPrompt": "kitchen knife", "expectedTrack": false }
+      ],
+      "successCheck": {
+        "kind": "required_present_and_absent",
+        "description": "The whole cup and the mortar are visible. The knife stays out.",
+        "requiredObjectIds": ["obj_cup", "obj_mortar"],
+        "forbiddenObjectIds": ["obj_knife"],
+        "minStableChunks": 1
+      },
+      "safety": {
+        "ruleId": "knife_near_cup",
+        "triggerObjectIds": ["obj_knife"],
+        "message": "Knife is in frame. Move it off the board."
+      }
+    }
+  ]
+}

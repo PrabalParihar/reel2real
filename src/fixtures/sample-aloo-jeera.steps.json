@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "1.0.0",
+  "tutorialId": "sample_aloo_jeera_prep_v1",
+  "title": "Sample · Aloo jeera — onion prep",
+  "domain": "indian_recipe",
+  "sampleLabel": true,
+  "attribution": {
+    "creatorName": "Sample cook (self-filmed)",
+    "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+    "licence": "self_filmed_sample"
+  },
+  "sourceClip": {
+    "mediaType": "video/mp4",
+    "durationSec": 42.0,
+    "localUri": "placeholders/sample-aloo-jeera-onion-prep.mp4",
+    "width": 1080,
+    "height": 1920
+  },
+  "generation": {
+    "mode": "muse_spark_curated",
+    "modelId": "muse-spark-1.3",
+    "apiBaseHint": "https://api.meta.ai/v1",
+    "generatedAtIso": "2026-10-31T06:30:00.000Z",
+    "toolCalls": [
+      {
+        "tool": "muse_spark",
+        "modelId": "muse-spark-1.3",
+        "purpose": "tutorial_transcript_to_steps_json",
+        "inputKind": "transcript"
+      }
+    ]
+  },
+  "runtimeHints": {
+    "preferredLiveMode": "keyframe_still",
+    "maxObjectsPerStep": 4,
+    "safetyRuleId": "knife_on_board_wrong_step"
+  },
+  "steps": [
+    {
+      "id": "step_01_board_setup",
+      "index": 0,
+      "instructionText": "Place the chopping board and knife in frame, onion whole on the board.",
+      "hinglishPrompt": "Board aur knife dikhao — onion ready.",
+      "sourceTimeRange": { "startSec": 0.0, "endSec": 6.0 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creatorName": "Sample cook (self-filmed)",
+        "sampleLabel": true
+      },
+      "objects": [
+        {
+          "objectId": "obj_board",
+          "noun": "chopping_board",
+          "role": "required_present",
+          "samPrompt": "wooden chopping board",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_knife",
+          "noun": "knife",
+          "role": "required_present",
+          "samPrompt": "kitchen knife",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_onion_whole",
+          "noun": "onion",
+          "role": "required_present",
+          "samPrompt": "whole onion",
+          "expectedTrack": true
+        }
+      ],
+      "successCheck": {
+        "kind": "all_required_present",
+        "description": "Board, knife, and whole onion all visible in frame.",
+        "requiredObjectIds": ["obj_board", "obj_knife", "obj_onion_whole"],
+        "minStableChunks": 1
+      }
+    },
+    {
+      "id": "step_02_chop_onion",
+      "index": 1,
+      "instructionText": "Chop the onion into small pieces on the board.",
+      "hinglishPrompt": "Onion kaato — pieces board pe.",
+      "sourceTimeRange": { "startSec": 6.0, "endSec": 18.0 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "sampleLabel": true
+      },
+      "objects": [
+        {
+          "objectId": "obj_onion_pieces",
+          "noun": "chopped_onion",
+          "role": "required_present",
+          "samPrompt": "chopped onion pieces",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_knife",
+          "noun": "knife",
+          "role": "required_present",
+          "samPrompt": "kitchen knife",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_board",
+          "noun": "chopping_board",
+          "role": "required_present",
+          "samPrompt": "wooden chopping board",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_whole_onion",
+          "noun": "whole_onion",
+          "role": "required_absent",
+          "samPrompt": "whole uncut onion",
+          "expectedTrack": false
+        }
+      ],
+      "successCheck": {
+        "kind": "required_present_and_absent",
+        "description": "Chopped onion and knife on board; whole onion no longer dominant.",
+        "requiredObjectIds": ["obj_onion_pieces", "obj_knife", "obj_board"],
+        "forbiddenObjectIds": ["obj_whole_onion"],
+        "minStableChunks": 2
+      },
+      "safety": {
+        "ruleId": "knife_on_board_wrong_step",
+        "triggerObjectIds": ["obj_knife"],
+        "message": "Knife detected — keep fingers clear. Sample safety cue."
+      }
+    },
+    {
+      "id": "step_03_knife_down",
+      "index": 2,
+      "instructionText": "Set the knife off the board and gather the chopped onion.",
+      "hinglishPrompt": "Knife hatao — onion ikattha karo.",
+      "sourceTimeRange": { "startSec": 18.0, "endSec": 30.0 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creatorName": "Sample cook (self-filmed)",
+        "sampleLabel": true
+      },
+      "objects": [
+        {
+          "objectId": "obj_onion_pieces",
+          "noun": "chopped_onion",
+          "role": "required_present",
+          "samPrompt": "chopped onion pieces",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_board",
+          "noun": "chopping_board",
+          "role": "required_present",
+          "samPrompt": "wooden chopping board",
+          "expectedTrack": true
+        },
+        {
+          "objectId": "obj_knife",
+          "noun": "knife",
+          "role": "safety_prop",
+          "samPrompt": "kitchen knife",
+          "expectedTrack": false
+        }
+      ],
+      "successCheck": {
+        "kind": "required_present_and_absent",
+        "description": "Chopped onion and board visible; knife off the board.",
+        "requiredObjectIds": ["obj_onion_pieces", "obj_board"],
+        "forbiddenObjectIds": ["obj_knife"],
+        "minStableChunks": 1
+      },
+      "safety": {
+        "ruleId": "knife_on_board_wrong_step",
+        "triggerObjectIds": ["obj_knife"],
+        "message": "Knife still on the board. Move it aside."
+      }
+    }
+  ]
+}

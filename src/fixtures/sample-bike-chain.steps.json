@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0.0",
+  "tutorialId": "sample_bike_chain_wipe_v1",
+  "title": "Sample · Bike chain wipe",
+  "domain": "non_cooking_diy",
+  "sampleLabel": true,
+  "attribution": {
+    "creatorName": "Sample maker (self-filmed)",
+    "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+    "licence": "self_filmed_sample"
+  },
+  "sourceClip": {
+    "mediaType": "video/mp4",
+    "durationSec": 30,
+    "localUri": "placeholders/sample-bike-chain-wipe.mp4",
+    "width": 1920,
+    "height": 1080
+  },
+  "generation": {
+    "mode": "muse_spark_curated",
+    "modelId": "muse-spark-1.3",
+    "apiBaseHint": "https://api.meta.ai/v1",
+    "generatedAtIso": "2026-10-31T06:30:00.000Z",
+    "toolCalls": [
+      {
+        "tool": "muse_spark",
+        "modelId": "muse-spark-1.3",
+        "purpose": "tutorial_transcript_to_steps_json",
+        "inputKind": "transcript"
+      }
+    ]
+  },
+  "runtimeHints": {
+    "preferredLiveMode": "keyframe_still",
+    "maxObjectsPerStep": 4
+  },
+  "steps": [
+    {
+      "id": "step_01_layout",
+      "index": 0,
+      "instructionText": "Put the rear wheel, the chain, and a dry rag fully in frame.",
+      "hinglishPrompt": "Wheel, chain, aur rag dikhao.",
+      "sourceTimeRange": { "startSec": 0, "endSec": 8 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "creatorName": "Sample maker (self-filmed)",
+        "sampleLabel": true
+      },
+      "objects": [
+        { "objectId": "obj_wheel", "noun": "wheel", "role": "required_present", "samPrompt": "bicycle rear wheel", "expectedTrack": true },
+        { "objectId": "obj_chain", "noun": "chain", "role": "required_present", "samPrompt": "bicycle chain", "expectedTrack": true },
+        { "objectId": "obj_rag", "noun": "rag", "role": "required_present", "samPrompt": "dry cloth rag", "expectedTrack": true }
+      ],
+      "successCheck": {
+        "kind": "all_required_present",
+        "description": "Wheel, chain, and rag are all fully visible.",
+        "requiredObjectIds": ["obj_wheel", "obj_chain", "obj_rag"],
+        "minStableChunks": 1
+      }
+    },
+    {
+      "id": "step_02_wipe",
+      "index": 1,
+      "instructionText": "Pinch the rag around the chain and turn the pedal backward.",
+      "hinglishPrompt": "Rag se chain pocho.",
+      "sourceTimeRange": { "startSec": 8, "endSec": 18 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "sampleLabel": true
+      },
+      "objects": [
+        { "objectId": "obj_chain", "noun": "chain", "role": "required_present", "samPrompt": "bicycle chain", "expectedTrack": true },
+        { "objectId": "obj_rag", "noun": "rag", "role": "required_present", "samPrompt": "cloth rag on the chain", "expectedTrack": true },
+        { "objectId": "obj_pedal", "noun": "pedal", "role": "required_present", "samPrompt": "bicycle pedal", "expectedTrack": true }
+      ],
+      "successCheck": {
+        "kind": "all_required_present",
+        "description": "Chain, rag, and pedal are visible while you wipe.",
+        "requiredObjectIds": ["obj_chain", "obj_rag", "obj_pedal"],
+        "minStableChunks": 1
+      }
+    },
+    {
+      "id": "step_03_oil",
+      "index": 2,
+      "instructionText": "Oil one link. Take the rag off the chain first.",
+      "hinglishPrompt": "Rag hatao, ek link pe oil.",
+      "sourceTimeRange": { "startSec": 18, "endSec": 28 },
+      "credit": {
+        "creditLine": "Sample · Self-filmed for Reel2Real demo — not a public creator Reel",
+        "sampleLabel": true
+      },
+      "objects": [
+        { "objectId": "obj_chain", "noun": "chain", "role": "required_present", "samPrompt": "bicycle chain", "expectedTrack": true },
+        { "objectId": "obj_oil", "noun": "oil", "role": "required_present", "samPrompt": "chain oil bottle", "expectedTrack": true },
+        { "objectId": "obj_rag", "noun": "rag", "role": "required_absent", "samPrompt": "cloth rag", "expectedTrack": false }
+      ],
+      "successCheck": {
+        "kind": "required_present_and_absent",
+        "description": "Chain and oil bottle are visible. The rag is off the chain.",
+        "requiredObjectIds": ["obj_chain", "obj_oil"],
+        "forbiddenObjectIds": ["obj_rag"],
+        "minStableChunks": 1
+      }
+    }
+  ]
+}
