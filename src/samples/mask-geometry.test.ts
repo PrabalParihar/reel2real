@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { decodeMaskToRaster } from "@meta-sam/parser";
-import { contourLoops, coverTransform, framePathFromPayload, framePathFromRaster, frameToView, smoothMask } from "./mask-geometry";
+import { clipPathToRect, contourLoops, coverTransform, framePathFromPayload, framePathFromRaster, frameToView, objectPositionForPoint, smoothMask, visibleFrameRect } from "./mask-geometry";
 import { heroNouns, SAMPLE_SCENES, selectMaskRecord, tutorialFromScene, type SamStepFile, type SceneNoun } from "./scene";
 
 function loadSam(demo: string, file: string): SamStepFile {
@@ -69,22 +69,76 @@ describe("mask to path", () => {
     expect(draw.d).not.toMatch(/rect/i);
   });
 
-  it("uses the bicycle-chain hit and ignores the miss on the same object id", () => {
-    const scene = SAMPLE_SCENES.find((item) => item.demo === "bike-chain");
-    expect(scene).toBeTruthy();
-    const noun = scene!.steps[0].nouns[0];
-    expect(noun.noun).toBe("chain");
-    expect(noun.samPrompt).toBe("bicycle chain");
-    const file = loadSam(scene!.demo, scene!.steps[0].samFile);
-    const miss = file.calls?.find((call) => call.present === false);
-    expect(miss?.requestId).not.toBe(noun.requestId);
-    const selected = selectMaskRecord(file.calls, noun);
-    expect(selected?.call.requestId).toBe("24e94893-d87b-44d2-bf2e-da6292074e32");
-    expect(selected?.call.present).toBe(true);
-    const draw = framePathFromPayload(selected!.mask, selected!.box);
-    expect(draw.d.includes("M ")).toBe(true);
-    const absent: SceneNoun = { ...noun, present: false };
-    expect(selectMaskRecord(file.calls, absent)).toBeNull();
+  it("ignores a recorded miss when the noun is marked absent", () => {
+    const scene = SAMPLE_SCENES[0];
+    const noun = { ...scene.steps[0].nouns[0], present: false };
+    const file = loadSam(scene.demo, scene.steps[0].samFile);
+    expect(selectMaskRecord(file.calls, noun)).toBeNull();
+  });
+});
+
+describe("vertical crop", () => {
+  it("keeps a focal point centered after a 9:16 cover crop", () => {
+    const focal = { x: 398, y: 245 };
+    const position = objectPositionForPoint(focal.x, focal.y, 720, 405, 360, 640);
+    const cover = coverTransform(720, 405, 360, 640, position);
+    const view = frameToView(focal.x, focal.y, 720, 405, cover);
+    expect(view.x).toBeCloseTo(180, 0);
+    expect(view.y).toBeGreaterThanOrEqual(-1);
+    expect(view.y).toBeLessThanOrEqual(641);
+    expect(cover.left).toBeLessThanOrEqual(0);
+    const wide = coverTransform(720, 405, 360, 640, { x: 0.5, y: 0.5 }, 0.5);
+    expect(wide.height).toBeLessThan(640);
+    expect(wide.top).toBeGreaterThan(0);
+    const pinned = coverTransform(720, 405, 360, 640, { x: 0, y: 0.5 });
+    expect(pinned.left).toBeCloseTo(0);
+    const end = coverTransform(720, 405, 360, 640, { x: 1, y: 0.5 });
+    expect(end.left).toBeCloseTo(360 - end.width);
+  });
+
+  it("fills the view in both dimensions at zoom 1", () => {
+    const views: Array<[number, number]> = [[280, 224], [360, 288], [390, 312], [390, 844], [500, 400], [1440, 900]];
+    for (const [viewW, viewH] of views) {
+      const cover = coverTransform(720, 405, viewW, viewH, { x: 0.38, y: 0.5 }, 1);
+      expect(cover.width).toBeGreaterThanOrEqual(viewW - 0.01);
+      expect(cover.height).toBeGreaterThanOrEqual(viewH - 0.01);
+    }
+  });
+
+  it("keeps the mortar and pestle inside a 5:4 cover", () => {
+    const position = { x: 0.3784, y: 0.5 };
+    const viewW = 500;
+    const viewH = 400;
+    const cover = coverTransform(720, 405, viewW, viewH, position, 1);
+    const boxes = [
+      { x1: 100, y1: 0, x2: 217, y2: 250 },
+      { x1: 221, y1: 85, x2: 568, y2: 380 },
+    ];
+    for (const box of boxes) {
+      for (const [x, y] of [[box.x1, box.y1], [box.x2, box.y1], [box.x1, box.y2], [box.x2, box.y2]] as const) {
+        const point = frameToView(x, y, 720, 405, cover);
+        expect(point.x).toBeGreaterThanOrEqual(-0.5);
+        expect(point.y).toBeGreaterThanOrEqual(-0.5);
+        expect(point.x).toBeLessThanOrEqual(viewW + 0.5);
+        expect(point.y).toBeLessThanOrEqual(viewH + 0.5);
+      }
+    }
+    const window = visibleFrameRect(720, 405, viewW, viewH, cover);
+    expect(window.x1).toBeLessThanOrEqual(100);
+    expect(window.x2).toBeGreaterThanOrEqual(568);
+  });
+
+  it("clips a contour so every point stays inside the cover window", () => {
+    const d = "M 0 10 L 100 10 L 100 80 L 0 80 Z";
+    const clipped = clipPathToRect(d, { x1: 20, y1: 0, x2: 70, y2: 100 });
+    const nums = clipped.match(/-?\d+(\.\d+)?/g)?.map(Number) ?? [];
+    expect(nums.length).toBeGreaterThan(4);
+    for (let index = 0; index < nums.length; index += 2) {
+      expect(nums[index]).toBeGreaterThanOrEqual(20);
+      expect(nums[index]).toBeLessThanOrEqual(70);
+      expect(nums[index + 1]).toBeGreaterThanOrEqual(0);
+      expect(nums[index + 1]).toBeLessThanOrEqual(100);
+    }
   });
 });
 
@@ -104,7 +158,6 @@ describe("scene tutorials", () => {
     }
     const chai = SAMPLE_SCENES.find((scene) => scene.demo === "masala-chai");
     expect(heroNouns(chai!).map((noun) => noun.noun)).toEqual(["mortar"]);
-    const bike = tutorialFromScene(SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain")!);
-    expect(bike.steps.map((step) => step.objects.map((object) => object.noun))).toEqual([["chain"], ["brush"], ["hand"]]);
+    expect(SAMPLE_SCENES.some((scene) => scene.demo === "bike-chain")).toBe(false);
   });
 });

@@ -1,6 +1,5 @@
 import type { TutorialSteps } from "@/src/schema/types";
 import chaiSceneJson from "../../public/samples/masala-chai/steps.json";
-import bikeSceneJson from "../../public/samples/bike-chain/steps.json";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
 export const SAM_FRAME = { width: 720, height: 405 } as const;
@@ -87,12 +86,10 @@ export interface SamStepFile {
 
 const DOMAIN_BY_DEMO: Record<string, NonNullable<TutorialSteps["domain"]>> = {
   "masala-chai": "indian_recipe",
-  "bike-chain": "non_cooking_diy",
 };
 
 export const SAMPLE_SCENES: SampleScene[] = [
   chaiSceneJson as SampleScene,
-  bikeSceneJson as SampleScene,
 ];
 
 export function sceneByDemo(id: string | null | undefined): SampleScene | undefined {

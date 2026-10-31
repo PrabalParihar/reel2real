@@ -5,7 +5,6 @@ import { normalizeSparkPayload } from "./normalize";
 import { validateTutorialSteps } from "./validate";
 
 const chai = tutorialFromScene(SAMPLE_SCENES[0]);
-const bike = tutorialFromScene(SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain") ?? SAMPLE_SCENES[1]);
 
 describe("steps schema", () => {
   it("accepts the Sample aloo jeera fixture", () => {
@@ -23,30 +22,16 @@ describe("steps schema", () => {
     }
   });
 
-  it("accepts the Sample chai and the second-domain fixture", () => {
-    expect(validateTutorialSteps(chai).ok).toBe(true);
-    const second = validateTutorialSteps(bike);
-    expect(second.ok).toBe(true);
-    if (!second.ok) return;
-    const bikeScene = SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain");
-    expect(second.value.sampleLabel).toBe(true);
-    expect(second.value.attribution.licence).toBe("other_cleared");
-    expect(second.value.attribution.creatorName).toBe(bikeScene?.sourceClip.author);
-    expect(second.value.steps.map((step) => step.instructionText)).toEqual(bikeScene?.steps.map((step) => step.title));
-    expect(second.value.steps.map((step) => step.objects.map((object) => object.noun))).toEqual(
-      bikeScene?.steps.map((step) => step.nouns.filter((noun) => noun.present).map((noun) => noun.noun)),
-    );
-    expect(second.value.steps).toHaveLength(3);
-    for (const step of second.value.steps) {
-      expect(step.credit.sampleLabel).toBe(true);
-      expect(step.objects.length).toBeLessThanOrEqual(4);
-      for (const object of step.objects) {
-        expect(object.noun.toLowerCase()).not.toMatch(/cassette|sprocket|rag|lube/);
-      }
-    }
+  it("accepts the published chai sample", () => {
+    const result = validateTutorialSteps(chai);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
     const chaiScene = SAMPLE_SCENES.find((scene) => scene.demo === "masala-chai");
-    expect(chai.steps.map((step) => step.instructionText)).toEqual(chaiScene?.steps.map((step) => step.title));
-    expect(JSON.stringify(chai.steps)).not.toMatch(/ginger|cardamom|\bcup\b/);
+    expect(result.value.sampleLabel).toBe(true);
+    expect(result.value.attribution.licence).toBe("other_cleared");
+    expect(result.value.steps.map((step) => step.instructionText)).toEqual(chaiScene?.steps.map((step) => step.title));
+    expect(result.value.steps).toHaveLength(3);
+    expect(JSON.stringify(result.value.steps)).not.toMatch(/ginger|cardamom|\bcup\b|bike-chain/);
   });
 
   it("accepts stills_only on the same schema", () => {

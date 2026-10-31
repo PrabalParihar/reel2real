@@ -51,13 +51,9 @@ Pexels mortar kitchen clip, one continuous scene. Keyframes live in `public/samp
 2. Crush the spice mix. Spices and a hand.
 3. Drop dried herbs into the mortar.
 
-## Bike chain (second Sample)
+## More demos
 
-Same drivetrain clip throughout. Keyframes live in `public/samples/bike-chain/`. The landing card uses the chain frame.
-
-1. Frame the bicycle chain.
-2. Brush the drivetrain.
-3. Steady the bike with your hand.
+The published list is the `DEMOS` array. Adding one is a data change. See `docs/ADD-A-DEMO.md`.
 
 ## Your own filming
 

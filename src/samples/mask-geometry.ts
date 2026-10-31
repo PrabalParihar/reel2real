@@ -26,20 +26,64 @@ export interface MaskDraw {
   centroid: Point | null;
 }
 
-/** object-fit: cover, centered. Maps a native frame onto a viewport. */
-export function coverTransform(frameW: number, frameH: number, viewW: number, viewH: number): CoverTransform {
+export interface ObjectPosition {
+  x: number;
+  y: number;
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0.5;
+  return Math.min(1, Math.max(0, value));
+}
+
+/**
+ * object-fit: cover plus object-position.
+ * Position is 0–1, matching CSS: 0 shows the start edge, 1 the end edge, 0.5 the center.
+ */
+export function coverTransform(
+  frameW: number,
+  frameH: number,
+  viewW: number,
+  viewH: number,
+  position: ObjectPosition = { x: 0.5, y: 0.5 },
+  zoom = 1,
+): CoverTransform {
   if (frameW <= 0 || frameH <= 0 || viewW <= 0 || viewH <= 0) {
     return { scale: 1, left: 0, top: 0, width: Math.max(viewW, 0), height: Math.max(viewH, 0) };
   }
-  const scale = Math.max(viewW / frameW, viewH / frameH);
-  const width = frameW * scale;
-  const height = frameH * scale;
+  const fit = Math.max(viewW / frameW, viewH / frameH);
+  const scale = fit * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
+  let width = frameW * scale;
+  let height = frameH * scale;
+  if (width + 1 >= viewW) width = Math.max(width, viewW);
+  if (height + 1 >= viewH) height = Math.max(height, viewH);
   return {
     scale,
-    left: (viewW - width) / 2,
-    top: (viewH - height) / 2,
     width,
     height,
+    left: (viewW - width) * clamp01(position.x),
+    top: (viewH - height) * clamp01(position.y),
+  };
+}
+
+/** object-position that places a frame point at the center of a cover crop, when the crop allows it. */
+export function objectPositionForPoint(
+  focalX: number,
+  focalY: number,
+  frameW: number,
+  frameH: number,
+  viewW: number,
+  viewH: number,
+): ObjectPosition {
+  const scale = Math.max(viewW / frameW, viewH / frameH);
+  const axis = (view: number, scaled: number, frame: number, focal: number) => {
+    const spare = view - scaled;
+    if (Math.abs(spare) < 0.5 || frame <= 0) return 0.5;
+    return clamp01((view / 2 - (focal / frame) * scaled) / spare);
+  };
+  return {
+    x: axis(viewW, frameW * scale, frameW, focalX),
+    y: axis(viewH, frameH * scale, frameH, focalY),
   };
 }
 
@@ -48,6 +92,81 @@ export function frameToView(x: number, y: number, frameW: number, frameH: number
     x: cover.left + (frameW === 0 ? 0 : (x / frameW) * cover.width),
     y: cover.top + (frameH === 0 ? 0 : (y / frameH) * cover.height),
   };
+}
+
+/** Source rectangle that object-fit: cover actually shows inside the view. */
+export function visibleFrameRect(
+  frameW: number,
+  frameH: number,
+  viewW: number,
+  viewH: number,
+  cover: CoverTransform,
+): FrameBox {
+  const xAt = (viewX: number) => (cover.width === 0 ? 0 : ((viewX - cover.left) / cover.width) * frameW);
+  const yAt = (viewY: number) => (cover.height === 0 ? 0 : ((viewY - cover.top) / cover.height) * frameH);
+  return { x1: xAt(0), y1: yAt(0), x2: xAt(viewW), y2: yAt(viewH) };
+}
+
+function parseSubpaths(d: string): Point[][] {
+  const tokens = d.match(/[MLZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
+  if (!tokens) return [];
+  const paths: Point[][] = [];
+  let current: Point[] | null = null;
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token === "M" || token === "L") {
+      const x = Number(tokens[index + 1]);
+      const y = Number(tokens[index + 2]);
+      index += 2;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      if (!current) current = [];
+      current.push({ x, y });
+    } else if (token === "Z" || token === "z") {
+      if (current && current.length >= 3) paths.push(current);
+      current = null;
+    }
+  }
+  if (current && current.length >= 3) paths.push(current);
+  return paths;
+}
+
+function clipEdge(points: Point[], inside: (point: Point) => boolean, cross: (a: Point, b: Point) => Point): Point[] {
+  if (!points.length) return [];
+  const out: Point[] = [];
+  let prev = points[points.length - 1];
+  let prevIn = inside(prev);
+  for (const curr of points) {
+    const currIn = inside(curr);
+    if (currIn) {
+      if (!prevIn) out.push(cross(prev, curr));
+      out.push(curr);
+    } else if (prevIn) {
+      out.push(cross(prev, curr));
+    }
+    prev = curr;
+    prevIn = currIn;
+  }
+  return out;
+}
+
+function lerpEdge(a: Point, b: Point, axis: "x" | "y", at: number): Point {
+  const delta = b[axis] - a[axis];
+  const t = delta === 0 ? 0 : (at - a[axis]) / delta;
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+/** Keep contour vertices inside the visible cover window so they cannot run past the frame. */
+export function clipPathToRect(d: string, rect: FrameBox): string {
+  if (!(rect.x2 > rect.x1) || !(rect.y2 > rect.y1)) return "";
+  const loops = parseSubpaths(d).map((loop) => {
+    let points = loop;
+    points = clipEdge(points, (point) => point.x >= rect.x1, (a, b) => lerpEdge(a, b, "x", rect.x1));
+    points = clipEdge(points, (point) => point.x <= rect.x2, (a, b) => lerpEdge(a, b, "x", rect.x2));
+    points = clipEdge(points, (point) => point.y >= rect.y1, (a, b) => lerpEdge(a, b, "y", rect.y1));
+    points = clipEdge(points, (point) => point.y <= rect.y2, (a, b) => lerpEdge(a, b, "y", rect.y2));
+    return points;
+  }).filter((loop) => loop.length >= 3);
+  return loops.map(loopToPath).filter(Boolean).join(" ");
 }
 
 export function smoothMask(raster: Uint8Array, width: number, height: number, radius = 3, cutoff = 0.5): Uint8Array {

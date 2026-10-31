@@ -1,7 +1,10 @@
-import { sceneByDemo, SAMPLE_SCENES, tutorialFromScene, type SampleScene } from "@/src/samples/scene";
+import { DEMOS, type DemoDefinition } from "@/src/samples/demos";
+import type { FrameShapeId } from "@/src/samples/frame-fit";
+import { tutorialFromScene, type SampleScene } from "@/src/samples/scene";
+import type { ObjectPosition } from "@/src/samples/mask-geometry";
 import type { TutorialSteps } from "@/src/schema/types";
 
-export type SampleFrame = "chai" | "bike";
+export type SampleFrame = "chai" | "reel";
 
 export interface PublishedSample {
   id: string;
@@ -10,43 +13,55 @@ export interface PublishedSample {
   creatorName: string;
   scene: SampleScene;
   tutorial: TutorialSteps;
+  clip: string;
+  poster: string;
+  shape: FrameShapeId;
+  crop: ObjectPosition;
+  zoom: number;
+  stepCrops: ObjectPosition[];
+  stepZooms: number[];
+  stepTitle: Array<"overlay" | "below">;
+  cardCrop: ObjectPosition;
+  cardZoom: number;
+  cardOutlines: boolean;
+  demo: DemoDefinition;
 }
 
-function publish(scene: SampleScene, frame: SampleFrame): PublishedSample {
-  const tutorial = tutorialFromScene(scene);
+function publish(demo: DemoDefinition): PublishedSample {
   return {
-    id: scene.demo,
-    domain: tutorial.domain ?? "other",
-    frame,
-    creatorName: scene.sourceClip.author,
-    scene,
-    tutorial,
+    id: demo.slug,
+    domain: demo.domain,
+    frame: "reel",
+    creatorName: demo.credit.name,
+    scene: demo.scene,
+    tutorial: tutorialFromScene(demo.scene),
+    clip: demo.clip,
+    poster: demo.poster,
+    shape: demo.shape,
+    crop: demo.crop,
+    zoom: demo.zoom,
+    stepCrops: demo.stepCrops,
+    stepZooms: demo.stepZooms,
+    stepTitle: demo.stepTitle,
+    cardCrop: demo.cardCrop,
+    cardZoom: demo.cardZoom,
+    cardOutlines: demo.cardOutlines,
+    demo,
   };
 }
 
-/**
- * The non-cooking slot. Titles, nouns, and keyframes come from
- * public/samples/bike-chain/steps.json.
- */
-export const SECOND_DOMAIN: PublishedSample = publish(
-  SAMPLE_SCENES.find((scene) => scene.demo === "bike-chain") ?? SAMPLE_SCENES[1],
-  "bike",
-);
-
-export const PUBLISHED_SAMPLES: PublishedSample[] = [
-  publish(SAMPLE_SCENES.find((scene) => scene.demo === "masala-chai") ?? SAMPLE_SCENES[0], "chai"),
-  SECOND_DOMAIN,
-];
+/** Published Sample reels. Add a demo in src/samples/demos.ts only. */
+export const PUBLISHED_SAMPLES: PublishedSample[] = DEMOS.map(publish);
 
 export function sampleByPublishedId(id: string | null | undefined): PublishedSample | undefined {
   if (!id) return undefined;
-  return PUBLISHED_SAMPLES.find((item) => item.id === id || item.tutorial.tutorialId === id);
+  return PUBLISHED_SAMPLES.find((item) => item.id === id || item.tutorial.tutorialId === id || item.scene.demo === id);
 }
 
 export function frameForDomain(domain: string | undefined): SampleFrame {
-  return PUBLISHED_SAMPLES.find((item) => item.domain === domain)?.frame ?? "chai";
+  return PUBLISHED_SAMPLES.find((item) => item.domain === domain)?.frame ?? "reel";
 }
 
 export function sceneForPublishedId(id: string | null | undefined): SampleScene | undefined {
-  return sampleByPublishedId(id)?.scene ?? sceneByDemo(id);
+  return sampleByPublishedId(id)?.scene;
 }

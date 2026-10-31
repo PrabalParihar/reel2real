@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { sceneForPublishedId } from "@/src/domains/catalog";
-import { coachHonesty, coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
+import { sampleByPublishedId } from "@/src/domains/catalog";
+import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
-import { presentNouns, sceneAsset } from "@/src/samples/scene";
+import { shapeClass } from "@/src/samples/frame-fit";
+import { presentNouns, RECORDED_SAM_LABEL, sceneAsset } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
-import { AppShell, Chip } from "./chrome";
+import { AppShell } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
 import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
@@ -53,10 +54,8 @@ function CoachBody() {
   const cameraBlocked = coach.cameraPhase === "denied" || coach.cameraPhase === "missing" || coach.cameraPhase === "insecure";
   const chip = coachStatusChip(coach.machine.state, cameraBlocked);
   const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
-  const honesty = coachHonesty(coach.machine.context.liveMode, coach.machine.context.stillsArmed, sampleSteps);
   const highlights = highlightsChip(coach.machine.context.lastError);
   const checking = !cameraBlocked && (coach.machine.state === "tracking" || coach.machine.state === "evaluating");
-  const tone = coach.machine.state === "safety_halt" ? "danger" : coach.machine.state === "skip_detected" || coach.machine.state === "out_of_order" ? "skip" : coach.machine.state === "success" ? "match" : checking ? "running" : "wait";
 
   const finished = useRef(false);
   useEffect(() => {
@@ -78,11 +77,25 @@ function CoachBody() {
     setDebug(new URLSearchParams(window.location.search).has("debug"));
   }, []);
   const sampleVisual = !session.prepare?.hasClip && (sampleSteps || Boolean(session.prepare?.sampleId));
-  const scene = sampleVisual
-    ? sceneForPublishedId(session.prepare?.sampleId) ?? sceneForPublishedId(tutorial.tutorialId)
+  const published = sampleVisual
+    ? sampleByPublishedId(session.prepare?.sampleId) ?? sampleByPublishedId(tutorial.tutorialId)
     : undefined;
+  const scene = published?.scene;
   const sceneStep = scene?.steps[coach.machine.context.stepIndex];
   const showRecorded = Boolean(scene) && coach.cameraPhase !== "live";
+  const stepCrop = published?.stepCrops[coach.machine.context.stepIndex] ?? published?.crop ?? { x: 0.5, y: 0.5 };
+  const stepZoom = published?.stepZooms[coach.machine.context.stepIndex] ?? published?.zoom ?? 1;
+  const liveCamera = coach.cameraPhase === "live";
+  const titleBelow = showRecorded && (published?.stepTitle[coach.machine.context.stepIndex] ?? "below") === "below";
+  const onVideoStatus = highlights
+    ? highlights
+    : coach.highlightsPaused
+      ? "Highlights paused"
+      : checking
+        ? "Checking…"
+        : showRecorded
+          ? RECORDED_SAM_LABEL
+          : chip;
   const recordedNouns = presentNouns(sceneStep);
   const hint = showRecorded && sceneStep && !recordedNouns.length
     ? "No highlight on this frame. Press Next when the step looks right."
@@ -91,13 +104,8 @@ function CoachBody() {
   return (
     <AppShell backHref="/upload">
       <main className="screen coach">
-        <section className="stage-wrap mesh">
-          <div className="stage-chips">
-            <Chip tone="wait">{honesty}</Chip>
-            {coach.highlightsPaused ? <Chip tone="skip">Highlights paused</Chip> : null}
-            {highlights ? <Chip tone="skip">{highlights}</Chip> : null}
-          </div>
-          <div className="stage">
+        <section className={`stage-wrap${showRecorded ? " is-sample" : ""}${liveCamera ? " is-live" : ""}${titleBelow ? " title-below" : ""}`}>
+          <div className={`reel-phone${published ? ` ${shapeClass(published.shape)}` : ""}${liveCamera ? " is-live" : " is-sample"}`}>
             <video ref={videoRef} className={coach.cameraPhase === "live" ? "camera" : "camera is-hidden"} playsInline muted />
             {showRecorded && scene && sceneStep ? (
               <PhotoFrame
@@ -105,9 +113,18 @@ function CoachBody() {
                 src={sceneAsset(scene, sceneStep.keyframe)}
                 alt={sceneStep.title}
                 sizes="(max-width: 1023px) 100vw, 60vw"
-                recordedLabel
+                objectPosition={stepCrop}
+                zoom={stepZoom}
+                status={onVideoStatus}
                 overlay={{ samUrl: sceneAsset(scene, sceneStep.samFile), nouns: recordedNouns }}
               />
+            ) : null}
+            {!showRecorded && onVideoStatus ? <span className="reel-status">{onVideoStatus}</span> : null}
+            {liveCamera || !titleBelow ? (
+              <div className="reel-title">
+                <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
+                <h1>{step.instructionText}</h1>
+              </div>
             ) : null}
             {coach.cameraPhase === "live" ? (
               <div className={`mask-layer${checking ? " is-dim" : ""}`}>
@@ -123,10 +140,34 @@ function CoachBody() {
               </div>
             ) : null}
           </div>
+          {titleBelow ? (
+            <div className="reel-title is-below">
+              <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
+              <h1>{step.instructionText}</h1>
+            </div>
+          ) : null}
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
         </section>
 
         <section className="coach-side">
+          {published ? (
+            <ol className={`filmstrip${tutorial.steps.length > 3 ? " is-scroll" : ""}`}>
+              {tutorial.steps.map((item, index) => (
+                <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
+                  <PhotoFrame
+                    className={shapeClass(published.shape)}
+                    src={sceneAsset(published.scene, published.scene.steps[index]?.keyframe ?? published.poster)}
+                    alt=""
+                    objectPosition={published.stepCrops[index] ?? published.crop}
+                    zoom={published.stepZooms[index] ?? published.zoom}
+                    sizes="160px"
+                  />
+                  <span className="film-num">{index + 1}</span>
+                  {index === coach.machine.context.stepIndex ? <span className="film-title">{item.instructionText}</span> : null}
+                </li>
+              ))}
+            </ol>
+          ) : null}
           <ol className="rail">
             {tutorial.steps.map((item, index) => (
               <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
@@ -138,12 +179,11 @@ function CoachBody() {
           <article className="panel step-card" key={step.id}>
             <div className="step-meta">
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-              {chip ? <Chip tone={tone} pulse={checking}>{chip}</Chip> : null}
             </div>
             <h1>{step.instructionText}</h1>
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
-            {showStepPanelFrame(showRecorded) ? (
+            {showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
                 {clip ? (
                   <video src={clip} muted playsInline preload="metadata" />
