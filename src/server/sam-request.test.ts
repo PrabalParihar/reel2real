@@ -17,6 +17,7 @@ describe("SAM request builder", () => {
     expect(headers.Accept).toBe("text/event-stream");
     expect(headers["Content-Type"]).toBe("application/json");
     expect(headers.Authorization).toBe("Bearer test-key");
+    expect(headers["User-Agent"]).toBe("reel2real/0.1 (+server)");
     expect(body).toEqual({
       model: SAM_MODEL_ID,
       stream: true,
@@ -49,11 +50,18 @@ describe("SAM request builder", () => {
   });
 
   it("logs upstream status and path without the key", () => {
-    const line = samFailureLog(404, "https://api.meta.ai/v1/responses", "");
-    expect(line).toBe("SAM upstream HTTP 404 POST /v1/responses code=empty");
-    const model = samFailureLog(404, "https://api.meta.ai/v1/responses", '{"error":{"code":"model_not_found"}}');
-    expect(model).toContain("code=model_not_found");
+    const line = samFailureLog({ status: 404, url: "https://api.meta.ai/v1/responses", body: "", requestId: "req_empty" });
+    expect(line).toContain("POST /v1/responses");
+    expect(line).toContain("request_id=req_empty");
+    expect(line).toContain("status=404");
+    const model = samFailureLog({
+      status: 404,
+      url: "https://api.meta.ai/v1/responses",
+      body: '{"error":{"type":"invalid_request_error","code":"model_not_found","message":"missing"}}',
+    });
+    expect(model).toContain("error_code=model_not_found");
     expect(model).not.toContain("Bearer");
     expect(model).not.toContain("META_MODEL_API_KEY");
+    expect(model).not.toContain("Authorization");
   });
 });
