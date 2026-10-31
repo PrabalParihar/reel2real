@@ -153,7 +153,7 @@ p { margin: 0; color: var(--ink-2); }
   padding: 20px 16px 22px;
   border-radius: 28px;
 }
-.hero-copy h1 { margin: 8px 0 12px; font-size: clamp(40px, 5.4vw, 76px); line-height: 0.98; letter-spacing: -0.04em; }
+.hero-copy h1 { margin: 8px 0 12px; font-size: clamp(40px, 4.4vw, 64px); line-height: 1.02; letter-spacing: -0.035em; }
 .hero-copy .lead { max-width: 34rem; }
 .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .honesty { margin-top: 14px; }
@@ -288,6 +288,8 @@ p { margin: 0; color: var(--ink-2); }
 .footnote { margin-top: 14px; }
 .note { margin-top: 16px; color: var(--ink); }
 .closing { position: relative; overflow: hidden; text-align: center; padding: 60px 16px; }
+.landing > .section:not(.hero) { padding: 28px 0; }
+.landing > .closing { padding-top: 28px; }
 .closing h2 { margin-bottom: 18px; }
 .closing .cta-row { justify-content: center; }
 .orb { position: absolute; width: 280px; height: 280px; left: 50%; top: 10%; transform: translateX(-50%); background: radial-gradient(circle, rgba(245, 165, 36, 0.2), transparent 68%); filter: blur(4px); }
@@ -510,6 +512,8 @@ p { margin: 0; color: var(--ink-2); }
 @media (min-width: 800px) {
   .lead { font-size: 18px; }
   .section { padding: 48px 0; }
+  .landing > .section:not(.hero) { padding: 40px 0; }
+  .landing > .closing { padding-top: 40px; }
   .bento { display: grid; grid-template-columns: 1.35fr 0.9fr; grid-template-rows: auto auto; overflow: visible; }
   .bento article { flex: unset; }
   .bento-feature { grid-row: 1 / span 2; }

@@ -33,7 +33,7 @@ export function DoneScreen() {
                 const skipped = summary?.skippedStepIds?.includes(`index:${index}`) ?? false;
                 return (
                   <li key={step.id}>
-                    <StillFrame kind={kind} />
+                    <StillFrame kind={kind} label={false} />
                     <div>
                       <p>{step.instructionText}</p>
                       <span>{skipped ? "Skipped" : "Done"}</span>
