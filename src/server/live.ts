@@ -5,7 +5,8 @@ import path from "node:path";
 import { SAM_MODEL_ID, SPARK_MODEL_ID, API_ORIGIN } from "@/src/models";
 import { tutorialFromSparkPayload, type UserAttribution } from "@/src/schema/attribution";
 import { parseSamBoxes } from "./sam-parse";
-import { buildSamResponsesBody, responsesUrl, samFailureLog, samMaskPresent, samOutputText, samRequestHeaders } from "./sam-request";
+import { buildSamResponsesBody, responsesUrl, samMaskPresent, samOutputText, samRequestHeaders } from "./sam-request";
+import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, samFailureLog, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { buildSparkResponsesBody, chooseSparkMediaPlan, SPARK_STEPS_INSTRUCTION } from "./spark-request";
 import { sampleById } from "./fixtures";
@@ -21,16 +22,25 @@ function reserveMetaCall() {
   if (!result.ok) throw new DailyCapError(result.message);
 }
 
+function modelFromBody(body: unknown): string {
+  if (body && typeof body === "object" && "model" in body) {
+    const model = (body as { model?: unknown }).model;
+    if (typeof model === "string" && model) return model;
+  }
+  return "-";
+}
+
 async function postResponses(
   key: string,
   body: unknown,
   timeoutMs: number,
   headers: Record<string, string> = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-): Promise<{ status: number; text: string; url: string }> {
+): Promise<{ status: number; text: string; url: string; requestId: string; route: string; latencyMs: number }> {
   reserveMetaCall();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const url = responsesUrl(process.env);
+  const started = performance.now();
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -39,7 +49,17 @@ async function postResponses(
       signal: controller.signal,
     });
     const text = await response.text();
-    return { status: response.status, text: redactSecrets(text, [key]), url };
+    const ids = readUpstreamHeaders(response.headers);
+    const latencyMs = Math.round(performance.now() - started);
+    const model = modelFromBody(body);
+    const ok = response.status >= 200 && response.status < 300;
+    const line = ok
+      ? metaUpstreamLog({ path: pathnameOf(url), model, status: response.status, requestId: ids.requestId, route: ids.route, latencyMs })
+      : model === SAM_MODEL_ID
+        ? samFailureLog({ status: response.status, url, body: text, requestId: ids.requestId, route: ids.route, latencyMs, model, secrets: [key] })
+        : sparkFailureLog({ status: response.status, url, body: text, requestId: ids.requestId, route: ids.route, latencyMs, model, secrets: [key] });
+    console.error(line);
+    return { status: response.status, text: redactSecrets(text, [key]), url, requestId: ids.requestId, route: ids.route, latencyMs };
   } finally {
     clearTimeout(timer);
   }
@@ -166,6 +186,7 @@ async function twoSecondChunk(base64: string): Promise<string> {
 
 async function uploadClipFile(key: string, base64: string, mime: string): Promise<{ id?: string; status: number }> {
   reserveMetaCall();
+  const started = performance.now();
   const bytes = Buffer.from(base64, "base64");
   const form = new FormData();
   form.append("purpose", "user_data");
@@ -175,7 +196,30 @@ async function uploadClipFile(key: string, base64: string, mime: string): Promis
     headers: { Authorization: `Bearer ${key}` },
     body: form,
   });
-  if (!response.ok) return { status: response.status };
+  const ids = readUpstreamHeaders(response.headers);
+  const latencyMs = Math.round(performance.now() - started);
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(sparkFailureLog({
+      status: response.status,
+      url: FILES_URL,
+      body: text,
+      requestId: ids.requestId,
+      route: ids.route,
+      latencyMs,
+      model: "-",
+      secrets: [key],
+    }));
+    return { status: response.status };
+  }
+  console.error(metaUpstreamLog({
+    path: "/v1/files",
+    model: "-",
+    status: response.status,
+    requestId: ids.requestId,
+    route: ids.route,
+    latencyMs,
+  }));
   const payload = (await response.json()) as { id?: string };
   return { id: payload.id, status: response.status };
 }
@@ -310,7 +354,6 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
           );
           status = response.status;
           if (response.status < 200 || response.status >= 300) {
-            console.error(samFailureLog(response.status, response.url, response.text));
             failed = `SAM failed (HTTP ${response.status}).`;
             masks.push({ objectId: prompt.objectId, noun: prompt.noun, present: false });
             continue;

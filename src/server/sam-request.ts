@@ -1,4 +1,4 @@
-import { API_ORIGIN, RESPONSES_PATH, SAM_MODEL_ID } from "@/src/models";
+import { API_ORIGIN, SAM_MODEL_ID } from "@/src/models";
 
 /** Documented Responses base. Railway does not set a base-URL variable. */
 export const DEFAULT_API_BASE = `${API_ORIGIN}/v1`;
@@ -85,14 +85,4 @@ export function samOutputText(payload: string): string {
   return payload;
 }
 
-/** Status and path only. Never include the key or the response body. */
-export function samFailureLog(status: number, url: string, body: string): string {
-  let path = RESPONSES_PATH;
-  try {
-    path = new URL(url).pathname;
-  } catch {
-    path = url;
-  }
-  const code = body.includes("model_not_found") ? "model_not_found" : body.trim() ? "envelope" : "empty";
-  return `SAM upstream HTTP ${status} POST ${path} code=${code}`;
-}
+export { samFailureLog } from "./meta-log";
