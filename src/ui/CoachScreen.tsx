@@ -1,20 +1,50 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sampleByPublishedId } from "@/src/domains/catalog";
+import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
 import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, unverifiedStep, unverifiedStepHint } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
-import { AppShell } from "./chrome";
+import { AppShell, Chip } from "./chrome";
+import { hidesClipTiming } from "./clip-timing";
+import { coverNormalizedBox } from "./cover-box";
+import { PHONE_STAND_HINT, instructHonestyChips, instructSamChip, instructSamOverlay, instructSamPhase } from "./instruct-chips";
+import { stepHeadlineFontPx } from "./step-headline";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 import { useCoach } from "./useCoach";
+
+function useCameraCover(videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean) {
+  const [size, setSize] = useState({ viewW: 0, viewH: 0, frameW: 0, frameH: 0 });
+  useLayoutEffect(() => {
+    const video = videoRef.current;
+    if (!video || !active) return;
+    const read = () => setSize({
+      viewW: video.clientWidth,
+      viewH: video.clientHeight,
+      frameW: video.videoWidth,
+      frameH: video.videoHeight,
+    });
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(video);
+    video.addEventListener("loadedmetadata", read);
+    video.addEventListener("resize", read);
+    return () => {
+      observer.disconnect();
+      video.removeEventListener("loadedmetadata", read);
+      video.removeEventListener("resize", read);
+    };
+  }, [active, videoRef]);
+  return size;
+}
 
 const MODES: Array<{ id: PreferredLiveMode; label: string }> = [
   { id: "keyframe_still", label: "Keyframe" },
@@ -93,17 +123,32 @@ function CoachBody() {
   const recordedNouns = presentNouns(sceneStep);
   const verifiedNouns = recordedNouns.filter((noun) => noun.verified !== false);
   const noVerifiedMask = showRecorded && unverifiedStep(recordedNouns);
-  const onVideoStatus = noVerifiedMask
+  const honesty = session.stepsSource === "instruct" ? instructHonestyChips(session.runtime.mock) : null;
+  const boxDrawn = coach.masks.some((mask) => Boolean(mask.present && mask.box));
+  const samPhase = instructSamPhase({
+    failed: coach.samStale || coach.highlightsPaused || Boolean(highlights) || coach.machine.state === "mask_lost" || coach.machine.state === "error_recoverable",
+    boxDrawn,
+  });
+  const samChip = session.stepsSource === "instruct" ? instructSamChip(session.runtime.mock, samPhase) : null;
+  const cover = useCameraCover(videoRef, liveCamera);
+  const headlinePx = session.stepsSource === "instruct" ? stepHeadlineFontPx(step.instructionText) : undefined;
+  const headlineStyle = headlinePx ? { fontSize: headlinePx, lineHeight: 1.15 } : undefined;
+  const hideTiming = hidesClipTiming({
+    stepsSource: session.stepsSource,
+    stillPlaceholder: tutorial.sourceClip.stillPlaceholder,
+  });
+  const coachStatus = noVerifiedMask
     ? null
-    : highlights
-      ? highlights
-      : coach.highlightsPaused
-        ? "Highlights paused"
+    : coach.highlightsPaused
+      ? SESSION_BUDGET_STOP_LABEL
+      : highlights
+        ? highlights
         : checking
           ? "Checking…"
           : showRecorded
             ? RECORDED_SAM_LABEL
             : chip;
+  const onVideoStatus = session.stepsSource === "instruct" ? instructSamOverlay(samPhase, coachStatus) : coachStatus;
   const hint = noVerifiedMask
     ? unverifiedStepHint(recordedNouns)
     : showRecorded && sceneStep && !recordedNouns.length
@@ -111,7 +156,7 @@ function CoachBody() {
       : missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
 
   return (
-    <AppShell backHref="/upload">
+    <AppShell backHref={session.stepsSource === "instruct" ? "/instruct" : "/upload"}>
       <main className="screen coach">
         <section className={`stage-wrap${showRecorded ? " is-sample" : ""}${liveCamera ? " is-live" : ""}${titleBelow ? " title-below" : ""}`}>
           <div className={`reel-phone${fullFrame ? " is-source" : published ? ` ${shapeClass(published.shape)}` : ""}${liveCamera ? " is-live" : " is-sample"}`}>
@@ -132,33 +177,47 @@ function CoachBody() {
             {liveCamera || !titleBelow ? (
               <div className="reel-title">
                 <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-                <h1>{step.instructionText}</h1>
+                <h1 style={headlineStyle}>{step.instructionText}</h1>
               </div>
             ) : null}
-            {coach.cameraPhase === "live" ? (
+            {coach.cameraPhase === "live" && !(session.stepsSource === "instruct" && samPhase === "failed") ? (
               <div className={`mask-layer${checking ? " is-dim" : ""}`}>
-                {coach.masks.filter((mask) => mask.present && mask.box).map((mask) => (
+                {coach.masks.filter((mask) => mask.present && mask.box).map((mask) => {
+                  const placed = coverNormalizedBox(mask.box!, cover.frameW, cover.frameH, cover.viewW, cover.viewH);
+                  return (
                   <div
                     key={mask.objectId}
-                    className="mask"
-                    style={{ left: `${mask.box!.x * 100}%`, top: `${mask.box!.y * 100}%`, width: `${mask.box!.w * 100}%`, height: `${mask.box!.h * 100}%` }}
+                    className="mask is-box"
+                    role="img"
+                    aria-label={`${mask.noun.replaceAll("_", " ")} box`}
+                    style={{ left: `${placed.x * 100}%`, top: `${placed.y * 100}%`, width: `${placed.w * 100}%`, height: `${placed.h * 100}%` }}
                   >
                     <span>{mask.noun.replaceAll("_", " ")}</span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : null}
           </div>
           {titleBelow ? (
             <div className="reel-title is-below">
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-              <h1>{step.instructionText}</h1>
+              <h1 style={headlineStyle}>{step.instructionText}</h1>
             </div>
           ) : null}
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
+          {coach.highlightsPaused ? <p className="stage-note quiet">Session budget reached. Press Next to move the step.</p> : null}
         </section>
 
         <section className="coach-side">
+          {honesty ? (
+            <div className="chip-row is-start">
+              <Chip tone={session.runtime.mock ? "mock" : "match"}>{honesty.plan}</Chip>
+              <Chip tone={samPhase === "failed" ? "danger" : samPhase === "box" ? "mask" : "wait"}>{samChip}</Chip>
+            </div>
+          ) : null}
+          {session.stepsSource === "instruct" ? <p className="quiet">{PHONE_STAND_HINT}</p> : null}
+          {session.stepsSource === "instruct" && session.runtime.mock ? <p className="quiet">Mock client. This is not a live Muse call.</p> : null}
           {published ? (
             <ol className={`filmstrip${tutorial.steps.length > 3 ? " is-scroll" : ""}`}>
               {tutorial.steps.map((item, index) => (
@@ -189,11 +248,11 @@ function CoachBody() {
             <div className="step-meta">
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
             </div>
-            <h1>{step.instructionText}</h1>
+            <h1 style={headlineStyle}>{step.instructionText}</h1>
             <SafetyNote note={published?.safetyNote} />
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
-            {showStepPanelFrame(showRecorded || Boolean(scene)) ? (
+            {!hideTiming && showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
                 {clip ? (
                   <video src={clip} muted playsInline preload="metadata" />
@@ -207,7 +266,7 @@ function CoachBody() {
                 <p className="mono">{step.sourceTimeRange.startSec}s to {step.sourceTimeRange.endSec}s</p>
               </div>
             ) : null}
-            {scene ? <SceneCredit scene={scene} /> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
+            {scene ? <SceneCredit scene={scene} /> : session.stepsSource === "instruct" ? <p className="credit">Credit · You · instruction mode</p> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
             {coach.machine.state === "safety_halt" ? <p className="safety-copy">{step.safety?.message}</p> : null}
           </article>
 

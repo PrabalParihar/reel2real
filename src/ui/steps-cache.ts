@@ -34,7 +34,14 @@ export async function readStepsCache(hash: string): Promise<CachedSteps | null> 
   });
 }
 
+/** A still stand-in is not a clip, so it never lands in the clip cache. */
+export function shouldCacheSteps(value: { inputKind: string; tutorial: { sourceClip?: { stillPlaceholder?: boolean } } }): boolean {
+  if (value.tutorial.sourceClip?.stillPlaceholder === true) return false;
+  return value.inputKind === "clip" || value.inputKind === "transcript" || value.inputKind === "sample";
+}
+
 export async function writeStepsCache(hash: string, value: CachedSteps): Promise<void> {
+  if (!shouldCacheSteps(value)) return;
   if (typeof indexedDB === "undefined") return;
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {

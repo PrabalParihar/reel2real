@@ -1,6 +1,6 @@
 import type { PreferredLiveMode, ToolCall, TutorialSteps } from "@/src/schema/types";
 
-export type StepsInputKind = "clip" | "transcript" | "sample";
+export type StepsInputKind = "clip" | "transcript" | "sample" | "instruct";
 export type LicenceChoice = "self_filmed" | "permission_granted";
 
 export interface SparkRequest {
@@ -27,6 +27,10 @@ export interface SparkResult {
   tutorial: TutorialSteps | null;
   toolCalls: ToolCall[];
   inputKind: StepsInputKind;
+  refused?: boolean;
+  refusalReason?: string;
+  /** Redacted model text, capped at 4KB. Present on instruct schema failure only. */
+  debug?: string;
 }
 
 export interface SegmentPromptInput {

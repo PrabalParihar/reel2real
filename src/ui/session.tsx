@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ToolCall, TutorialSteps } from "@/src/schema/types";
 import { SPARK_MODEL_ID, SAM_MODEL_ID } from "@/src/models";
 
-export type StepsSource = "clip" | "transcript" | "sample" | "cache" | "cap_cache" | "cap_sample";
+export type StepsSource = "clip" | "transcript" | "sample" | "cache" | "cap_cache" | "cap_sample" | "instruct";
 
 export interface PrepareRequest {
   key: string;

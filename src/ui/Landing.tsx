@@ -10,6 +10,7 @@ import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, 
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
+import { SampleCoachStill } from "./SampleCoachStill";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
 
 const CHAI = PUBLISHED_SAMPLES.find((sample) => sample.id === "masala-chai") ?? PUBLISHED_SAMPLES[0];
@@ -29,6 +30,7 @@ export function Landing() {
           <div className="nav-links">
             <a href="#how">How it works</a>
             <a href="#demos">Demos</a>
+            <Link href="/instruct">Instruction mode</Link>
             <a href="#meta">Built with Meta</a>
           </div>
           <div className="nav-actions">
@@ -45,11 +47,26 @@ export function Landing() {
           <p className="lead">Put the phone on a stand. The objects in each step light up as you match the lesson.</p>
           <div className="cta-row">
             <Link className="btn btn-primary" href="/upload">Try the coach <ArrowRight size={18} strokeWidth={1.5} /></Link>
+            <Link className="btn btn-ghost" href="/instruct">Instruction mode</Link>
             <a className="btn btn-ghost" href="#demos">Watch the demos</a>
           </div>
+          <p className="quiet honesty">No tutorial. Phone or laptop camera only.</p>
         </div>
             <HeroStage scene={chai} />
       </header>
+
+      <section className="section wrap" id="instruct">
+        <p className="kicker">No tutorial</p>
+        <h2>Instruction mode</h2>
+        <div className="instruct-home">
+          <SampleCoachStill />
+          <article className="panel instruct-home-copy">
+            <h3>Type a goal. Skip the tutorial.</h3>
+            <p>Your phone or laptop camera takes one still, then the coach checks the workspace.</p>
+            <Link className="btn btn-primary" href="/instruct">Instruction mode</Link>
+          </article>
+        </div>
+      </section>
 
       <section className="section wrap" id="how">
         <p className="kicker">How it works</p>
@@ -179,7 +196,7 @@ export function Landing() {
           </article>
           <article className="panel model-card">
             <h3>SAM 3.1</h3>
-            <p>Keyframe highlights for 2 to 4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
+            <p>Draws a box highlight around the 2 to 4 objects each step needs.</p>
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>
@@ -203,6 +220,7 @@ export function Landing() {
         <p className="footer-links">
           <a href="#how">How it works</a>
           <a href="#demos">Demos</a>
+          <Link href="/instruct">Instruction mode</Link>
           <Link href="/upload">App</Link>
         </p>
       </footer>

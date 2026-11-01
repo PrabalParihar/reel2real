@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { config, middleware } from "../../middleware";
 import { previewDecision } from "./preview-auth";
-import { INTERNAL_SEGMENT_PATH, previewPathIsGated } from "./preview-gate";
+import { INTERNAL_INSTRUCT_PATH, INTERNAL_SEGMENT_PATH, INTERNAL_SPARK_PATH, previewPathIsGated } from "./preview-gate";
 
 function matcherCovers(pathname: string): boolean {
   const pattern = config.matcher?.[0];
@@ -47,8 +47,10 @@ describe("preview auth gate", () => {
     expect(matcherCovers("/coach")).toBe(true);
   });
 
-  it("skips basic auth only for the internal segment path", () => {
+  it("skips basic auth only for the internal forward paths", () => {
     expect(previewPathIsGated(INTERNAL_SEGMENT_PATH)).toBe(false);
+    expect(previewPathIsGated(INTERNAL_INSTRUCT_PATH)).toBe(false);
+    expect(previewPathIsGated(INTERNAL_SPARK_PATH)).toBe(false);
     expect(previewPathIsGated("/api/internal/segment/")).toBe(true);
     expect(previewPathIsGated("/api/internal/segment/extra")).toBe(true);
     expect(previewPathIsGated("/api/internal")).toBe(true);
@@ -58,11 +60,15 @@ describe("preview auth gate", () => {
     process.env.PREVIEW_PASSWORD = "preview-secret";
     try {
       const internal = middleware(new NextRequest(`http://preview.local${INTERNAL_SEGMENT_PATH}`));
+      const internalInstruct = middleware(new NextRequest(`http://preview.local${INTERNAL_INSTRUCT_PATH}`));
+      const internalSpark = middleware(new NextRequest(`http://preview.local${INTERNAL_SPARK_PATH}`));
       const segment = middleware(new NextRequest("http://preview.local/api/segment"));
       const spark = middleware(new NextRequest("http://preview.local/api/spark"));
       const home = middleware(new NextRequest("http://preview.local/"));
       const coach = middleware(new NextRequest("http://preview.local/coach"));
       expect(internal.status).toBe(200);
+      expect(internalInstruct.status).toBe(200);
+      expect(internalSpark.status).toBe(200);
       expect(segment.status).toBe(401);
       expect(spark.status).toBe(401);
       expect(home.status).toBe(401);

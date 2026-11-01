@@ -1,5 +1,8 @@
-import { createModelClients } from "@/src/server/factory";
+import { consumeMetaCalls, DailyCapError } from "@/src/server/daily-cap";
 import { dailyCapResponse, guardMetaRoute } from "@/src/server/meta-guard";
+import { forwardMuseRequest, museForwardEnabled, museTooLargeResponse, readMuseBody } from "@/src/server/muse-forward";
+import { executeSpark, sparkRefusalResponse } from "@/src/server/spark-run";
+import { screenSparkInput } from "@/src/safety/goal-screen";
 import type { SparkRequest } from "@/src/server/types";
 
 export const dynamic = "force-dynamic";
@@ -7,26 +10,32 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
-  const body = (await request.json()) as SparkRequest;
-  const clients = createModelClients(process.env, { mockSparkDelayMs: 2800 });
+  const forward = museForwardEnabled(process.env);
+  const rawBody = forward ? await readMuseBody(request) : await request.text();
+  if (rawBody === null) return museTooLargeResponse();
+  let body: SparkRequest;
   try {
-  const result = await clients.spark.generateSteps({
-    transcript: body.transcript,
-    title: body.title,
-    domain: body.domain,
-    filename: body.filename,
-    durationSec: body.durationSec,
-    sampleId: body.sampleId,
-    videoBase64: body.videoBase64,
-    mimeType: body.mimeType,
-    creatorName: body.creatorName,
-    licenceChoice: body.licenceChoice,
-    creditLink: body.creditLink,
-  });
-  return Response.json(result);
-  } catch (error) {
-    const capped = dailyCapResponse(error);
-    if (capped) return capped;
-    throw error;
+    body = JSON.parse(rawBody) as SparkRequest;
+  } catch {
+    return Response.json({ error: "invalid_json", message: "The request was not JSON." }, { status: 400 });
   }
+  // Screen before the daily cap and before any forward or fetch.
+  const screened = screenSparkInput(body);
+  if (screened) return sparkRefusalResponse(screened.reason);
+  if (forward) {
+    const reserved = consumeMetaCalls(1);
+    if (!reserved.ok) {
+      return dailyCapResponse(new DailyCapError(reserved.message))
+        ?? Response.json({ error: "daily_cap", message: reserved.message }, { status: 429 });
+    }
+    return forwardMuseRequest({
+      rawBody,
+      env: process.env,
+      route: "spark",
+      contentType: request.headers.get("content-type"),
+      forwardedFor: request.headers.get("x-forwarded-for"),
+      realIp: request.headers.get("x-real-ip"),
+    });
+  }
+  return executeSpark(body, { mockSparkDelayMs: 2800 });
 }

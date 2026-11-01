@@ -1,0 +1,179 @@
+{
+  "mode": "live",
+  "modelId": "muse-spark-1.3",
+  "latencyMs": 0,
+  "schemaValid": true,
+  "parseOk": true,
+  "errors": [],
+  "tutorial": {
+    "schemaVersion": "1.0.0",
+    "title": "Make a chai spice mix",
+    "domain": "indian_recipe",
+    "sourceClip": {
+      "mediaType": "video/mp4",
+      "durationSec": 8
+    },
+    "generation": {
+      "modelId": "muse-spark-1.3",
+      "mode": "muse_spark_live",
+      "toolCalls": [
+        {
+          "tool": "muse_spark",
+          "modelId": "muse-spark-1.3",
+          "purpose": "goal_still_to_steps_json",
+          "inputKind": "image",
+          "latencyMs": 0
+        }
+      ]
+    },
+    "runtimeHints": {
+      "preferredLiveMode": "keyframe_still",
+      "maxObjectsPerStep": 4
+    },
+    "steps": [
+      {
+        "id": "s1",
+        "index": 0,
+        "instructionText": "Place the stone mortar bowl on the wooden board with the stone pestle and pile of dried spices alongside.",
+        "sourceTimeRange": {
+          "startSec": 0,
+          "endSec": 2.67
+        },
+        "objects": [
+          {
+            "objectId": "o1_1",
+            "noun": "stone mortar bowl",
+            "role": "required_present",
+            "samPrompt": "round dark stone mortar bowl",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o1_2",
+            "noun": "stone pestle",
+            "role": "required_present",
+            "samPrompt": "dark stone pestle",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o1_3",
+            "noun": "pile of dried spices",
+            "role": "required_present",
+            "samPrompt": "pile of dried colorful spices and petals",
+            "expectedTrack": true
+          }
+        ],
+        "successCheck": {
+          "kind": "all_required_present",
+          "description": "mortar bowl, pestle, and spice pile are visible on board",
+          "minStableChunks": 1
+        },
+        "credit": {
+          "creditLine": "You · instruction mode",
+          "creatorName": "You",
+          "sampleLabel": false
+        }
+      },
+      {
+        "id": "s2",
+        "index": 1,
+        "instructionText": "Add a pinch of the dried spices and petals into the mortar bowl.",
+        "sourceTimeRange": {
+          "startSec": 2.67,
+          "endSec": 5.33
+        },
+        "objects": [
+          {
+            "objectId": "o2_1",
+            "noun": "stone mortar bowl",
+            "role": "required_present",
+            "samPrompt": "round dark stone mortar bowl",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o2_2",
+            "noun": "dried spices in mortar",
+            "role": "required_present",
+            "samPrompt": "dried spices and orange petals inside mortar",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o2_3",
+            "noun": "pile of dried spices",
+            "role": "required_present",
+            "samPrompt": "remaining pile of dried spices beside mortar",
+            "expectedTrack": true
+          }
+        ],
+        "successCheck": {
+          "kind": "all_required_present",
+          "description": "spices are visible inside the mortar bowl",
+          "minStableChunks": 1
+        },
+        "credit": {
+          "creditLine": "You · instruction mode",
+          "creatorName": "You",
+          "sampleLabel": false
+        }
+      },
+      {
+        "id": "s3",
+        "index": 2,
+        "instructionText": "Grind the spices with the stone pestle until a coarse chai spice mix forms in the mortar.",
+        "sourceTimeRange": {
+          "startSec": 5.33,
+          "endSec": 8
+        },
+        "objects": [
+          {
+            "objectId": "o3_1",
+            "noun": "stone mortar bowl",
+            "role": "required_present",
+            "samPrompt": "round dark stone mortar bowl with ground spices",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o3_2",
+            "noun": "stone pestle",
+            "role": "required_present",
+            "samPrompt": "dark stone pestle",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o3_3",
+            "noun": "ground chai spice mix",
+            "role": "required_present",
+            "samPrompt": "ground chai spice mix inside mortar",
+            "expectedTrack": true
+          }
+        ],
+        "successCheck": {
+          "kind": "all_required_present",
+          "description": "ground chai spice mix and pestle are visible with mortar",
+          "minStableChunks": 1
+        },
+        "credit": {
+          "creditLine": "You · instruction mode",
+          "creatorName": "You",
+          "sampleLabel": false
+        }
+      }
+    ],
+    "tutorialId": "instruct-make-a-chai-spice-mix",
+    "sampleLabel": false,
+    "attribution": {
+      "creatorName": "You",
+      "creditLine": "You · instruction mode",
+      "licence": "self_filmed_sample"
+    }
+  },
+  "toolCalls": [
+    {
+      "tool": "muse_spark",
+      "modelId": "muse-spark-1.3",
+      "purpose": "goal_still_to_steps_json",
+      "inputKind": "image",
+      "latencyMs": 0
+    }
+  ],
+  "inputKind": "instruct"
+}

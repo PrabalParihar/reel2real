@@ -7,6 +7,7 @@ import {
   SPARK_STEPS_INSTRUCTION,
   buildSparkResponsesBody,
   chooseSparkMediaPlan,
+  goalInstruction,
 } from "./spark-request";
 
 describe("Spark request builder", () => {
@@ -44,5 +45,29 @@ describe("Spark request builder", () => {
 
   it("does not ask the model for attribution fields", () => {
     expect(SPARK_STEPS_INSTRUCTION).not.toMatch(/attribution|creditLine|licence|creatorName|sampleLabel/);
+  });
+
+  it("sends a goal still as an input_image data URL and keeps the video path", () => {
+    const imageDataUrl = "data:image/jpeg;base64,aGVsbG8gd29ybGQ=";
+    const instruction = goalInstruction("I want to make chai");
+    expect(instruction.startsWith(SPARK_STEPS_INSTRUCTION)).toBe(true);
+    expect(instruction).toContain("2 to 4 steps");
+    expect(instruction).toContain("2 or 3 handheld or manipulable nouns");
+    expect(instruction).toContain("Put the object the hands use first");
+    expect(instruction).toContain("Do not name surfaces, tables, backgrounds, or workspaces");
+    expect(instruction).toContain("I want to make chai");
+    const body = buildSparkResponsesBody({ instruction, imageDataUrl });
+    expect(body.model).toBe(SPARK_MODEL_ID);
+    expect(body.model).toBe("muse-spark-1.3");
+    expect(body.input[0].role).toBe("user");
+    expect(body.input[0].content[0]).toEqual({ type: "input_text", text: instruction });
+    expect(body.input[0].content[1]).toEqual({ type: "input_image", image_url: imageDataUrl });
+    expect(JSON.stringify(body)).not.toContain("input_video");
+    expect(JSON.stringify(body)).not.toContain("Bearer");
+    expect(JSON.stringify(body)).not.toContain("META_MODEL_API_KEY");
+
+    const video = buildSparkResponsesBody({ videoBase64: "aGVsbG8=", mimeType: "video/mp4" });
+    expect(video.input[0].content.map((part) => part.type)).toEqual(["input_text", "input_video"]);
+    expect(JSON.stringify(video)).not.toContain("input_image");
   });
 });

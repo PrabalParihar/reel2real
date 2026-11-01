@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cameraBlockMessage, classifyCameraError, openRearCamera, shouldPollSam, type CameraBlock } from "@/src/coach/camera";
 import { grabJpeg } from "@/src/coach/keyframe";
-import { capturePlan, promptsForStep } from "@/src/coach/prompts";
+import { capturePlan, segmentPrompts } from "@/src/coach/prompts";
 import {
   decideSamPoll,
   initialSamSchedulerState,
   markSamSettled,
   readSamSchedulerConfig,
+  resetStepCalls,
+  sessionBudgetHardStop,
   type SamSchedulerState,
 } from "@/src/coach/sam-scheduler";
 import { createCoach, transition } from "@/src/fsm/machine";
@@ -35,11 +37,13 @@ export function useCoach(
   const [tools, setTools] = useState<ToolCall[]>(tutorial.generation.toolCalls);
   const [cameraPhase, setCameraPhase] = useState<CameraPhase>("starting");
   const [highlightsPaused, setHighlightsPaused] = useState(false);
+  const [samStale, setSamStale] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
   const [hidden, setHidden] = useState(false);
   const scenarioRef = useRef(scenario);
   const phaseRef = useRef(0);
   const schedulerRef = useRef<SamSchedulerState>(initialSamSchedulerState());
+  const boxesRef = useRef(false);
   const configRef = useRef(readSamSchedulerConfig({
     NEXT_PUBLIC_SAM_MIN_INTERVAL_MS: process.env.NEXT_PUBLIC_SAM_MIN_INTERVAL_MS,
     NEXT_PUBLIC_SAM_SESSION_CAP: process.env.NEXT_PUBLIC_SAM_SESSION_CAP,
@@ -122,6 +126,14 @@ export function useCoach(
   }, [dispatch, machine.context.armImmediate, machine.context.tick, machine.state]);
 
   useEffect(() => {
+    schedulerRef.current = resetStepCalls(schedulerRef.current);
+    boxesRef.current = false;
+    setMasks([]);
+    setPresence(null);
+    setSamStale(false);
+  }, [machine.context.stepIndex]);
+
+  useEffect(() => {
     if (machine.state !== "tracking") return;
     let cancelled = false;
     let timer = 0;
@@ -130,6 +142,10 @@ export function useCoach(
 
     const attempt = () => {
       if (cancelled) return;
+      if (sessionBudgetHardStop(schedulerRef.current.calls, config.sessionCap)) {
+        setHighlightsPaused(true);
+        return;
+      }
       if (!shouldPollSam(cameraPhase)) return;
       const frame = cameraPhase === "live" && videoRef.current ? grabJpeg(videoRef.current) : undefined;
       if (cameraPhase === "live" && !frame) {
@@ -155,9 +171,13 @@ export function useCoach(
       schedulerRef.current = decision.state;
       controller = new AbortController();
       const plan = capturePlan(machine.context.liveMode);
-      const prompts = promptsForStep(tutorial, machine.context.stepIndex);
+      const prompts = segmentPrompts(tutorial, machine.context.stepIndex);
+      const failCheck = () => {
+        if (boxesRef.current) setSamStale(true);
+        else dispatch({ type: "SAM_ERROR", message: "SAM request failed." });
+      };
       const timeout = window.setTimeout(() => {
-        if (!cancelled) dispatch({ type: "SAM_TIMEOUT" });
+        if (!cancelled) failCheck();
       }, TIMEOUTS.SAM_TIMEOUT_MS);
       fetch("/api/segment", {
         method: "POST",
@@ -177,21 +197,19 @@ export function useCoach(
         if (cancelled || controller?.signal.aborted) return;
         phaseRef.current += 1;
         setTools((current) => [...current, data.toolCall]);
-        if (data.timedOut) {
-          dispatch({ type: "SAM_TIMEOUT" });
-          return;
-        }
-        if (!data.ok) {
-          dispatch({ type: "SAM_ERROR", message: data.error || "SAM request failed." });
+        if (data.timedOut || !data.ok) {
+          failCheck();
           return;
         }
         const map: Record<string, boolean> = {};
         for (const mask of data.masks) map[mask.objectId] = mask.present;
+        boxesRef.current = data.masks.some((mask) => mask.present && mask.box);
+        setSamStale(false);
         setMasks(data.masks);
         setPresence(map);
         dispatch({ type: "SAM_RESULT", presence: map });
       }).catch(() => {
-        if (!cancelled && !controller?.signal.aborted) dispatch({ type: "SAM_ERROR", message: "SAM request failed." });
+        if (!cancelled && !controller?.signal.aborted) failCheck();
       }).finally(() => {
         window.clearTimeout(timeout);
         schedulerRef.current = markSamSettled(schedulerRef.current);
@@ -235,6 +253,7 @@ export function useCoach(
     cameraPhase,
     cameraNote,
     highlightsPaused,
+    samStale,
     voiceOn,
     setVoiceOn,
     dispatch,

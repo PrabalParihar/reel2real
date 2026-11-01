@@ -63,7 +63,7 @@ describe("published samples", () => {
       expect(source.includes("Cook along")).toBe(false);
     }
     expect(readFileSync("src/ui/Landing.tsx", "utf8")).toContain("Follow along");
-    expect(readFileSync("src/ui/Landing.tsx", "utf8")).toContain("Keyframe highlights");
+    expect(readFileSync("src/ui/Landing.tsx", "utf8")).toContain("box highlight around the 2 to 4 objects");
   });
 
   it("does not hard-code the second-domain title in the screens", () => {

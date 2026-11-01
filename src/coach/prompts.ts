@@ -36,6 +36,13 @@ export function promptsForStep(tutorial: TutorialSteps, stepIndex: number): Segm
   return prompts.slice(0, 4);
 }
 
+/** Instruct stills stay at 3 nouns. Samples keep the lookahead that can add a fourth. */
+export function segmentPrompts(tutorial: TutorialSteps, stepIndex: number): SegmentPrompt[] {
+  const prompts = promptsForStep(tutorial, stepIndex);
+  if (tutorial.sourceClip.stillPlaceholder) return prompts.slice(0, 3);
+  return prompts;
+}
+
 export function capturePlan(mode: PreferredLiveMode): {
   inputKind: "image" | "video_chunk";
   cadenceMs: number;

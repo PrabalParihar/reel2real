@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "title": "Fold an origami crane",
+  "domain": "craft",
+  "sampleLabel": false,
+  "sourceClip": { "mediaType": "image/jpeg", "durationSec": 0 },
+  "generation": {
+    "mode": "muse_spark_live",
+    "modelId": "muse-spark-1.3",
+    "toolCalls": [
+      { "tool": "muse_spark", "modelId": "muse-spark-1.3", "purpose": "goal_still_to_steps_json", "inputKind": "image" }
+    ]
+  },
+  "runtimeHints": { "preferredLiveMode": "keyframe_still" },
+  "steps": [
+    {
+      "id": "step_1",
+      "index": 0,
+      "instructionText": "Set the paper and the crease fully in frame.",
+      "sourceTimeRange": { "startSec": 0, "endSec": 0 },
+      "objects": [
+        { "objectId": "paper", "noun": "paper", "role": "present", "samPrompt": "paper" },
+        { "objectId": "crease", "noun": "crease", "role": "tool", "samPrompt": "crease" }
+      ],
+      "successCheck": { "kind": "highlight", "description": "Paper and crease are fully visible." },
+      "generation": { "toolCalls": [{ "tool": "spark", "modelId": "muse-spark-1.3", "purpose": "highlight" }] }
+    },
+    {
+      "id": "step_2",
+      "index": 1,
+      "instructionText": "Fold the paper along the crease.",
+      "sourceTimeRange": { "startSec": 0, "endSec": 0 },
+      "objects": [
+        { "objectId": "paper", "noun": "paper", "role": "present", "samPrompt": "paper" },
+        { "objectId": "fold", "noun": "fold", "role": "tool", "samPrompt": "fold" }
+      ],
+      "successCheck": { "kind": "highlight", "description": "Paper and fold are fully visible." },
+      "generation": { "toolCalls": [{ "tool": "spark", "modelId": "muse-spark-1.3", "purpose": "highlight" }] }
+    },
+    {
+      "id": "step_3",
+      "index": 2,
+      "instructionText": "Leave the crane and the paper fully in frame.",
+      "sourceTimeRange": { "startSec": 0, "endSec": 0 },
+      "objects": [
+        { "objectId": "crane", "noun": "crane", "role": "present", "samPrompt": "crane" },
+        { "objectId": "paper", "noun": "paper", "role": "tool", "samPrompt": "paper" }
+      ],
+      "successCheck": { "kind": "highlight", "description": "Crane and paper are fully visible." },
+      "generation": { "toolCalls": [{ "tool": "spark", "modelId": "muse-spark-1.3", "purpose": "highlight" }] }
+    }
+  ]
+}

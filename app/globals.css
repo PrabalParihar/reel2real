@@ -129,8 +129,21 @@ p { margin: 0; color: var(--ink-2); }
 .spark-mark { width: 16px; height: 16px; fill: var(--saffron); }
 .wordmark { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.03em; text-decoration: none; color: var(--ink); }
 
-.nav-wrap { position: sticky; top: 0; z-index: 30; display: flex; justify-content: center; padding: 14px 12px 0; }
-#how, #demos, #meta { scroll-margin-top: 84px; }
+.nav-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding: 14px 12px 0;
+  background: var(--bg);
+}
+.landing > :not(.nav-wrap) {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+#how, #demos, #meta, #instruct { scroll-margin-top: 84px; }
 .nav {
   display: flex;
   align-items: center;
@@ -544,9 +557,9 @@ p { margin: 0; color: var(--ink-2); }
   cursor: pointer;
 }
 .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.drop small, .quiet, .form-note { color: var(--ink-2); font-size: 13px; }
+.drop small, .quiet, .form-note { color: var(--ink-2); font-size: 14px; }
 .drop.is-over { background: var(--saffron-wash); border-color: var(--saffron); }
-.field-label { display: grid; gap: 6px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.field-label { display: grid; gap: 6px; margin-top: 12px; font-size: 14px; color: var(--ink-2); }
 .field {
   width: 100%;
   border-radius: 12px;
@@ -634,6 +647,7 @@ p { margin: 0; color: var(--ink-2); }
   box-shadow: var(--shadow-float);
 }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.chip-row.is-start { justify-content: flex-start; }
 .licence-set { border: 0; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .licence-set legend { width: 100%; padding: 0; margin-bottom: 6px; font-size: 13px; color: var(--ink-2); }
 .ring strong { font-size: 22px; color: var(--ink); }
@@ -718,7 +732,7 @@ p { margin: 0; color: var(--ink-2); }
 .rail li.is-current { background: var(--saffron-wash); color: var(--saffron-hi); border-color: transparent; }
 .step-card { padding: 16px; display: grid; gap: 8px; animation: rise 220ms var(--ease-out); }
 .step-meta { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.hint { color: var(--wait); }
+.hint { color: var(--wait); font-size: 15px; line-height: 1.45; }
 .clip-card video, .replay { width: 100%; border-radius: 12px; max-height: 180px; background: #000; }
 .credit { color: var(--ink); }
 .safety-copy { color: var(--danger); }
@@ -1016,6 +1030,16 @@ p { margin: 0; color: var(--ink-2); }
     bottom: auto;
   }
   .reel-title h1 { color: #fff; font-size: 26px; line-height: 1.05; }
+  .app-shell:has(.screen.coach) .stage-wrap.is-live .reel-title {
+    top: auto;
+    bottom: 10px;
+    left: 12px;
+    right: 12px;
+  }
+  .app-shell:has(.screen.coach) .reel-phone.is-live > .reel-status {
+    top: 12px;
+    bottom: auto;
+  }
   .reel-title .mono { color: rgba(255, 255, 255, 0.78); }
   .step-card { padding: 0 12px; background: transparent; border: 0; box-shadow: none; }
   .step-card .step-meta,
@@ -1033,6 +1057,99 @@ p { margin: 0; color: var(--ink-2); }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes sheen { to { background-position: -200% 0; } }
 
+.instruct-home {
+  display: grid;
+  gap: 18px;
+  align-items: center;
+}
+.instruct-home .reel-phone { width: min(420px, 100%); margin: 0; }
+.instruct-home-copy {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 28px;
+}
+.instruct-home-copy p { font-size: 16px; }
+.sample-coach { margin: 0; width: 100%; min-width: 0; }
+.sample-coach figcaption { margin: 0; }
+.sample-coach .quiet { margin: 12px 0 0; }
+.sample-coach .sample-step { margin: 6px 0 0; font-size: 15px; color: var(--ink); }
+.instruct-screen { display: grid; gap: 12px; padding-bottom: 48px; }
+.instruct-screen h1 { font-size: clamp(36px, 6vw, 64px); }
+.instruct-progress {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.instruct-progress li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.instruct-progress li.is-current { background: var(--saffron-wash); color: var(--saffron-hi); border-color: transparent; }
+.instruct-progress li.is-done { background: rgba(52, 211, 153, 0.14); color: var(--match); border-color: transparent; }
+.goal-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.goal-chips .chip {
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 36px;
+  white-space: normal;
+  text-align: left;
+  cursor: pointer;
+}
+.instruct-layout { display: grid; gap: 20px; align-items: stretch; }
+.instruct-form { display: grid; gap: 12px; align-content: start; }
+.instruct-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.instruct-actions .btn { flex: 1 1 160px; }
+.instruct-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-height: 280px;
+  padding: 16px;
+  overflow: hidden;
+  background: #101218;
+}
+.instruct-stage .reel-phone { width: 100%; margin: 0; }
+.instruct-stage .instruct-video,
+.instruct-stage .instruct-shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0;
+  background: #000;
+}
+.instruct-block { display: grid; gap: 8px; padding: 12px; }
+.instruct-block h2 { font-size: 22px; }
+.mask.is-box { border-radius: 16px; }
+@media (min-width: 900px) {
+  .instruct-home { grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr); }
+  .instruct-home .reel-phone { width: 100%; }
+  .instruct-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+  .instruct-stage { min-height: 560px; padding: 20px; }
+}
+@media (min-width: 1024px) {
+  .app-shell:has(.screen.coach) .app-bar { width: min(1240px, calc(100% - 48px)); }
+}
+@media (max-width: 1023px) {
+  .app-shell:has(.screen.coach) .app-bar {
+    width: 100%;
+    padding: 8px 14px;
+  }
+}
 .ig-section {
   display: grid;
   gap: 10px;
@@ -1048,6 +1165,7 @@ p { margin: 0; color: var(--ink-2); }
 .ig-embed blockquote,
 .ig-embed iframe { max-width: 100% !important; }
 @media (max-width: 390px) {
+  .instruct-actions .btn { flex-basis: 100%; }
   .ig-section .btn { width: 100%; }
 }
 
