@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IG_BAD_URL, IG_FAIL, IG_FIELD_LABEL, IG_SAVE_HINT, IG_SHOW } from "@/src/instagram/copy";
+import { IG_BAD_URL, IG_FAIL, IG_FIELD_LABEL, IG_SAVE_HINT, IG_SECTION_TITLE, IG_SHOW } from "@/src/instagram/copy";
 import { parsePublicInstagramUrl } from "@/src/instagram/url";
 
 interface ShowResult {
@@ -81,7 +81,8 @@ export function InstagramShow() {
   }
 
   return (
-    <div className="ig-show">
+    <section className="ig-section panel" aria-labelledby="ig-heading">
+      <h2 id="ig-heading">{IG_SECTION_TITLE}</h2>
       <label className="field-label" htmlFor="ig-link">
         {IG_FIELD_LABEL}
         <input
@@ -104,6 +105,6 @@ export function InstagramShow() {
       {note ? <p className="form-note" role="status">{note}</p> : null}
       {credit ? <p className="credit">{credit}</p> : null}
       <div className="ig-embed" ref={hostRef} />
-    </div>
+    </section>
   );
 }

@@ -109,6 +109,7 @@ export function UploadScreen() {
         <p className="lead">A clip you filmed, or one you have permission to use.</p>
         <div className="upload-grid">
           <section>
+            <InstagramShow />
             <label
               className={`drop${over ? " is-over" : ""}`}
               onDragOver={(event) => { event.preventDefault(); setOver(true); }}
@@ -129,7 +130,6 @@ export function UploadScreen() {
               />
             </label>
             {note ? <p className="form-note">{note}</p> : null}
-            <InstagramShow />
             <label className="field-label">
               Creator name
               <input className="field" value={creatorName} onChange={(event) => setCreatorName(event.target.value)} />

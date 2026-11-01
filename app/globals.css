@@ -1030,14 +1030,20 @@ p { margin: 0; color: var(--ink-2); }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes sheen { to { background-position: -200% 0; } }
 
-.ig-show { display: grid; gap: 8px; margin: 4px 0 8px; }
-.ig-show .field-label { margin-top: 0; }
-.ig-show .btn { justify-self: start; }
+.ig-section {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 16px 16px 18px;
+}
+.ig-section h2 { font-size: 22px; margin: 0; }
+.ig-section .field-label { margin-top: 0; }
+.ig-section .btn { justify-self: start; }
 .ig-embed { max-width: 100%; min-width: 0; overflow: hidden; }
 .ig-embed blockquote,
 .ig-embed iframe { max-width: 100% !important; }
 @media (max-width: 390px) {
-  .ig-show .btn { width: 100%; }
+  .ig-section .btn { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -30,6 +30,7 @@ describe("public Instagram URL", () => {
 
   it("keeps the save hint and never says import", () => {
     expect(IG_SAVE_HINT).toBe("Save the Reel to your phone, then upload or share the file here.");
+    expect(readFileSync("src/ui/InstagramShow.tsx", "utf8")).toContain("IG_SECTION_TITLE");
     const copy = readFileSync("src/instagram/copy.ts", "utf8");
     expect(copy).not.toMatch(/\bimport\b/i);
     expect(copy).not.toMatch(/scrape|download|WitLabs/i);
