@@ -10,7 +10,7 @@ import { forwardMuseRequest, museForwardEnabled } from "./muse-forward";
 import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
-import { coerceInstructDocument } from "./instruct-coerce";
+import { coerceInstructDocument, INSTRUCT_CLIP_SEC, instructStructureProblem } from "./instruct-coerce";
 import { buildSparkResponsesBody, goalInstruction } from "./spark-request";
 import type { SparkResult } from "./types";
 
@@ -167,10 +167,9 @@ function readRefusal(payload: unknown): string | null {
 }
 
 function clampPlan(tutorial: TutorialSteps, goal: string): { ok: true; value: TutorialSteps } | { ok: false; message: string } {
-  const steps = tutorial.steps.slice(0, 4);
-  if (steps.length < 2) return { ok: false, message: "The plan needs 2 to 4 steps." };
+  const steps = tutorial.steps.filter((step) => step.objects.length > 0).slice(0, 4);
+  if (!steps.length) return { ok: false, message: "The plan needs at least one object." };
   for (const step of steps) {
-    if (step.objects.length < 2) return { ok: false, message: "Each step needs 2 to 4 visually checkable objects." };
     step.objects = step.objects.slice(0, 4);
   }
   steps.forEach((step, index) => {
@@ -262,15 +261,38 @@ export function normalizeInstructPayload(
       latencyMs,
     },
   ];
-  const coerced = coerceInstructDocument(payload, goal);
+  const structure = instructStructureProblem(payload);
+  const { value: coerced, coercions } = coerceInstructDocument(payload, goal);
+  for (const item of coercions) {
+    console.error(`instruct schema path=${item.path || "/"} value=${item.value}`);
+  }
+  const coercedRecord = asRecord(coerced);
+  const coercedDomain = coercedRecord?.domain;
+  const domain = coercedDomain === "indian_recipe" || coercedDomain === "non_cooking_diy" || coercedDomain === "other"
+    ? coercedDomain
+    : "non_cooking_diy";
+  if (structure) {
+    return {
+      mode,
+      modelId: SPARK_MODEL_ID,
+      latencyMs,
+      schemaValid: false,
+      parseOk: true,
+      errors: [structure],
+      tutorial: null,
+      toolCalls,
+      inputKind: "instruct",
+      debug: rawText === undefined ? undefined : instructDebugText(rawText),
+    };
+  }
   const normalized = tutorialFromSparkPayload(coerced, {
     creatorName: "You",
     licence: "self_filmed",
   }, {
     title: goal.slice(0, 80),
-    domain: "other",
+    domain,
     filename: "workspace-still.jpg",
-    durationSec: 24,
+    durationSec: INSTRUCT_CLIP_SEC,
     mode: "muse_spark_live",
   });
   if (!normalized.ok) {
@@ -393,7 +415,7 @@ export async function askInstructModel(
   try {
     return { status: response.status, payload: readModelPayload(safe), rawText };
   } catch {
-    return { status: 502, payload: null, rawText };
+    return { status: response.status, payload: null, rawText };
   }
 }
 
@@ -459,10 +481,24 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
   const ask = deps.ask ?? ((body) => askInstructModel(body, env, fetchImpl));
   try {
     const reply = await ask(sparkBody);
-    if (reply.status < 200 || reply.status >= 300 || reply.payload == null) {
+    const mode = readModelApiKey(env) ? "live" : "mock";
+    if (reply.status < 200 || reply.status >= 300) {
       return jsonError(502, "spark_failed", "Spark did not return a plan.");
     }
-    const mode = readModelApiKey(env) ? "live" : "mock";
+    if (reply.payload == null) {
+      return Response.json({
+        mode,
+        modelId: SPARK_MODEL_ID,
+        latencyMs: 0,
+        schemaValid: false,
+        parseOk: false,
+        errors: ["The plan was not JSON."],
+        tutorial: null,
+        toolCalls: [],
+        inputKind: "instruct",
+        debug: instructDebugText(reply.rawText ?? "", [readModelApiKey(env)]),
+      }, { status: 422 });
+    }
     const result = normalizeInstructPayload(reply.payload, parsed.value.goal, mode, 0, reply.rawText);
     if (!result.schemaValid && result.debug === undefined && reply.rawText) {
       result.debug = instructDebugText(reply.rawText, [readModelApiKey(env)]);

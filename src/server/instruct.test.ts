@@ -73,7 +73,7 @@ describe("instruction mode", () => {
     expect(result.toolCalls[0]?.purpose).toBe("goal_still_to_steps_json");
   });
 
-  it("keeps 2 to 4 steps and rejects a plan that is not visually checkable", () => {
+  it("keeps at most 4 steps and accepts a short plan", () => {
     const wide = normalizeInstructPayload({
       steps: [step(0), step(1), step(2), step(3), step(4, ["pan", "lid"])],
     }, "Make tea", "live");
@@ -81,15 +81,14 @@ describe("instruction mode", () => {
     expect(wide.tutorial?.steps).toHaveLength(4);
 
     const thin = normalizeInstructPayload({ steps: [step(0)] }, "Make tea", "live");
-    expect(thin.schemaValid).toBe(false);
-    expect(thin.tutorial).toBeNull();
-    expect(thin.errors[0]).toMatch(/2 to 4 steps/);
+    expect(thin.schemaValid).toBe(true);
+    expect(thin.tutorial?.steps).toHaveLength(1);
 
     const oneNoun = normalizeInstructPayload({
       steps: [step(0, ["cup"]), step(1)],
     }, "Make tea", "live");
-    expect(oneNoun.schemaValid).toBe(false);
-    expect(oneNoun.errors[0]).toMatch(/2 to 4/);
+    expect(oneNoun.schemaValid).toBe(true);
+    expect(oneNoun.tutorial?.steps[0].objects).toHaveLength(1);
   });
 
   it("returns a refusal state from the model instead of steps", () => {
