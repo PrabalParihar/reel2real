@@ -67,6 +67,8 @@ export interface TutorialSteps {
   sourceClip: {
     mediaType: "video/mp4" | "video/webm";
     durationSec: number;
+    /** Server stand-in timing for an instruction still. Samples omit this. */
+    stillPlaceholder?: boolean;
     localUri?: string;
     width?: number;
     height?: number;

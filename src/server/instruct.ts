@@ -10,7 +10,7 @@ import { forwardMuseRequest, museForwardEnabled } from "./muse-forward";
 import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
-import { coerceInstructDocument, INSTRUCT_CLIP_SEC, instructStructureProblem } from "./instruct-coerce";
+import { coerceInstructDocument, INSTRUCT_CLIP_MEDIA, INSTRUCT_CLIP_SEC, instructStructureProblem } from "./instruct-coerce";
 import { buildSparkResponsesBody, goalInstruction } from "./spark-request";
 import type { SparkResult } from "./types";
 
@@ -327,6 +327,9 @@ export function normalizeInstructPayload(
     };
   }
   clamped.value.generation.toolCalls = toolCalls;
+  clamped.value.sourceClip.stillPlaceholder = true;
+  clamped.value.sourceClip.mediaType = INSTRUCT_CLIP_MEDIA;
+  clamped.value.sourceClip.durationSec = INSTRUCT_CLIP_SEC;
   return {
     mode,
     modelId: SPARK_MODEL_ID,

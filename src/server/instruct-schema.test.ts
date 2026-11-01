@@ -3,6 +3,8 @@ import { tutorialFromSparkPayload } from "@/src/schema/attribution";
 import { validateTutorialSteps } from "@/src/schema/validate";
 import chaiFixture from "@/src/fixtures/instruct-chai.muse.json";
 import origamiFixture from "@/src/fixtures/instruct-origami.muse.json";
+import sampleFixture from "@/src/fixtures/sample-aloo-jeera.steps.json";
+import { normalizeSparkPayload } from "@/src/schema/normalize";
 import { coerceInstructDocument } from "./instruct-coerce";
 import { handleInstructRequest, INSTRUCT_DEBUG_MAX } from "./instruct";
 
@@ -61,6 +63,7 @@ describe("instruct schema fixtures", () => {
     expect(result.tutorial?.domain).toBe("indian_recipe");
     expect(result.tutorial?.sourceClip.mediaType).toBe("video/mp4");
     expect(result.tutorial?.sourceClip.durationSec).toBe(8);
+    expect(result.tutorial?.sourceClip.stillPlaceholder).toBe(true);
     expect(result.tutorial?.generation.toolCalls[0]?.tool).toBe("muse_spark");
     expect(result.tutorial?.steps[0].sourceTimeRange.endSec).toBeGreaterThan(0);
     expect(result.tutorial?.steps[0].objects[0].role).toBe("required_present");
@@ -101,6 +104,7 @@ describe("instruct schema fixtures", () => {
     expect(result.tutorial?.tutorialId).toBe("instruct-fold-an-origami-crane");
     expect(result.tutorial?.domain).toBe("non_cooking_diy");
     expect(result.tutorial?.sourceClip.durationSec).toBe(8);
+    expect(result.tutorial?.sourceClip.stillPlaceholder).toBe(true);
     expect(result.tutorial?.generation.toolCalls[0]?.tool).toBe("muse_spark");
     for (const step of result.tutorial?.steps ?? []) {
       expect(step.sourceTimeRange.endSec).toBeGreaterThan(0);
@@ -215,6 +219,72 @@ describe("instruct schema fixtures", () => {
       else process.env.META_MODEL_API_KEY = previous;
       vi.restoreAllMocks();
     }
+  });
+
+  it("overwrites the clip numbers from calls 6 and 7 and marks the still", async () => {
+    const chai = structuredClone(chaiFixture) as {
+      sourceClip: { mediaType: string; durationSec: number };
+      steps: Array<{ sourceTimeRange: { startSec: number; endSec: number } }>;
+    };
+    chai.sourceClip.mediaType = "video/mp4";
+    chai.sourceClip.durationSec = 9;
+    chai.steps[0].sourceTimeRange = { startSec: 0, endSec: 3 };
+    chai.steps[1].sourceTimeRange = { startSec: 3, endSec: 6 };
+    chai.steps[2].sourceTimeRange = { startSec: 6, endSec: 9 };
+    const { normalizeInstructPayload } = await import("./instruct");
+    const chaiPlan = normalizeInstructPayload(chai, "Make a chai spice mix", "live");
+    expect(chaiPlan.schemaValid).toBe(true);
+    expect(chaiPlan.tutorial?.sourceClip.stillPlaceholder).toBe(true);
+    expect(chaiPlan.tutorial?.sourceClip.mediaType).toBe("video/mp4");
+    expect(chaiPlan.tutorial?.sourceClip.durationSec).toBe(8);
+    expect(chaiPlan.tutorial?.steps.map((step) => [step.sourceTimeRange.startSec, step.sourceTimeRange.endSec])).toEqual([
+      [0, 2.67],
+      [2.67, 5.33],
+      [5.33, 8],
+    ]);
+
+    const origami = structuredClone(origamiFixture) as {
+      sourceClip: { mediaType: string; durationSec: number };
+      generation: { toolCalls: Array<{ tool: string; modelId: string; purpose: string; inputKind: string }> };
+      steps: Array<{ sourceTimeRange: { startSec: number; endSec: number } }>;
+    };
+    origami.sourceClip.mediaType = "video/mp4";
+    origami.sourceClip.durationSec = 90;
+    origami.steps[0].sourceTimeRange = { startSec: 0, endSec: 30 };
+    origami.steps[1].sourceTimeRange = { startSec: 30, endSec: 60 };
+    origami.steps[2].sourceTimeRange = { startSec: 60, endSec: 90 };
+    origami.generation.toolCalls.push({
+      tool: "sam_3_1",
+      modelId: "sam-3.1",
+      purpose: "segment_the_still",
+      inputKind: "video_chunk",
+    });
+    const origamiPlan = normalizeInstructPayload(origami, "Fold an origami crane", "live");
+    expect(origamiPlan.schemaValid).toBe(true);
+    expect(origamiPlan.tutorial?.sourceClip.stillPlaceholder).toBe(true);
+    expect(origamiPlan.tutorial?.sourceClip.durationSec).toBe(8);
+    expect(origamiPlan.tutorial?.generation.toolCalls).toEqual([
+      expect.objectContaining({ tool: "muse_spark", inputKind: "image" }),
+    ]);
+    expect(JSON.stringify(origamiPlan.tutorial?.generation.toolCalls)).not.toContain("sam_3_1");
+    expect(JSON.stringify(origamiPlan.tutorial?.generation.toolCalls)).not.toContain("video_chunk");
+    expect(origamiPlan.tutorial?.steps.map((step) => step.sourceTimeRange.endSec)).toEqual([2.67, 5.33, 8]);
+  });
+
+  it("never marks a Sample with the still placeholder", () => {
+    const sample = validateTutorialSteps(sampleFixture);
+    expect(sample.ok).toBe(true);
+    if (!sample.ok) return;
+    expect(sample.value.sourceClip.stillPlaceholder).toBeUndefined();
+    expect(sample.value.sourceClip.durationSec).toBe(42);
+    const loose = normalizeSparkPayload({
+      title: "Sample · Draft",
+      steps: [{ instructionText: "Cut the potato.", objects: ["potato", "knife"] }],
+    }, { durationSec: 42, domain: "indian_recipe" });
+    expect(loose.ok).toBe(true);
+    if (!loose.ok) return;
+    expect(loose.value.sourceClip.stillPlaceholder).toBeUndefined();
+    expect(loose.value.sourceClip.durationSec).toBe(42);
   });
 
   it("keeps the shared sample schema strict", () => {

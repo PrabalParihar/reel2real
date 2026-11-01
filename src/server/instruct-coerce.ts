@@ -1,6 +1,6 @@
 /** Instruct-only tolerance. Samples keep the strict schema and do not use this. */
 
-export const INSTRUCT_CLIP_MEDIA = "video/mp4";
+export const INSTRUCT_CLIP_MEDIA = "video/mp4" as const;
 /** Small positive stand-in. A still has no clip length. */
 export const INSTRUCT_CLIP_SEC = 8;
 
@@ -217,11 +217,14 @@ export function coerceInstructDocument(payload: unknown, goal: string): { value:
 
   const clip = asRecord(record.sourceClip) ?? {};
   if (record.sourceClip !== undefined && !asRecord(record.sourceClip)) note(notes, "/sourceClip", record.sourceClip);
+  const sentPlaceholder = clip.stillPlaceholder;
   keep(clip, CLIP_KEYS, "/sourceClip", notes);
   if ("mediaType" in clip && clip.mediaType !== INSTRUCT_CLIP_MEDIA) note(notes, "/sourceClip/mediaType", clip.mediaType);
   clip.mediaType = INSTRUCT_CLIP_MEDIA;
   if ("durationSec" in clip && clip.durationSec !== INSTRUCT_CLIP_SEC) note(notes, "/sourceClip/durationSec", clip.durationSec);
   clip.durationSec = INSTRUCT_CLIP_SEC;
+  if (sentPlaceholder !== undefined && sentPlaceholder !== true) note(notes, "/sourceClip/stillPlaceholder", sentPlaceholder);
+  clip.stillPlaceholder = true;
   if (typeof clip.localUri === "string" && /https?:\/\/|instagram\.com/i.test(clip.localUri)) {
     note(notes, "/sourceClip/localUri", clip.localUri);
     delete clip.localUri;

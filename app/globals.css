@@ -732,7 +732,7 @@ p { margin: 0; color: var(--ink-2); }
 .rail li.is-current { background: var(--saffron-wash); color: var(--saffron-hi); border-color: transparent; }
 .step-card { padding: 16px; display: grid; gap: 8px; animation: rise 220ms var(--ease-out); }
 .step-meta { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.hint { color: var(--wait); }
+.hint { color: var(--wait); font-size: 15px; line-height: 1.45; }
 .clip-card video, .replay { width: 100%; border-radius: 12px; max-height: 180px; background: #000; }
 .credit { color: var(--ink); }
 .safety-copy { color: var(--danger); }
@@ -1029,6 +1029,16 @@ p { margin: 0; color: var(--ink-2); }
     bottom: auto;
   }
   .reel-title h1 { color: #fff; font-size: 26px; line-height: 1.05; }
+  .app-shell:has(.screen.coach) .stage-wrap.is-live .reel-title {
+    top: auto;
+    bottom: 10px;
+    left: 12px;
+    right: 12px;
+  }
+  .app-shell:has(.screen.coach) .reel-phone.is-live > .reel-status {
+    top: 12px;
+    bottom: auto;
+  }
   .reel-title .mono { color: rgba(255, 255, 255, 0.78); }
   .step-card { padding: 0 12px; background: transparent; border: 0; box-shadow: none; }
   .step-card .step-meta,

@@ -6,6 +6,7 @@ import { coachHonesty } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
 import { sceneAsset } from "@/src/samples/scene";
+import { hidesClipTiming } from "./clip-timing";
 import { AppShell, Chip } from "./chrome";
 import { PhotoFrame } from "./PhotoFrame";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
@@ -20,7 +21,11 @@ export function DoneScreen() {
     ? sampleByPublishedId(session.prepare?.sampleId) ?? sampleByPublishedId(tutorial?.tutorialId)
     : undefined;
   const scene = published?.scene;
-  const showTiming = !session.runtime.mock && session.stepsSource === "clip" && session.sparkLatencyMs != null && session.sparkLatencyMs > 0;
+  const showTiming = !session.runtime.mock
+    && session.stepsSource === "clip"
+    && !hidesClipTiming({ stepsSource: session.stepsSource, stillPlaceholder: tutorial?.sourceClip.stillPlaceholder })
+    && session.sparkLatencyMs != null
+    && session.sparkLatencyMs > 0;
   return (
     <AppShell>
       <main className="screen done">

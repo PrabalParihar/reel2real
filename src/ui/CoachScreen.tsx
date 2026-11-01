@@ -11,7 +11,9 @@ import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, unveri
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell, Chip } from "./chrome";
-import { PHONE_STAND_HINT, instructHonestyChips } from "./instruct-chips";
+import { hidesClipTiming } from "./clip-timing";
+import { PHONE_STAND_HINT, instructHonestyChips, instructSamChip, instructSamPhase } from "./instruct-chips";
+import { stepHeadlineFontPx } from "./step-headline";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
@@ -96,6 +98,17 @@ function CoachBody() {
   const verifiedNouns = recordedNouns.filter((noun) => noun.verified !== false);
   const noVerifiedMask = showRecorded && unverifiedStep(recordedNouns);
   const honesty = session.stepsSource === "instruct" ? instructHonestyChips(session.runtime.mock) : null;
+  const samPhase = instructSamPhase({
+    failed: coach.highlightsPaused || Boolean(highlights) || coach.machine.state === "mask_lost" || coach.machine.state === "error_recoverable",
+    boxDrawn: coach.masks.some((mask) => Boolean(mask.present && mask.box)),
+  });
+  const samChip = session.stepsSource === "instruct" ? instructSamChip(session.runtime.mock, samPhase) : null;
+  const headlinePx = session.stepsSource === "instruct" ? stepHeadlineFontPx(step.instructionText) : undefined;
+  const headlineStyle = headlinePx ? { fontSize: headlinePx, lineHeight: 1.15 } : undefined;
+  const hideTiming = hidesClipTiming({
+    stepsSource: session.stepsSource,
+    stillPlaceholder: tutorial.sourceClip.stillPlaceholder,
+  });
   const onVideoStatus = noVerifiedMask
     ? null
     : coach.highlightsPaused
@@ -135,7 +148,7 @@ function CoachBody() {
             {liveCamera || !titleBelow ? (
               <div className="reel-title">
                 <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-                <h1>{step.instructionText}</h1>
+                <h1 style={headlineStyle}>{step.instructionText}</h1>
               </div>
             ) : null}
             {coach.cameraPhase === "live" ? (
@@ -157,7 +170,7 @@ function CoachBody() {
           {titleBelow ? (
             <div className="reel-title is-below">
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
-              <h1>{step.instructionText}</h1>
+              <h1 style={headlineStyle}>{step.instructionText}</h1>
             </div>
           ) : null}
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
@@ -168,7 +181,7 @@ function CoachBody() {
           {honesty ? (
             <div className="chip-row is-start">
               <Chip tone={session.runtime.mock ? "mock" : "match"}>{honesty.plan}</Chip>
-              <Chip tone="mask">{honesty.sam}</Chip>
+              <Chip tone={samPhase === "failed" ? "danger" : samPhase === "box" ? "mask" : "wait"}>{samChip}</Chip>
             </div>
           ) : null}
           {session.stepsSource === "instruct" ? <p className="quiet">{PHONE_STAND_HINT}</p> : null}
@@ -203,11 +216,11 @@ function CoachBody() {
             <div className="step-meta">
               <p className="mono">Step {coach.machine.context.stepIndex + 1} of {tutorial.steps.length}</p>
             </div>
-            <h1>{step.instructionText}</h1>
+            <h1 style={headlineStyle}>{step.instructionText}</h1>
             <SafetyNote note={published?.safetyNote} />
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
-            {session.stepsSource !== "instruct" && showStepPanelFrame(showRecorded || Boolean(scene)) ? (
+            {!hideTiming && showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
                 {clip ? (
                   <video src={clip} muted playsInline preload="metadata" />
