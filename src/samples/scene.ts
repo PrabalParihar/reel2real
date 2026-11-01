@@ -2,6 +2,17 @@ import type { TutorialSteps } from "@/src/schema/types";
 import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
+
+/** A published Sample card plays the stored SAM file. It does not open a live segment call. */
+export function usesRecordedSam(stepsSource: string | null | undefined): boolean {
+  return stepsSource === "sample";
+}
+
+/** The on-video label for that stored file. Live checking does not replace it. */
+export function recordedSampleStatus(recorded: boolean, unverified: boolean): string | null {
+  if (!recorded || unverified) return null;
+  return RECORDED_SAM_LABEL;
+}
 /** Coach fallback when a step has no verified mask. Grid cards must not use this. */
 export const NO_RECORDED_HIGHLIGHT = "No recorded highlight on this frame. Press Next when the step looks right.";
 

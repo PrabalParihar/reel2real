@@ -18,8 +18,9 @@ export interface SparkRequest {
 }
 
 export interface SparkResult {
-  mode: "live" | "mock";
-  modelId: string;
+  mode: "live" | "mock" | "degraded";
+  /** Null when no model was called. */
+  modelId: string | null;
   latencyMs: number;
   schemaValid: boolean;
   parseOk: boolean;
@@ -63,8 +64,9 @@ export interface MaskHit {
 }
 
 export interface SegmentResult {
-  mode: "live" | "mock";
-  modelId: string;
+  mode: "live" | "mock" | "degraded";
+  /** Null when no model was called. */
+  modelId: string | null;
   latencyMs: number;
   ok: boolean;
   timedOut: boolean;
@@ -72,7 +74,7 @@ export interface SegmentResult {
   httpStatus?: number;
   inputKind: "image" | "video_chunk";
   masks: MaskHit[];
-  toolCall: ToolCall;
+  toolCall: Omit<ToolCall, "modelId"> & { modelId?: string | null };
 }
 
 export interface SparkClient {

@@ -13,6 +13,7 @@ import { PUBLISHED_SAMPLES, sampleByPublishedId } from "@/src/domains/catalog";
 import { heroNouns, heroSamFile, heroStep, sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
 import { REFUSAL_UNSAFE } from "@/src/safety/goal-screen";
+import { isLiveCoachingOff, LiveCoachingOff } from "./LiveCoachingOff";
 import { readStepsCache, writeStepsCache } from "./steps-cache";
 
 async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: TutorialSteps; toolCalls: ToolCall[]; source: StepsSource } | null> {
@@ -46,6 +47,7 @@ export function ExtractingScreen() {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [coachingOff, setCoachingOff] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<ExtractStage>("reading");
   const demo = params.get("demo");
@@ -91,6 +93,10 @@ export function ExtractingScreen() {
         setRefusal(result.refusalReason || REFUSAL_UNSAFE);
         return;
       }
+      if (isLiveCoachingOff(result)) {
+        setCoachingOff(true);
+        return;
+      }
       if (!result.schemaValid || !result.tutorial) {
         if (attempt < 1) {
           setAttempt(1);
@@ -134,6 +140,16 @@ export function ExtractingScreen() {
     ? ["upload", "reading", "validating", "preparing"]
     : ["reading", "validating", "preparing"];
   const active = order.indexOf(stage);
+
+  if (coachingOff) {
+    return (
+      <AppShell backHref="/upload">
+        <main className="screen extract is-off">
+          <LiveCoachingOff goal={session.prepare?.transcript?.trim() || undefined} backHref="/upload" />
+        </main>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell backHref="/upload">

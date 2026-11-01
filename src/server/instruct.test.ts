@@ -221,7 +221,7 @@ describe("instruction mode", () => {
     expect(body.error).toBeUndefined();
   });
 
-  it("does not call Meta when the daily cap is spent", async () => {
+  it("degrades the public instruct route when forwarding is off, before the cap", async () => {
     process.env.META_DAILY_CALL_CAP = "0";
     process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
     const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }));
@@ -233,14 +233,19 @@ describe("instruction mode", () => {
       env: process.env,
       fetchImpl,
     });
-    expect(response.status).toBe(429);
-    const body = await response.json() as { error?: string; message?: string };
-    expect(body.error).toBe("daily_cap");
+    expect(response.status).toBe(200);
+    const body = await response.json() as { error?: string; errors?: string[]; schemaValid?: boolean; tutorial?: unknown; mode?: string; modelId?: string | null };
+    expect(body.error).toBeUndefined();
+    expect(body.schemaValid).toBe(false);
+    expect(body.tutorial).toBeNull();
+    expect(body.mode).toBe("degraded");
+    expect(body.modelId).toBeNull();
+    expect(body.errors).toEqual([]);
     expect(JSON.stringify(body)).not.toContain("test-only-not-a-meta-key");
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("does not call Meta when no model key is configured", async () => {
+  it("still lets the worker call the model when forwarding is skipped", async () => {
     delete process.env.META_MODEL_API_KEY;
     delete process.env.MODEL_API_KEY;
     const fetchImpl = vi.fn();
@@ -248,7 +253,7 @@ describe("instruction mode", () => {
       goal: "I want to make chai",
       imageDataUrl: jpegDataUrl(),
       mimeType: "image/jpeg",
-    }, "198.51.100.16"), { env: {}, fetchImpl });
+    }, "198.51.100.16"), { env: {}, fetchImpl, skipForward: true, skipGuard: true });
     expect(fetchImpl).not.toHaveBeenCalled();
     const body = await response.json() as { mode?: string; schemaValid?: boolean; inputKind?: string; tutorial?: { title?: string } };
     expect(response.status).toBe(200);

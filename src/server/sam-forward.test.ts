@@ -12,6 +12,7 @@ import {
   secretsEqual,
 } from "./sam-forward";
 import { SEGMENT_MAX_BODY_BYTES } from "./segment-run";
+import * as factory from "./factory";
 
 const SECRET = "test-forward-secret";
 const FORWARD_URL = "http://web-preview.railway.internal:8080/api/internal/segment";
@@ -96,23 +97,21 @@ describe("forward secret", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("runs the same segment handler when the secret matches", async () => {
+  it("keeps the internal handler on the worker and degrades the public route", async () => {
     process.env.SAM_FORWARD_SECRET = SECRET;
     const direct = await segmentPost(segmentRequest(RAW_BODY, {}, "203.0.113.24"));
     const internal = await internalPost(segmentRequest(RAW_BODY, {
       [SAM_FORWARD_SECRET_HEADER]: SECRET,
     }, "203.0.113.25"));
     expect(direct.status).toBe(200);
-    expect(internal.status).toBe(200);
     const directBody = await direct.json();
+    expect(directBody.ok).toBe(false);
+    expect(directBody.masks).toEqual([]);
+    expect(directBody.error).toBe("SAM request failed");
+    expect(internal.status).toBe(200);
     const internalBody = await internal.json();
-    expect(directBody.mode).toBe("mock");
     expect(internalBody.mode).toBe("mock");
     expect(internalBody.masks).toHaveLength(4);
-    expect(internalBody.masks.map((mask: { noun: string }) => mask.noun)).toEqual(
-      directBody.masks.map((mask: { noun: string }) => mask.noun),
-    );
-    expect(internalBody.ok).toBe(directBody.ok);
     expect(fetch).not.toHaveBeenCalled();
   });
 });
@@ -127,14 +126,41 @@ describe("SAM forward flag", () => {
     expect(samForwardEnabled({ SAM_FORWARD_ENABLED: "1", SAM_FORWARD_URL: FORWARD_URL })).toBe(true);
   });
 
-  it("uses the direct path when the flag is off", async () => {
+  it("calls the Meta client from the internal route only", async () => {
+    process.env.SAM_FORWARD_SECRET = SECRET;
+    process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
+    const clients = vi.spyOn(factory, "createModelClients");
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(String(url)).toContain("api.meta.ai");
+      return new Response(JSON.stringify({ output_text: "no box" }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const publicRoute = await segmentPost(segmentRequest(RAW_BODY, {}, "203.0.113.26"));
+    expect(publicRoute.status).toBe(200);
+    expect((await publicRoute.json()).ok).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(clients).not.toHaveBeenCalled();
+    const internal = await internalPost(segmentRequest(RAW_BODY, {
+      [SAM_FORWARD_SECRET_HEADER]: SECRET,
+    }, "203.0.113.27"));
+    expect(internal.status).toBe(200);
+    expect(clients).toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalled();
+    expect(String(fetchMock.mock.calls[0][0])).toContain("api.meta.ai");
+  });
+
+  it("degrades the public route when the flag is off and does not reserve a call", async () => {
     process.env.SAM_FORWARD_URL = FORWARD_URL;
     process.env.SAM_FORWARD_SECRET = SECRET;
+    process.env.SAM_FORWARD_ENABLED = "true";
+    process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
+    process.env.META_DAILY_CALL_CAP = "0";
     const response = await segmentPost(segmentRequest(RAW_BODY, {}, "203.0.113.31"));
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.mode).toBe("mock");
-    expect(body.ok).toBe(true);
+    expect(body).toMatchObject(samForwardDegrade({ timedOut: false, inputKind: "image" }));
+    expect(body.error).not.toBe("daily_cap");
+    expect(highlightsChip(body.error)).toBe("Highlights unavailable");
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -194,7 +220,8 @@ describe("SAM forward flag", () => {
     expect(body.ok).toBe(false);
     expect(body.timedOut).toBe(false);
     expect(body.masks).toEqual([]);
-    expect(body.mode).toBe("live");
+    expect(body.mode).toBe("degraded");
+    expect(body.modelId).toBeNull();
     expect(highlightsChip(body.error)).toBe("Highlights unavailable");
     expect(JSON.stringify(body)).not.toContain(SECRET);
     expect(JSON.stringify(body)).not.toContain(FORWARD_URL);

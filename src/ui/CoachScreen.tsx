@@ -7,7 +7,7 @@ import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, unverifiedStep, unverifiedStepHint } from "@/src/samples/scene";
+import { presentNouns, recordedFrameFile, recordedSampleStatus, RECORDED_SAM_LABEL, sceneAsset, unverifiedStep, unverifiedStepHint, usesRecordedSam } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell, Chip } from "./chrome";
@@ -80,7 +80,8 @@ function CoachBody() {
   const session = useSession();
   const tutorial = session.tutorial!;
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const coach = useCoach(tutorial, videoRef, { mock: session.runtime.mock });
+  const recordedRun = usesRecordedSam(session.stepsSource);
+  const coach = useCoach(tutorial, videoRef, { mock: session.runtime.mock, recordedSample: recordedRun });
   const step = tutorial.steps[coach.machine.context.stepIndex] ?? tutorial.steps[0];
   const cameraBlocked = coach.cameraPhase === "denied" || coach.cameraPhase === "missing" || coach.cameraPhase === "insecure";
   const chip = coachStatusChip(coach.machine.state, cameraBlocked);
@@ -113,7 +114,7 @@ function CoachBody() {
     : undefined;
   const scene = published?.scene;
   const sceneStep = scene?.steps[coach.machine.context.stepIndex];
-  const showRecorded = Boolean(scene) && coach.cameraPhase !== "live";
+  const showRecorded = Boolean(scene) && (recordedRun || coach.cameraPhase !== "live");
   const stepIndex = coach.machine.context.stepIndex;
   const fullFrame = published?.stepFullFrame[stepIndex] === true;
   const stepCrop = fullFrame ? { x: 0.5, y: 0.5 } : published?.stepCrops[stepIndex] ?? published?.crop ?? { x: 0.5, y: 0.5 };
@@ -137,17 +138,20 @@ function CoachBody() {
     stepsSource: session.stepsSource,
     stillPlaceholder: tutorial.sourceClip.stillPlaceholder,
   });
-  const coachStatus = noVerifiedMask
-    ? null
-    : coach.highlightsPaused
-      ? SESSION_BUDGET_STOP_LABEL
-      : highlights
-        ? highlights
-        : checking
-          ? "Checking…"
-          : showRecorded
-            ? RECORDED_SAM_LABEL
-            : chip;
+  const recordedStatus = recordedSampleStatus(recordedRun && showRecorded, noVerifiedMask);
+  const coachStatus = recordedRun && showRecorded
+    ? recordedStatus
+    : noVerifiedMask
+      ? null
+      : coach.highlightsPaused
+        ? SESSION_BUDGET_STOP_LABEL
+        : highlights
+          ? highlights
+          : checking
+            ? "Checking…"
+            : showRecorded
+              ? RECORDED_SAM_LABEL
+              : chip;
   const onVideoStatus = session.stepsSource === "instruct" ? instructSamOverlay(samPhase, coachStatus) : coachStatus;
   const hint = noVerifiedMask
     ? unverifiedStepHint(recordedNouns)

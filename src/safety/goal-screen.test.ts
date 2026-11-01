@@ -72,6 +72,24 @@ describe("unsafe goal screen", () => {
     expect(body.refused).toBeUndefined();
     expect(body.inputKind).toBe("sample");
     expect(body.tutorial?.steps[0].objects.some((object) => object.noun === "flask")).toBe(true);
+    process.env.META_DAILY_CALL_CAP = "0";
+    process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
+    const viaRoute = await sparkPost(new Request("http://local/api/spark", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": "198.51.100.162" },
+      body: JSON.stringify({
+        sampleId: "flask-colour",
+        title: flask?.tutorial.title,
+        creatorName: "Alex",
+        licenceChoice: "self_filmed",
+      }),
+    }));
+    expect(viaRoute.status).toBe(200);
+    const routed = await viaRoute.json() as { refused?: boolean; error?: string; inputKind?: string; tutorial?: { steps: Array<{ objects: Array<{ noun: string }> }> } };
+    expect(routed.refused).toBeUndefined();
+    expect(routed.error).toBeUndefined();
+    expect(routed.inputKind).toBe("sample");
+    expect(routed.tutorial?.steps[0].objects.some((object) => object.noun === "flask")).toBe(true);
   });
 
   it("refuses an unsafe spark transcript before the daily cap", async () => {
