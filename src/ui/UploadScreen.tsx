@@ -7,6 +7,7 @@ import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import type { LicenceChoice } from "@/src/schema/attribution";
 import { applyUserAttribution } from "@/src/schema/attribution";
 import { AppShell } from "./chrome";
+import { InstagramShow } from "./InstagramShow";
 import { sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
 import { useSession } from "./session";
@@ -128,6 +129,7 @@ export function UploadScreen() {
               />
             </label>
             {note ? <p className="form-note">{note}</p> : null}
+            <InstagramShow />
             <label className="field-label">
               Creator name
               <input className="field" value={creatorName} onChange={(event) => setCreatorName(event.target.value)} />
