@@ -1,6 +1,6 @@
 import { consumeMetaCalls, DailyCapError } from "@/src/server/daily-cap";
 import { dailyCapResponse, guardMetaRoute } from "@/src/server/meta-guard";
-import { forwardMuseRequest, museForwardEnabled, museTooLargeResponse, readMuseBody } from "@/src/server/muse-forward";
+import { forwardMuseRequest, museForwardEnabled, musePublicDegrade, museTooLargeResponse, readMuseBody } from "@/src/server/muse-forward";
 import { executeSpark, sparkRefusalResponse } from "@/src/server/spark-run";
 import { screenSparkInput } from "@/src/safety/goal-screen";
 import type { SparkRequest } from "@/src/server/types";
@@ -37,5 +37,9 @@ export async function POST(request: Request) {
       realIp: request.headers.get("x-real-ip"),
     });
   }
-  return executeSpark(body, { mockSparkDelayMs: 2800 });
+  // A recorded sample is local. It does not call Meta and does not reserve a call.
+  if (body.sampleId && !body.transcript?.trim() && !body.videoBase64) {
+    return executeSpark(body, { mockSparkDelayMs: 2800 });
+  }
+  return Response.json(musePublicDegrade(body.videoBase64 ? "clip" : "transcript"));
 }

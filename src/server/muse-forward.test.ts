@@ -79,24 +79,33 @@ describe("Muse forward flag", () => {
     expect(museForwardUrl({ SAM_FORWARD_URL: `${SAM_URL}/` }, "spark")).toBe(SPARK_URL);
   });
 
-  it("calls Muse directly when the flag is off and does not forward", async () => {
+  it("degrades public instruct and spark when the flag is off and does not reserve a call", async () => {
     process.env.SAM_FORWARD_URL = SAM_URL;
     process.env.SAM_FORWARD_SECRET = SECRET;
+    process.env.MUSE_FORWARD_ENABLED = "true";
     process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
-    const fetchMock = vi.fn(async (url: string) => {
-      expect(String(url)).toContain("api.meta.ai");
-      expect(String(url)).not.toContain("/api/internal/");
-      return new Response(JSON.stringify({
-        output_text: JSON.stringify({ refused: true, reason: "Not a household task." }),
-      }), { status: 200, headers: { "content-type": "application/json" } });
+    process.env.META_DAILY_CALL_CAP = "0";
+    const fetchMock = vi.fn(async () => {
+      throw new Error("public route must not call Meta");
     });
     vi.stubGlobal("fetch", fetchMock);
-    const response = await instructPost(post("http://local/api/instruct", instructBody(), {}, "198.51.100.81"));
-    expect(fetchMock).toHaveBeenCalledOnce();
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.refused).toBe(true);
-    expect(JSON.stringify(body)).not.toContain("test-only-not-a-meta-key");
+    const instruct = await instructPost(post("http://local/api/instruct", instructBody(), {}, "198.51.100.81"));
+    expect(instruct.status).toBe(200);
+    const instructBodyJson = await instruct.json() as { error?: string; errors?: string[]; schemaValid?: boolean; tutorial?: unknown };
+    expect(instructBodyJson.error).toBeUndefined();
+    expect(instructBodyJson.schemaValid).toBe(false);
+    expect(instructBodyJson.tutorial).toBeNull();
+    expect(instructBodyJson.errors).toEqual(["Highlights unavailable"]);
+    const spark = await sparkPost(post("http://local/api/spark", JSON.stringify({
+      transcript: "Crush the ginger.",
+      creatorName: "You",
+      licenceChoice: "self_filmed",
+    }), {}, "198.51.100.181"));
+    expect(spark.status).toBe(200);
+    const sparkBody = await spark.json() as { error?: string; errors?: string[] };
+    expect(sparkBody.error).toBeUndefined();
+    expect(sparkBody.errors).toEqual(["Highlights unavailable"]);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("forwards instruct with the secret header and passes the response through", async () => {
@@ -224,6 +233,25 @@ describe("internal Muse routes", () => {
     expect(await method.text()).toBe("");
     expect(sparkGet().status).toBe(404);
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("calls the Meta client from the internal instruct route when a key is set", async () => {
+    process.env.SAM_FORWARD_SECRET = SECRET;
+    process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(String(url)).toContain("api.meta.ai");
+      return new Response(JSON.stringify({
+        output_text: JSON.stringify({ title: "chai", steps: [] }),
+      }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await internalInstruct(post("http://local/api/internal/instruct", instructBody(), {
+      [SAM_FORWARD_SECRET_HEADER]: SECRET,
+    }, "198.51.100.96"));
+    expect(fetchMock).toHaveBeenCalled();
+    expect(String(fetchMock.mock.calls[0][0])).toContain("api.meta.ai");
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain("/api/internal/");
+    expect(response.status === 200 || response.status === 422).toBe(true);
   });
 
   it("runs the instruct handler when the secret matches and does not call Meta", async () => {

@@ -1,6 +1,8 @@
+import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { SPARK_MODEL_ID } from "@/src/models";
 import { segmentTooLargeResponse } from "./segment-run";
 import { SAM_FORWARD_SECRET_HEADER } from "./sam-forward";
+import type { SparkResult } from "./types";
 
 /** Same byte cap shape as the segment forward, sized for a clip's JSON body. */
 export const MUSE_MAX_BODY_BYTES = 32 * 1024 * 1024;
@@ -39,6 +41,21 @@ export function museSecretRejected(): Response {
 
 export function museTooLargeResponse(): Response {
   return segmentTooLargeResponse();
+}
+
+/** Public instruct and spark when forwarding is off. No model call. */
+export function musePublicDegrade(inputKind: SparkResult["inputKind"]): SparkResult {
+  return {
+    mode: "live",
+    modelId: SPARK_MODEL_ID,
+    latencyMs: 0,
+    schemaValid: false,
+    parseOk: false,
+    errors: [SESSION_BUDGET_STOP_LABEL],
+    tutorial: null,
+    toolCalls: [],
+    inputKind,
+  };
 }
 
 /** Null when the declared or actual body is over the Muse forward limit. */

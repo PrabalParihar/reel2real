@@ -6,7 +6,7 @@ import { INSTRUCT_STILL_WIDTH } from "@/src/coach/keyframe";
 import { consumeMetaCalls, DailyCapError } from "./daily-cap";
 import { readModelApiKey } from "./env";
 import { guardMetaRoute, dailyCapResponse } from "./meta-guard";
-import { forwardMuseRequest, museForwardEnabled } from "./muse-forward";
+import { forwardMuseRequest, museForwardEnabled, musePublicDegrade } from "./muse-forward";
 import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
@@ -456,6 +456,9 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
       realIp: request.headers.get("x-real-ip"),
       fetchImpl: deps.fetchImpl,
     });
+  }
+  if (!deps.ask && !deps.skipForward) {
+    return Response.json(musePublicDegrade("instruct"));
   }
   const sparkBody = instructSparkBody(parsed.value.goal, parsed.value.imageDataUrl);
   const fetchImpl = deps.fetchImpl ?? fetch;
