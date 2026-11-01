@@ -130,7 +130,7 @@ p { margin: 0; color: var(--ink-2); }
 .wordmark { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.03em; text-decoration: none; color: var(--ink); }
 
 .nav-wrap { position: sticky; top: 0; z-index: 30; display: flex; justify-content: center; padding: 14px 12px 0; }
-#how, #demos, #meta { scroll-margin-top: 84px; }
+#how, #demos, #meta, #instruct { scroll-margin-top: 84px; }
 .nav {
   display: flex;
   align-items: center;
@@ -516,8 +516,10 @@ p { margin: 0; color: var(--ink-2); }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  width: min(1120px, calc(100% - 28px));
   min-height: 56px;
-  padding: 8px 14px;
+  margin: 0 auto;
+  padding: 8px 0;
 }
 .back { color: var(--ink-2); text-decoration: none; font-size: 14px; }
 .model-chip { font-family: var(--font-mono); font-size: 12px; color: var(--mask); }
@@ -542,9 +544,9 @@ p { margin: 0; color: var(--ink-2); }
   cursor: pointer;
 }
 .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.drop small, .quiet, .form-note { color: var(--ink-2); font-size: 13px; }
+.drop small, .quiet, .form-note { color: var(--ink-2); font-size: 14px; }
 .drop.is-over { background: var(--saffron-wash); border-color: var(--saffron); }
-.field-label { display: grid; gap: 6px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.field-label { display: grid; gap: 6px; margin-top: 12px; font-size: 14px; color: var(--ink-2); }
 .field {
   width: 100%;
   border-radius: 12px;
@@ -1031,47 +1033,96 @@ p { margin: 0; color: var(--ink-2); }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes sheen { to { background-position: -200% 0; } }
 
-.instruct-banner {
-  display: flex;
-  flex-wrap: wrap;
+.instruct-home {
+  display: grid;
+  gap: 18px;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px;
 }
-.instruct-banner p { max-width: 40rem; margin-top: 8px; }
+.instruct-home .reel-phone { width: min(420px, 100%); margin: 0; }
+.instruct-home-copy {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  padding: 28px;
+}
+.instruct-home-copy p { font-size: 16px; }
+.sample-coach { margin: 0; width: 100%; min-width: 0; }
+.sample-coach figcaption { margin-top: 12px; font-size: 15px; color: var(--ink); }
 .instruct-screen { display: grid; gap: 12px; padding-bottom: 48px; }
 .instruct-screen h1 { font-size: clamp(36px, 6vw, 64px); }
-.instruct-layout { display: grid; gap: 16px; align-items: start; }
+.instruct-progress {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.instruct-progress li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.instruct-progress li.is-current { background: var(--saffron-wash); color: var(--saffron-hi); border-color: transparent; }
+.instruct-progress li.is-done { background: rgba(52, 211, 153, 0.14); color: var(--match); border-color: transparent; }
+.goal-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.goal-chips .chip {
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 36px;
+  white-space: normal;
+  text-align: left;
+  cursor: pointer;
+}
+.instruct-layout { display: grid; gap: 20px; align-items: stretch; }
 .instruct-form { display: grid; gap: 12px; align-content: start; }
 .instruct-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .instruct-actions .btn { flex: 1 1 160px; }
 .instruct-stage {
   position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-height: 280px;
   padding: 16px;
   overflow: hidden;
   background: #101218;
-  text-align: center;
 }
-.instruct-stage p { max-width: 28rem; }
-.instruct-stage img,
-.instruct-video {
+.instruct-stage .reel-phone { width: 100%; margin: 0; }
+.instruct-stage .instruct-video,
+.instruct-stage .instruct-shot {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  max-height: 520px;
+  max-height: none;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 0;
+  background: #000;
 }
-.instruct-video { background: #000; }
-.instruct-block { display: grid; gap: 8px; }
+.instruct-block { display: grid; gap: 8px; padding: 12px; }
 .instruct-block h2 { font-size: 22px; }
 .mask.is-box { border-radius: 16px; }
 @media (min-width: 900px) {
-  .instruct-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
-  .instruct-stage { min-height: 420px; }
+  .instruct-home { grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr); }
+  .instruct-home .reel-phone { width: 100%; }
+  .instruct-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+  .instruct-stage { min-height: 560px; padding: 20px; }
+}
+@media (min-width: 1024px) {
+  .app-shell:has(.screen.coach) .app-bar { width: min(1240px, calc(100% - 48px)); }
+}
+@media (max-width: 1023px) {
+  .app-shell:has(.screen.coach) .app-bar {
+    width: 100%;
+    padding: 8px 14px;
+  }
 }
 @media (max-width: 390px) {
   .instruct-actions .btn { flex-basis: 100%; }

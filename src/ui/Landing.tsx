@@ -10,6 +10,7 @@ import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, 
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
+import { SampleCoachStill } from "./SampleCoachStill";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
 
 const CHAI = PUBLISHED_SAMPLES.find((sample) => sample.id === "masala-chai") ?? PUBLISHED_SAMPLES[0];
@@ -55,14 +56,16 @@ export function Landing() {
       </header>
 
       <section className="section wrap" id="instruct">
-        <article className="panel instruct-banner">
-          <div>
-            <p className="kicker">No tutorial</p>
-            <h2>Instruction mode</h2>
-            <p>Type a goal, like making chai. Your phone or laptop camera takes one still, then the coach checks the workspace.</p>
-          </div>
-          <Link className="btn btn-primary" href="/instruct">Instruction mode</Link>
-        </article>
+        <p className="kicker">No tutorial</p>
+        <h2>Instruction mode</h2>
+        <div className="instruct-home">
+          <SampleCoachStill />
+          <article className="panel instruct-home-copy">
+            <h3>Type a goal. Skip the tutorial.</h3>
+            <p>Your phone or laptop camera takes one still, then the coach checks the workspace.</p>
+            <Link className="btn btn-primary" href="/instruct">Instruction mode</Link>
+          </article>
+        </div>
       </section>
 
       <section className="section wrap" id="how">
@@ -193,7 +196,7 @@ export function Landing() {
           </article>
           <article className="panel model-card">
             <h3>SAM 3.1</h3>
-            <p>Keyframe highlights for 2 to 4 objects. A 2 second chunk stays optional because Gate 0 measured it past the live threshold.</p>
+            <p>Draws a box highlight around the 2 to 4 objects each step needs.</p>
             <p className="mono">{SAM_MODEL_ID}</p>
           </article>
         </div>
