@@ -1,4 +1,3 @@
-import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { SPARK_MODEL_ID } from "@/src/models";
 import { segmentTooLargeResponse } from "./segment-run";
 import { SAM_FORWARD_SECRET_HEADER } from "./sam-forward";
@@ -46,12 +45,12 @@ export function museTooLargeResponse(): Response {
 /** Public instruct and spark when forwarding is off. No model call. */
 export function musePublicDegrade(inputKind: SparkResult["inputKind"]): SparkResult {
   return {
-    mode: "live",
-    modelId: SPARK_MODEL_ID,
+    mode: "degraded",
+    modelId: null,
     latencyMs: 0,
     schemaValid: false,
     parseOk: false,
-    errors: [SESSION_BUDGET_STOP_LABEL],
+    errors: [],
     tutorial: null,
     toolCalls: [],
     inputKind,

@@ -1,6 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { TIMEOUTS } from "@/src/fsm/types";
-import { SAM_MODEL_ID } from "@/src/models";
 import type { SegmentResult } from "@/src/server/types";
 
 export const SAM_FORWARD_SECRET_HEADER = "x-r2r-forward-secret";
@@ -29,7 +28,7 @@ export function forwardSecretOk(header: string | null, env: Record<string, strin
   return secretsEqual(header, expected);
 }
 
-/** Same failed segment result the coach already shows as Highlights unavailable. */
+/** Failed segment with no model call. The coach maps the error to Highlights unavailable. */
 export function samForwardDegrade(input: {
   timedOut: boolean;
   inputKind?: "image" | "video_chunk";
@@ -38,8 +37,8 @@ export function samForwardDegrade(input: {
   const inputKind = input.inputKind === "video_chunk" ? "video_chunk" : "image";
   const latencyMs = input.latencyMs ?? 0;
   return {
-    mode: "live",
-    modelId: SAM_MODEL_ID,
+    mode: "degraded",
+    modelId: null,
     latencyMs,
     ok: false,
     timedOut: input.timedOut,
@@ -48,7 +47,7 @@ export function samForwardDegrade(input: {
     masks: [],
     toolCall: {
       tool: "sam_3_1",
-      modelId: SAM_MODEL_ID,
+      modelId: null,
       purpose: "keyframe_object_masks",
       inputKind,
       latencyMs,

@@ -196,7 +196,9 @@ export function useCoach(
         const data = (await response.json()) as SegmentResult;
         if (cancelled || controller?.signal.aborted) return;
         phaseRef.current += 1;
-        setTools((current) => [...current, data.toolCall]);
+        if (data.mode !== "degraded" && data.toolCall.modelId) {
+          setTools((current) => [...current, { ...data.toolCall, modelId: data.toolCall.modelId as string }]);
+        }
         if (data.timedOut || !data.ok) {
           failCheck();
           return;

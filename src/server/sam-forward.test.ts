@@ -220,7 +220,8 @@ describe("SAM forward flag", () => {
     expect(body.ok).toBe(false);
     expect(body.timedOut).toBe(false);
     expect(body.masks).toEqual([]);
-    expect(body.mode).toBe("live");
+    expect(body.mode).toBe("degraded");
+    expect(body.modelId).toBeNull();
     expect(highlightsChip(body.error)).toBe("Highlights unavailable");
     expect(JSON.stringify(body)).not.toContain(SECRET);
     expect(JSON.stringify(body)).not.toContain(FORWARD_URL);

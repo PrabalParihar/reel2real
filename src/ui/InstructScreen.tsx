@@ -9,6 +9,7 @@ import { modelRefusalReason, screenGoal } from "@/src/safety/goal-screen";
 import { AppShell } from "./chrome";
 import { PHONE_STAND_HINT } from "./instruct-chips";
 import { INSTRUCT_GOALS, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
+import { isLiveCoachingOff, LiveCoachingOff } from "./LiveCoachingOff";
 import { SampleCoachStill } from "./SampleCoachStill";
 import { useSession } from "./session";
 
@@ -30,6 +31,7 @@ export function InstructScreen() {
   const [still, setStill] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [coachingOff, setCoachingOff] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
 
@@ -111,6 +113,7 @@ export function InstructScreen() {
     setNote(null);
     setError(null);
     setRefusal(null);
+    setCoachingOff(false);
     try {
       const response = await fetch("/api/instruct", {
         method: "POST",
@@ -127,6 +130,10 @@ export function InstructScreen() {
       });
       if (refusal) {
         setRefusal(refusal);
+        return;
+      }
+      if (isLiveCoachingOff(data)) {
+        setCoachingOff(true);
         return;
       }
       if (!response.ok || !data.schemaValid || !data.tutorial) {
@@ -165,7 +172,9 @@ export function InstructScreen() {
 
   return (
     <AppShell backHref="/">
-      <main className="screen instruct-screen">
+      <main className={`screen instruct-screen${coachingOff ? " is-off" : ""}`}>
+        {coachingOff ? <LiveCoachingOff /> : null}
+        {coachingOff ? null : <>
         <p className="kicker">No tutorial</p>
         <h1>Instruction mode</h1>
         <p className="lead">Type a goal. The camera takes one still, then the coach checks your workspace.</p>
@@ -254,6 +263,7 @@ export function InstructScreen() {
             {phase !== "live" && !still && !blocked ? <SampleCoachStill /> : null}
           </section>
         </div>
+        </>}
       </main>
     </AppShell>
   );

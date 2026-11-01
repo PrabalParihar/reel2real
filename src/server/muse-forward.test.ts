@@ -91,20 +91,24 @@ describe("Muse forward flag", () => {
     vi.stubGlobal("fetch", fetchMock);
     const instruct = await instructPost(post("http://local/api/instruct", instructBody(), {}, "198.51.100.81"));
     expect(instruct.status).toBe(200);
-    const instructBodyJson = await instruct.json() as { error?: string; errors?: string[]; schemaValid?: boolean; tutorial?: unknown };
+    const instructBodyJson = await instruct.json() as { error?: string; errors?: string[]; schemaValid?: boolean; tutorial?: unknown; mode?: string; modelId?: string | null };
     expect(instructBodyJson.error).toBeUndefined();
     expect(instructBodyJson.schemaValid).toBe(false);
     expect(instructBodyJson.tutorial).toBeNull();
-    expect(instructBodyJson.errors).toEqual(["Highlights unavailable"]);
+    expect(instructBodyJson.mode).toBe("degraded");
+    expect(instructBodyJson.modelId).toBeNull();
+    expect(instructBodyJson.errors).toEqual([]);
     const spark = await sparkPost(post("http://local/api/spark", JSON.stringify({
       transcript: "Crush the ginger.",
       creatorName: "You",
       licenceChoice: "self_filmed",
     }), {}, "198.51.100.181"));
     expect(spark.status).toBe(200);
-    const sparkBody = await spark.json() as { error?: string; errors?: string[] };
+    const sparkBody = await spark.json() as { error?: string; errors?: string[]; mode?: string; modelId?: string | null };
     expect(sparkBody.error).toBeUndefined();
-    expect(sparkBody.errors).toEqual(["Highlights unavailable"]);
+    expect(sparkBody.mode).toBe("degraded");
+    expect(sparkBody.modelId).toBeNull();
+    expect(sparkBody.errors).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

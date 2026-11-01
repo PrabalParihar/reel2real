@@ -234,11 +234,13 @@ describe("instruction mode", () => {
       fetchImpl,
     });
     expect(response.status).toBe(200);
-    const body = await response.json() as { error?: string; errors?: string[]; schemaValid?: boolean; tutorial?: unknown };
+    const body = await response.json() as { error?: string; errors?: string[]; schemaValid?: boolean; tutorial?: unknown; mode?: string; modelId?: string | null };
     expect(body.error).toBeUndefined();
     expect(body.schemaValid).toBe(false);
     expect(body.tutorial).toBeNull();
-    expect(body.errors).toEqual(["Highlights unavailable"]);
+    expect(body.mode).toBe("degraded");
+    expect(body.modelId).toBeNull();
+    expect(body.errors).toEqual([]);
     expect(JSON.stringify(body)).not.toContain("test-only-not-a-meta-key");
     expect(fetchImpl).not.toHaveBeenCalled();
   });
