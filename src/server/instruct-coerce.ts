@@ -3,6 +3,15 @@
 export const INSTRUCT_CLIP_MEDIA = "video/mp4" as const;
 /** Small positive stand-in. A still has no clip length. */
 export const INSTRUCT_CLIP_SEC = 8;
+/** One Meta SAM call per noun, so instruct steps stay at 2 or 3. */
+export const INSTRUCT_MAX_NOUNS = 3;
+
+const SURFACE_NOUN = /\b(tables?|workspaces?|counters?|countertops?|desks?|backgrounds?|surfaces?|floors?|walls?|backdrops?|benchtops?|worktops?|boards?)\b/i;
+
+/** Surfaces and backgrounds are not handheld. A bare board is the work surface. */
+export function isSurfaceNoun(noun: string): boolean {
+  return SURFACE_NOUN.test(noun);
+}
 
 const RECIPE = /recipe|cook|food|kitchen|chai|indian/;
 
@@ -295,6 +304,23 @@ export function coerceInstructDocument(payload: unknown, goal: string): { value:
   return { value: copy, coercions: notes };
 }
 
+function limitInstructNouns(objects: Record<string, unknown>[], path: string, notes: InstructCoercion[]): Record<string, unknown>[] {
+  const kept: Record<string, unknown>[] = [];
+  for (const object of objects) {
+    const noun = typeof object.noun === "string" ? object.noun : "";
+    if (noun && isSurfaceNoun(noun) && objects.some((other) => other !== object && typeof other.noun === "string" && !isSurfaceNoun(other.noun))) {
+      note(notes, `${path}/objects`, noun);
+      continue;
+    }
+    kept.push(object);
+  }
+  const usable = kept.length ? kept : objects.slice(0, 1);
+  if (usable.length > INSTRUCT_MAX_NOUNS) {
+    note(notes, `${path}/objects`, usable.slice(INSTRUCT_MAX_NOUNS).map((object) => object.noun));
+  }
+  return usable.slice(0, INSTRUCT_MAX_NOUNS);
+}
+
 function prepareStep(step: unknown, index: number, notes: InstructCoercion[]): Record<string, unknown> | null {
   const item = asRecord(step);
   if (!item) return null;
@@ -317,7 +343,11 @@ function prepareStep(step: unknown, index: number, notes: InstructCoercion[]): R
   }
   const objects = Array.isArray(item.objects) ? item.objects : [];
   const seenObjects = new Set<string>();
-  item.objects = objects.map((object, objectIndex) => prepareObject(object, path, objectIndex, notes)).filter((object): object is Record<string, unknown> => !!object).slice(0, 4);
+  item.objects = limitInstructNouns(
+    objects.map((object, objectIndex) => prepareObject(object, path, objectIndex, notes)).filter((object): object is Record<string, unknown> => !!object),
+    path,
+    notes,
+  );
   for (const object of item.objects as Record<string, unknown>[]) {
     let id = String(object.objectId ?? "");
     if (!id || seenObjects.has(id)) {

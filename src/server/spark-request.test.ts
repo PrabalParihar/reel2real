@@ -52,7 +52,9 @@ describe("Spark request builder", () => {
     const instruction = goalInstruction("I want to make chai");
     expect(instruction.startsWith(SPARK_STEPS_INSTRUCTION)).toBe(true);
     expect(instruction).toContain("2 to 4 steps");
-    expect(instruction).toContain("2 to 4 visually checkable nouns");
+    expect(instruction).toContain("2 or 3 handheld or manipulable nouns");
+    expect(instruction).toContain("Put the object the hands use first");
+    expect(instruction).toContain("Do not name surfaces, tables, backgrounds, or workspaces");
     expect(instruction).toContain("I want to make chai");
     const body = buildSparkResponsesBody({ instruction, imageDataUrl });
     expect(body.model).toBe(SPARK_MODEL_ID);

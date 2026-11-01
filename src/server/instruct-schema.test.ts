@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { tutorialFromSparkPayload } from "@/src/schema/attribution";
 import { validateTutorialSteps } from "@/src/schema/validate";
 import chaiFixture from "@/src/fixtures/instruct-chai.muse.json";
+import chaiRecorded from "@/src/fixtures/instruct-chai-recorded.json";
 import origamiFixture from "@/src/fixtures/instruct-origami.muse.json";
+import origamiRecorded from "@/src/fixtures/instruct-origami-recorded.json";
 import sampleFixture from "@/src/fixtures/sample-aloo-jeera.steps.json";
 import { normalizeSparkPayload } from "@/src/schema/normalize";
 import { coerceInstructDocument } from "./instruct-coerce";
@@ -285,6 +287,22 @@ describe("instruct schema fixtures", () => {
     if (!loose.ok) return;
     expect(loose.value.sourceClip.stillPlaceholder).toBeUndefined();
     expect(loose.value.sourceClip.durationSec).toBe(42);
+  });
+
+  it("drops surface nouns from the recorded plans and keeps the handheld ones", async () => {
+    const { normalizeInstructPayload } = await import("./instruct");
+    const origami = normalizeInstructPayload(origamiRecorded.tutorial, "Fold an origami crane", "live");
+    expect(origami.schemaValid).toBe(true);
+    const first = origami.tutorial?.steps[0].objects.map((object) => object.noun) ?? [];
+    expect(first[0]).toBe("square patterned paper sheet");
+    expect(first).not.toContain("white table workspace");
+    expect(first.length).toBeLessThanOrEqual(3);
+
+    const chai = normalizeInstructPayload(chaiRecorded.tutorial, "Make a chai spice mix", "live");
+    expect(chai.schemaValid).toBe(true);
+    const nouns = chai.tutorial?.steps.flatMap((step) => step.objects.map((object) => object.noun)) ?? [];
+    expect(nouns).toEqual(expect.arrayContaining(["stone mortar bowl", "stone pestle", "pile of dried spices"]));
+    expect(chai.tutorial?.steps.every((step) => step.objects.length >= 1 && step.objects.length <= 3)).toBe(true);
   });
 
   it("keeps the shared sample schema strict", () => {

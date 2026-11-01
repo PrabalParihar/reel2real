@@ -1,0 +1,172 @@
+{
+  "mode": "live",
+  "modelId": "muse-spark-1.3",
+  "latencyMs": 0,
+  "schemaValid": true,
+  "parseOk": true,
+  "errors": [],
+  "tutorial": {
+    "schemaVersion": "1.0.0",
+    "title": "Fold an origami crane",
+    "domain": "non_cooking_diy",
+    "sourceClip": {
+      "mediaType": "video/mp4",
+      "durationSec": 8
+    },
+    "generation": {
+      "modelId": "muse-spark-1.3",
+      "mode": "muse_spark_live",
+      "toolCalls": [
+        {
+          "tool": "muse_spark",
+          "modelId": "muse-spark-1.3",
+          "purpose": "goal_still_to_steps_json",
+          "inputKind": "image",
+          "latencyMs": 0
+        }
+      ]
+    },
+    "runtimeHints": {
+      "preferredLiveMode": "keyframe_still",
+      "maxObjectsPerStep": 4
+    },
+    "steps": [
+      {
+        "id": "step-1",
+        "index": 0,
+        "instructionText": "Place one square patterned paper sheet flat on the white table and fold it corner to corner into a triangle, creasing firmly.",
+        "sourceTimeRange": {
+          "startSec": 0,
+          "endSec": 2.67
+        },
+        "objects": [
+          {
+            "objectId": "o1-1",
+            "noun": "square patterned paper sheet",
+            "role": "required_present",
+            "samPrompt": "square patterned origami paper sheet flat on white table",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o1-2",
+            "noun": "stack of extra square papers",
+            "role": "optional",
+            "samPrompt": "stack of square origami papers on right side of table",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o1-3",
+            "noun": "white table workspace",
+            "role": "required_present",
+            "samPrompt": "clean white table workspace surface",
+            "expectedTrack": true
+          }
+        ],
+        "successCheck": {
+          "kind": "all_required_present",
+          "description": "Square paper sheet visible flat on white table before folding",
+          "minStableChunks": 1
+        },
+        "credit": {
+          "creditLine": "You · instruction mode",
+          "creatorName": "You",
+          "sampleLabel": false
+        }
+      },
+      {
+        "id": "step-2",
+        "index": 1,
+        "instructionText": "Fold the triangle sides into the center to form a small diamond kite base, aligning edges and flattening creases.",
+        "sourceTimeRange": {
+          "startSec": 2.67,
+          "endSec": 5.33
+        },
+        "objects": [
+          {
+            "objectId": "o2-1",
+            "noun": "folded triangular paper",
+            "role": "required_present",
+            "samPrompt": "origami paper folded into triangle shape in center of table",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o2-2",
+            "noun": "diamond folded paper base",
+            "role": "required_present",
+            "samPrompt": "origami paper folded into narrow diamond kite base",
+            "expectedTrack": true
+          }
+        ],
+        "successCheck": {
+          "kind": "all_required_present",
+          "description": "Diamond-shaped folded paper base visible in center of table",
+          "minStableChunks": 1
+        },
+        "credit": {
+          "creditLine": "You · instruction mode",
+          "creatorName": "You",
+          "sampleLabel": false
+        }
+      },
+      {
+        "id": "step-3",
+        "index": 2,
+        "instructionText": "Form the crane by pulling out the wings and folding one narrow point for the neck and one for the tail to complete the crane shape.",
+        "sourceTimeRange": {
+          "startSec": 5.33,
+          "endSec": 8
+        },
+        "objects": [
+          {
+            "objectId": "o3-1",
+            "noun": "completed origami crane",
+            "role": "required_present",
+            "samPrompt": "completed folded origami paper crane on white table",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o3-2",
+            "noun": "crane wings",
+            "role": "required_present",
+            "samPrompt": "spread triangular wings of origami paper crane",
+            "expectedTrack": true
+          },
+          {
+            "objectId": "o3-3",
+            "noun": "crane neck and tail folds",
+            "role": "required_present",
+            "samPrompt": "narrow folded neck and tail points of origami crane",
+            "expectedTrack": true
+          }
+        ],
+        "successCheck": {
+          "kind": "all_required_present",
+          "description": "Completed crane with spread wings and neck and tail folds visible",
+          "minStableChunks": 1
+        },
+        "credit": {
+          "creditLine": "You · instruction mode",
+          "creatorName": "You",
+          "sampleLabel": false
+        }
+      }
+    ],
+    "tutorialId": "instruct-fold-an-origami-crane",
+    "sampleLabel": false,
+    "attribution": {
+      "creatorName": "You",
+      "creditLine": "You · instruction mode",
+      "licence": "self_filmed_sample"
+    }
+  },
+  "toolCalls": [
+    {
+      "tool": "muse_spark",
+      "modelId": "muse-spark-1.3",
+      "purpose": "goal_still_to_steps_json",
+      "inputKind": "image",
+      "latencyMs": 0
+    }
+  ],
+  "inputKind": "instruct"
+}

@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   decideSamPoll,
+  DEFAULT_SAM_STEP_CAP,
   initialSamSchedulerState,
   markSamSettled,
   readSamSchedulerConfig,
+  resetStepCalls,
   SESSION_BUDGET_STOP_LABEL,
   sessionBudgetHardStop,
   type SamSchedulerState,
 } from "./sam-scheduler";
 import { highlightsChip } from "@/src/fsm/ui";
 
-const config = { minIntervalMs: 2000, sessionCap: 60 };
+const config = { minIntervalMs: 2000, sessionCap: 60, stepCap: 60 };
 
 function poll(state: SamSchedulerState, now: number, extra: Partial<Parameters<typeof decideSamPoll>[0]> = {}) {
   return decideSamPoll({
@@ -57,6 +59,22 @@ describe("SAM poll scheduler", () => {
     expect(poll(initialSamSchedulerState(), 0, { stepDone: true })).toEqual({ action: "pause", reason: "step_done" });
   });
 
+  it("stops re-checks after the per-step cap and starts again on the next step", () => {
+    const stepConfig = { ...config, stepCap: DEFAULT_SAM_STEP_CAP };
+    let state = initialSamSchedulerState();
+    for (let i = 0; i < DEFAULT_SAM_STEP_CAP; i += 1) {
+      const decision = poll(state, i * config.minIntervalMs, { config: stepConfig });
+      expect(decision.action).toBe("start");
+      if (decision.action !== "start") return;
+      state = markSamSettled(decision.state);
+    }
+    expect(state.stepCalls).toBe(3);
+    expect(poll(state, 10_000, { config: stepConfig })).toEqual({ action: "pause", reason: "step_cap" });
+    const nextStep = resetStepCalls(state);
+    expect(nextStep.stepCalls).toBe(0);
+    expect(poll(nextStep, 12_000, { config: stepConfig }).action).toBe("start");
+  });
+
   it("stops after the session cap", () => {
     let state = initialSamSchedulerState();
     for (let i = 0; i < config.sessionCap; i += 1) {
@@ -76,9 +94,11 @@ describe("SAM poll scheduler", () => {
   it("reads the public interval and cap", () => {
     expect(readSamSchedulerConfig({}).minIntervalMs).toBe(2000);
     expect(readSamSchedulerConfig({}).sessionCap).toBe(60);
+    expect(readSamSchedulerConfig({}).stepCap).toBe(DEFAULT_SAM_STEP_CAP);
     expect(readSamSchedulerConfig({ NEXT_PUBLIC_SAM_MIN_INTERVAL_MS: "2500", NEXT_PUBLIC_SAM_SESSION_CAP: "12" })).toEqual({
       minIntervalMs: 2500,
       sessionCap: 12,
+      stepCap: DEFAULT_SAM_STEP_CAP,
     });
     expect(readSamSchedulerConfig({ NEXT_PUBLIC_SAM_SESSION_CAP: "0" }).sessionCap).toBe(60);
   });

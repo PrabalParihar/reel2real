@@ -343,6 +343,7 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
         if (!base64) throw new Error("No frame was attached");
         const mime = input.mimeType || (input.inputKind === "video_chunk" ? "video/mp4" : "image/jpeg");
         const encoded = dataUrl(mime, base64);
+        // One Meta SAM call per noun. A 4-noun step is 4 calls. Instruct plans cap nouns at 3.
         for (const prompt of prompts) {
           const response = await postResponses(
             key,

@@ -1,18 +1,32 @@
+/**
+ * Re-check cadence. One step is not one SAM call.
+ * The coach leaves "waiting" on CADENCE_MS (1.5s), or immediately when the step
+ * was just armed, and then sends one /api/segment. This scheduler also keeps
+ * minIntervalMs (default 2s) between starts and will not start a second call
+ * while one is in flight. A result that is not stable yet returns to waiting,
+ * and the cadence fires again. Each /api/segment is one Meta SAM call per noun.
+ * stepCap stops that loop on the current step. The session cap still applies
+ * across steps.
+ */
 export const DEFAULT_SAM_MIN_INTERVAL_MS = 2000;
 export const DEFAULT_SAM_SESSION_CAP = 60;
+/** Segment requests per step, not Meta calls. Three nouns make 3 calls each. */
+export const DEFAULT_SAM_STEP_CAP = 3;
 
 export interface SamSchedulerConfig {
   minIntervalMs: number;
   sessionCap: number;
+  stepCap: number;
 }
 
 export interface SamSchedulerState {
   inFlight: boolean;
   calls: number;
+  stepCalls: number;
   lastStartedAt: number | null;
 }
 
-export type SamPauseReason = "hidden" | "step_done" | "error_recoverable" | "session_cap";
+export type SamPauseReason = "hidden" | "step_done" | "error_recoverable" | "session_cap" | "step_cap";
 
 export type SamPollDecision =
   | { action: "start"; state: SamSchedulerState }
@@ -20,7 +34,11 @@ export type SamPollDecision =
   | { action: "pause"; reason: SamPauseReason };
 
 export function initialSamSchedulerState(): SamSchedulerState {
-  return { inFlight: false, calls: 0, lastStartedAt: null };
+  return { inFlight: false, calls: 0, stepCalls: 0, lastStartedAt: null };
+}
+
+export function resetStepCalls(state: SamSchedulerState): SamSchedulerState {
+  return { ...state, stepCalls: 0 };
 }
 
 /** Client hard stop. Once the per-session budget is spent, no more highlight calls. */
@@ -35,6 +53,7 @@ export function readSamSchedulerConfig(env: Record<string, string | undefined> =
   return {
     minIntervalMs: positiveInt(env.NEXT_PUBLIC_SAM_MIN_INTERVAL_MS, DEFAULT_SAM_MIN_INTERVAL_MS),
     sessionCap: positiveInt(env.NEXT_PUBLIC_SAM_SESSION_CAP, DEFAULT_SAM_SESSION_CAP),
+    stepCap: positiveInt(env.NEXT_PUBLIC_SAM_STEP_CAP, DEFAULT_SAM_STEP_CAP),
   };
 }
 
@@ -59,6 +78,7 @@ export function decideSamPoll(input: {
 }): SamPollDecision {
   if (input.state.inFlight) return { action: "wait", reason: "in_flight", waitMs: input.config.minIntervalMs };
   if (input.state.calls >= input.config.sessionCap) return { action: "pause", reason: "session_cap" };
+  if (input.state.stepCalls >= input.config.stepCap) return { action: "pause", reason: "step_cap" };
   if (input.hidden) return { action: "pause", reason: "hidden" };
   if (input.coachState === "error_recoverable") return { action: "pause", reason: "error_recoverable" };
   if (input.stepDone) return { action: "pause", reason: "step_done" };
@@ -73,6 +93,7 @@ export function decideSamPoll(input: {
     state: {
       inFlight: true,
       calls: input.state.calls + 1,
+      stepCalls: input.state.stepCalls + 1,
       lastStartedAt: input.now,
     },
   };

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { PHONE_STAND_HINT, instructHonestyChips, instructSamChip, instructSamPhase } from "./instruct-chips";
+import { PHONE_STAND_HINT, instructHonestyChips, instructSamChip, instructSamOverlay, instructSamPhase, nextSamView } from "./instruct-chips";
 
 const COPY = [
   "src/ui/instruct-chips.ts",
@@ -19,16 +19,34 @@ describe("instruction mode chips", () => {
   it("follows the real SAM state", () => {
     expect(instructSamPhase({ failed: false, boxDrawn: false })).toBe("waiting");
     expect(instructSamPhase({ failed: false, boxDrawn: true })).toBe("box");
-    expect(instructSamPhase({ failed: true, boxDrawn: true })).toBe("failed");
     expect(instructSamChip(false, "waiting")).toBe("Checking");
     expect(instructSamChip(false, "box")).toBe("Live · SAM box");
     expect(instructSamChip(false, "failed")).toBe("SAM unavailable");
-    expect(instructSamChip(true, "waiting")).toBe("Checking");
     expect(instructSamChip(true, "box")).toBe("SAM box");
-    expect(instructSamChip(true, "failed")).toBe("SAM unavailable");
     const coach = readFileSync("src/ui/CoachScreen.tsx", "utf8");
     expect(coach).toContain("instructSamChip");
+    expect(coach).toContain("instructSamOverlay");
     expect(coach).not.toContain("honesty.sam");
+  });
+
+  it("keeps the last boxes when a later check fails, and clears a miss that never drew", () => {
+    let afterSuccess = nextSamView({ boxDrawn: false, failed: false }, "success");
+    afterSuccess = nextSamView(afterSuccess, "failure");
+    expect(instructSamPhase(afterSuccess)).toBe("stale");
+    expect(instructSamChip(false, "stale")).toBe("Last check");
+    expect(instructSamOverlay("stale", "Highlights unavailable")).toBe("Last check");
+    expect(afterSuccess.boxDrawn).toBe(true);
+
+    const missed = nextSamView({ boxDrawn: false, failed: false }, "failure");
+    expect(instructSamPhase(missed)).toBe("failed");
+    expect(instructSamChip(false, "failed")).toBe("SAM unavailable");
+    expect(instructSamOverlay("failed", "Checking…")).toBe("Highlights unavailable");
+    expect(missed.boxDrawn).toBe(false);
+
+    const recovered = nextSamView(missed, "success");
+    expect(instructSamPhase(recovered)).toBe("box");
+    expect(instructSamChip(false, "box")).toBe("Live · SAM box");
+    expect(instructSamOverlay("box", "Watching")).toBe("Watching");
   });
 
   it("does not claim glasses, contours, or a scraped reel", () => {

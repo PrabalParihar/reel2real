@@ -34,7 +34,8 @@ type ContentPart =
 export function goalInstruction(goal: string): string {
   return `${SPARK_STEPS_INSTRUCTION}
 The learner has no tutorial. They stated a goal and attached one still of the workspace.
-Return 2 to 4 steps. Each step lists 2 to 4 visually checkable nouns.
+Return 2 to 4 steps. Each step lists 2 or 3 handheld or manipulable nouns. Put the object the hands use first.
+Do not name surfaces, tables, backgrounds, or workspaces. No counter, desk, board, or backdrop.
 Safe household tasks only. The camera must be able to check each noun.
 If the goal is unsafe, or it is not something a camera can check, return only {"refused":true,"reason":"short reason"} with no steps.
 Do not invent tutorialId.
