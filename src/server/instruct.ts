@@ -6,6 +6,7 @@ import { INSTRUCT_STILL_WIDTH } from "@/src/coach/keyframe";
 import { consumeMetaCalls, DailyCapError } from "./daily-cap";
 import { readModelApiKey } from "./env";
 import { guardMetaRoute, dailyCapResponse } from "./meta-guard";
+import { forwardMuseRequest, museForwardEnabled } from "./muse-forward";
 import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
@@ -57,6 +58,10 @@ export interface InstructDeps {
   env?: Record<string, string | undefined>;
   fetchImpl?: typeof fetch;
   ask?: InstructAsk;
+  /** Worker route already checked the per-IP guard. */
+  skipGuard?: boolean;
+  /** Worker route must call Meta itself and must not forward again. */
+  skipForward?: boolean;
 }
 
 type InputResult =
@@ -361,8 +366,10 @@ export function instructSparkBody(goal: string, imageDataUrl: string) {
 }
 
 export async function handleInstructRequest(request: Request, deps: InstructDeps = {}): Promise<Response> {
-  const blocked = guardMetaRoute(request);
-  if (blocked) return blocked;
+  if (!deps.skipGuard) {
+    const blocked = guardMetaRoute(request);
+    if (blocked) return blocked;
+  }
   let raw: unknown;
   try {
     raw = await request.json();
@@ -387,8 +394,24 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
       latencyMs: 0,
     });
   }
-  const sparkBody = instructSparkBody(parsed.value.goal, parsed.value.imageDataUrl);
   const env = deps.env ?? process.env;
+  if (!deps.ask && !deps.skipForward && museForwardEnabled(env)) {
+    const reserved = consumeMetaCalls(1);
+    if (!reserved.ok) {
+      return dailyCapResponse(new DailyCapError(reserved.message))
+        ?? Response.json({ error: "daily_cap", message: reserved.message }, { status: 429 });
+    }
+    return forwardMuseRequest({
+      rawBody: JSON.stringify(parsed.value),
+      env,
+      route: "instruct",
+      contentType: "application/json",
+      forwardedFor: request.headers.get("x-forwarded-for"),
+      realIp: request.headers.get("x-real-ip"),
+      fetchImpl: deps.fetchImpl,
+    });
+  }
+  const sparkBody = instructSparkBody(parsed.value.goal, parsed.value.imageDataUrl);
   const fetchImpl = deps.fetchImpl ?? fetch;
   const ask = deps.ask ?? ((body) => askInstructModel(body, env, fetchImpl));
   try {

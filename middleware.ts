@@ -13,7 +13,7 @@ export const config = {
 };
 
 export function middleware(request: NextRequest) {
-  // /api/internal/segment is the only path that skips this gate. It checks its own secret.
+  // Internal forward targets skip this gate. Each route checks the forward secret.
   if (!previewPathIsGated(request.nextUrl.pathname)) return NextResponse.next();
   const decision = previewDecision({
     password: process.env.PREVIEW_PASSWORD,
