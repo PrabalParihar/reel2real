@@ -12,6 +12,7 @@ import { validateTutorialSteps } from "@/src/schema/validate";
 import { PUBLISHED_SAMPLES, sampleByPublishedId } from "@/src/domains/catalog";
 import { heroNouns, heroSamFile, heroStep, sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
+import { REFUSAL_UNSAFE } from "@/src/safety/goal-screen";
 import { readStepsCache, writeStepsCache } from "./steps-cache";
 
 async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: TutorialSteps; toolCalls: ToolCall[]; source: StepsSource } | null> {
@@ -44,6 +45,7 @@ export function ExtractingScreen() {
   const session = useSession();
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [refusal, setRefusal] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<ExtractStage>("reading");
   const demo = params.get("demo");
@@ -85,6 +87,10 @@ export function ExtractingScreen() {
     }).then(async (result) => {
       if (cancelled) return;
       setStage("validating");
+      if (result.refused) {
+        setRefusal(result.refusalReason || REFUSAL_UNSAFE);
+        return;
+      }
       if (!result.schemaValid || !result.tutorial) {
         if (attempt < 1) {
           setAttempt(1);
@@ -177,6 +183,14 @@ export function ExtractingScreen() {
             <li />
             <li />
           </ul>
+          {refusal ? (
+            <div className="panel error-panel" role="status">
+              <h1>Cannot coach this goal</h1>
+              <p>{refusal}</p>
+              <p>Try a safe household task, like making tea or folding a shirt.</p>
+              <Link className="btn btn-primary" href="/upload">Back to upload</Link>
+            </div>
+          ) : null}
           {error ? (
             <div className="panel error-panel">
               <h1>Steps did not validate</h1>

@@ -1,7 +1,8 @@
 import { consumeMetaCalls, DailyCapError } from "@/src/server/daily-cap";
 import { dailyCapResponse, guardMetaRoute } from "@/src/server/meta-guard";
 import { forwardMuseRequest, museForwardEnabled, museTooLargeResponse, readMuseBody } from "@/src/server/muse-forward";
-import { executeSpark } from "@/src/server/spark-run";
+import { executeSpark, sparkRefusalResponse } from "@/src/server/spark-run";
+import { screenSparkInput } from "@/src/safety/goal-screen";
 import type { SparkRequest } from "@/src/server/types";
 
 export const dynamic = "force-dynamic";
@@ -9,14 +10,19 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
-  if (museForwardEnabled(process.env)) {
-    const rawBody = await readMuseBody(request);
-    if (rawBody === null) return museTooLargeResponse();
-    try {
-      JSON.parse(rawBody);
-    } catch {
-      return Response.json({ error: "invalid_json", message: "The request was not JSON." }, { status: 400 });
-    }
+  const forward = museForwardEnabled(process.env);
+  const rawBody = forward ? await readMuseBody(request) : await request.text();
+  if (rawBody === null) return museTooLargeResponse();
+  let body: SparkRequest;
+  try {
+    body = JSON.parse(rawBody) as SparkRequest;
+  } catch {
+    return Response.json({ error: "invalid_json", message: "The request was not JSON." }, { status: 400 });
+  }
+  // Screen before the daily cap and before any forward or fetch.
+  const screened = screenSparkInput(body);
+  if (screened) return sparkRefusalResponse(screened.reason);
+  if (forward) {
     const reserved = consumeMetaCalls(1);
     if (!reserved.ok) {
       return dailyCapResponse(new DailyCapError(reserved.message))
@@ -31,6 +37,5 @@ export async function POST(request: Request) {
       realIp: request.headers.get("x-real-ip"),
     });
   }
-  const body = (await request.json()) as SparkRequest;
   return executeSpark(body, { mockSparkDelayMs: 2800 });
 }

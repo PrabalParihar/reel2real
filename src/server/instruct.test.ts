@@ -182,6 +182,45 @@ describe("instruction mode", () => {
     expect(ask).not.toHaveBeenCalled();
   });
 
+  it("refuses an unsafe goal before the daily cap and before any fetch", async () => {
+    process.env.META_DAILY_CALL_CAP = "0";
+    process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";
+    const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }));
+    const response = await handleInstructRequest(request({
+      goal: "mix bleach and ammonia",
+      imageDataUrl: jpegDataUrl(),
+      mimeType: "image/jpeg",
+    }, "198.51.100.151"), {
+      env: process.env,
+      fetchImpl,
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { refused?: boolean; error?: string; reason?: string };
+    expect(body.refused).toBe(true);
+    expect(body.reason).toBe(REFUSAL_UNSAFE);
+    expect(body.error).toBeUndefined();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("shows a model safety reply as a refusal", async () => {
+    const response = await handleInstructRequest(request({
+      goal: "I want to make chai",
+      imageDataUrl: jpegDataUrl(),
+      mimeType: "image/jpeg",
+    }, "198.51.100.152"), {
+      ask: async () => ({
+        status: 200,
+        payload: { message: "I cannot assist with this request" },
+        rawText: "I cannot assist with this request",
+      }),
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { refused?: boolean; reason?: string; error?: string };
+    expect(body.refused).toBe(true);
+    expect(body.reason).toBe(REFUSAL_UNSAFE);
+    expect(body.error).toBeUndefined();
+  });
+
   it("does not call Meta when the daily cap is spent", async () => {
     process.env.META_DAILY_CALL_CAP = "0";
     process.env.META_MODEL_API_KEY = "test-only-not-a-meta-key";

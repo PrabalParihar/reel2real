@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { classifyCameraError, openRearCamera, type CameraBlock } from "@/src/coach/camera";
 import { grabInstructJpeg } from "@/src/coach/keyframe";
 import type { SparkResult } from "@/src/server/types";
+import { modelRefusalReason, screenGoal } from "@/src/safety/goal-screen";
 import { AppShell } from "./chrome";
 import { PHONE_STAND_HINT } from "./instruct-chips";
 import { INSTRUCT_GOALS, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
@@ -99,6 +100,13 @@ export function InstructScreen() {
       setRefusal(null);
       return;
     }
+    const screened = screenGoal(trimmed);
+    if (screened) {
+      setRefusal(screened.reason);
+      setError(null);
+      setNote(null);
+      return;
+    }
     setPlanning(true);
     setNote(null);
     setError(null);
@@ -110,8 +118,15 @@ export function InstructScreen() {
         body: JSON.stringify({ goal: trimmed, imageDataUrl: still, mimeType: "image/jpeg" }),
       });
       const data = (await response.json()) as InstructResponse;
-      if (data.refused) {
-        setRefusal(data.reason || data.refusalReason || "This goal cannot be coached from the camera.");
+      const refusal = modelRefusalReason({
+        refused: data.refused,
+        reason: data.reason,
+        refusalReason: data.refusalReason,
+        message: data.message,
+        errors: data.errors,
+      });
+      if (refusal) {
+        setRefusal(refusal);
         return;
       }
       if (!response.ok || !data.schemaValid || !data.tutorial) {

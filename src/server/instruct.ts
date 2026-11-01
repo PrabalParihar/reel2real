@@ -11,38 +11,17 @@ import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } fro
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
 import { coerceInstructDocument, INSTRUCT_CLIP_MEDIA, INSTRUCT_CLIP_SEC, instructStructureProblem } from "./instruct-coerce";
+import { looksLikeModelRefusal, REFUSAL_NOT_VISUAL, REFUSAL_UNSAFE, screenGoal } from "@/src/safety/goal-screen";
 import { buildSparkResponsesBody, goalInstruction } from "./spark-request";
 import type { SparkResult } from "./types";
+
+export { REFUSAL_NOT_VISUAL, REFUSAL_UNSAFE, screenGoal };
 
 export const INSTRUCT_DEBUG_MAX = 4096;
 
 export const INSTRUCT_STILL_MAX_BYTES = 2 * 1024 * 1024;
 export const INSTRUCT_GOAL_MAX = 240;
 export const INSTRUCT_CREDIT = "You · instruction mode";
-
-const UNSAFE_GOAL = [
-  /\bbombs?\b/i,
-  /\bexplosives?\b/i,
-  /\bgrenades?\b/i,
-  /\b(gun|guns|pistol|rifle|firearm|ammunition)\b/i,
-  /\bpoison(ing|ed|ous)?\b/i,
-  /\b(ricin|anthrax|fentanyl|heroin|cocaine|meth)\b/i,
-  /\b(suicide|self-harm)\b/i,
-  /\b(murder|kill someone)\b/i,
-  /\b(napalm|molotov)\b/i,
-  /\bweapons?\b/i,
-];
-
-const NOT_VISUAL_GOAL = [
-  /\b(essay|novel|homework|calculus|algebra)\b/i,
-  /\b(hack|phishing|malware|password)\b/i,
-  /\b(crypto|bitcoin|stock market|invest|day trade)\b/i,
-  /\bwrite (an? )?(code|program|app|website|email|paper)\b/i,
-  /\b(summarize|translate) (this|the|an?) (article|pdf|document|book)\b/i,
-];
-
-export const REFUSAL_UNSAFE = "This goal is not a safe household task the camera can check.";
-export const REFUSAL_NOT_VISUAL = "This goal is not something a camera can check step by step.";
 
 export interface InstructInput {
   goal: string;
@@ -83,13 +62,6 @@ export function cleanRefusalReason(reason: unknown, fallback = REFUSAL_UNSAFE): 
   if (!text || text.length > 240) return fallback;
   if (/[<>]|https?:/i.test(text)) return fallback;
   return text;
-}
-
-export function screenGoal(goal: string): { reason: string } | null {
-  const text = goal.trim();
-  if (UNSAFE_GOAL.some((pattern) => pattern.test(text))) return { reason: REFUSAL_UNSAFE };
-  if (NOT_VISUAL_GOAL.some((pattern) => pattern.test(text))) return { reason: REFUSAL_NOT_VISUAL };
-  return null;
 }
 
 function decodedBytes(base64: string): number {
@@ -161,9 +133,14 @@ export function readModelPayload(body: unknown): unknown {
 }
 
 function readRefusal(payload: unknown): string | null {
+  if (typeof payload === "string") return looksLikeModelRefusal(payload) ? REFUSAL_UNSAFE : null;
   const record = asRecord(payload);
-  if (!record || record.refused !== true) return null;
-  return cleanRefusalReason(record.reason);
+  if (!record) return null;
+  if (record.refused === true) return cleanRefusalReason(record.reason);
+  if (Array.isArray(record.steps) && record.steps.length > 0) return null;
+  const blob = [record.reason, record.message, record.text].filter((part) => typeof part === "string").join(" ");
+  if (blob && looksLikeModelRefusal(blob)) return cleanRefusalReason(record.reason, REFUSAL_UNSAFE);
+  return null;
 }
 
 function clampPlan(tutorial: TutorialSteps, goal: string): { ok: true; value: TutorialSteps } | { ok: false; message: string } {
@@ -446,6 +423,7 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
   }
   const parsed = validateInstructInput(raw);
   if (!parsed.ok) return jsonError(parsed.status, parsed.code, parsed.message);
+  // Screen before the daily cap and before any model fetch.
   const screened = screenGoal(parsed.value.goal);
   if (screened) {
     return Response.json({
@@ -489,6 +467,21 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
       return jsonError(502, "spark_failed", "Spark did not return a plan.");
     }
     if (reply.payload == null) {
+      if (reply.rawText && looksLikeModelRefusal(reply.rawText)) {
+        return Response.json({
+          refused: true,
+          reason: REFUSAL_UNSAFE,
+          tutorial: null,
+          schemaValid: false,
+          parseOk: true,
+          errors: [],
+          mode,
+          modelId: SPARK_MODEL_ID,
+          inputKind: "instruct",
+          toolCalls: [],
+          latencyMs: 0,
+        });
+      }
       return Response.json({
         mode,
         modelId: SPARK_MODEL_ID,

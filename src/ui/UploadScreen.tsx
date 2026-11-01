@@ -6,6 +6,7 @@ import { Upload } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import type { LicenceChoice } from "@/src/schema/attribution";
 import { applyUserAttribution } from "@/src/schema/attribution";
+import { screenSparkInput } from "@/src/safety/goal-screen";
 import { AppShell } from "./chrome";
 import { sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
@@ -47,6 +48,15 @@ export function UploadScreen() {
       return;
     }
     if (!file && !sampleId) return;
+    const screened = screenSparkInput({
+      transcript,
+      title,
+      sampleId,
+    });
+    if (screened) {
+      setNote(screened.reason);
+      return;
+    }
     const sample = PUBLISHED_SAMPLES.find((item) => item.id === sampleId);
     let durationSec: number | undefined;
     let url: string | null = null;
