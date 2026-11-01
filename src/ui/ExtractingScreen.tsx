@@ -93,7 +93,7 @@ export function ExtractingScreen() {
         setError(result.errors[0] || "The steps JSON did not validate.");
         return;
       }
-      if (request.clipHash) {
+      if (request.clipHash && (result.inputKind === "clip" || result.inputKind === "transcript" || result.inputKind === "sample")) {
         await writeStepsCache(request.clipHash, {
           tutorial: result.tutorial,
           toolCalls: result.toolCalls,

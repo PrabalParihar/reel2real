@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sampleByPublishedId } from "@/src/domains/catalog";
+import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
 import { presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, unverifiedStep, unverifiedStepHint } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
-import { AppShell } from "./chrome";
+import { AppShell, Chip } from "./chrome";
+import { PHONE_STAND_HINT, instructHonestyChips } from "./instruct-chips";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
@@ -93,12 +95,13 @@ function CoachBody() {
   const recordedNouns = presentNouns(sceneStep);
   const verifiedNouns = recordedNouns.filter((noun) => noun.verified !== false);
   const noVerifiedMask = showRecorded && unverifiedStep(recordedNouns);
+  const honesty = session.stepsSource === "instruct" ? instructHonestyChips(session.runtime.mock) : null;
   const onVideoStatus = noVerifiedMask
     ? null
-    : highlights
-      ? highlights
-      : coach.highlightsPaused
-        ? "Highlights paused"
+    : coach.highlightsPaused
+      ? SESSION_BUDGET_STOP_LABEL
+      : highlights
+        ? highlights
         : checking
           ? "Checking…"
           : showRecorded
@@ -111,7 +114,7 @@ function CoachBody() {
       : missingObjectHint(step, coach.machine.state === "step_ready" ? null : coach.presence);
 
   return (
-    <AppShell backHref="/upload">
+    <AppShell backHref={session.stepsSource === "instruct" ? "/instruct" : "/upload"}>
       <main className="screen coach">
         <section className={`stage-wrap${showRecorded ? " is-sample" : ""}${liveCamera ? " is-live" : ""}${titleBelow ? " title-below" : ""}`}>
           <div className={`reel-phone${fullFrame ? " is-source" : published ? ` ${shapeClass(published.shape)}` : ""}${liveCamera ? " is-live" : " is-sample"}`}>
@@ -140,7 +143,9 @@ function CoachBody() {
                 {coach.masks.filter((mask) => mask.present && mask.box).map((mask) => (
                   <div
                     key={mask.objectId}
-                    className="mask"
+                    className="mask is-box"
+                    role="img"
+                    aria-label={`${mask.noun.replaceAll("_", " ")} box`}
                     style={{ left: `${mask.box!.x * 100}%`, top: `${mask.box!.y * 100}%`, width: `${mask.box!.w * 100}%`, height: `${mask.box!.h * 100}%` }}
                   >
                     <span>{mask.noun.replaceAll("_", " ")}</span>
@@ -156,9 +161,18 @@ function CoachBody() {
             </div>
           ) : null}
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
+          {coach.highlightsPaused ? <p className="stage-note quiet">Session budget reached. Press Next to move the step.</p> : null}
         </section>
 
         <section className="coach-side">
+          {honesty ? (
+            <div className="chip-row is-start">
+              <Chip tone={session.runtime.mock ? "mock" : "match"}>{honesty.plan}</Chip>
+              <Chip tone="mask">{honesty.sam}</Chip>
+            </div>
+          ) : null}
+          {session.stepsSource === "instruct" ? <p className="quiet">{PHONE_STAND_HINT}</p> : null}
+          {session.stepsSource === "instruct" && session.runtime.mock ? <p className="quiet">Mock client. This is not a live Muse call.</p> : null}
           {published ? (
             <ol className={`filmstrip${tutorial.steps.length > 3 ? " is-scroll" : ""}`}>
               {tutorial.steps.map((item, index) => (
@@ -193,7 +207,7 @@ function CoachBody() {
             <SafetyNote note={published?.safetyNote} />
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
-            {showStepPanelFrame(showRecorded || Boolean(scene)) ? (
+            {session.stepsSource !== "instruct" && showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
                 {clip ? (
                   <video src={clip} muted playsInline preload="metadata" />
@@ -207,7 +221,7 @@ function CoachBody() {
                 <p className="mono">{step.sourceTimeRange.startSec}s to {step.sourceTimeRange.endSec}s</p>
               </div>
             ) : null}
-            {scene ? <SceneCredit scene={scene} /> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
+            {scene ? <SceneCredit scene={scene} /> : session.stepsSource === "instruct" ? <p className="credit">Credit · You · instruction mode</p> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
             {coach.machine.state === "safety_halt" ? <p className="safety-copy">{step.safety?.message}</p> : null}
           </article>
 

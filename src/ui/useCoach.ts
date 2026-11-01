@@ -9,6 +9,7 @@ import {
   initialSamSchedulerState,
   markSamSettled,
   readSamSchedulerConfig,
+  sessionBudgetHardStop,
   type SamSchedulerState,
 } from "@/src/coach/sam-scheduler";
 import { createCoach, transition } from "@/src/fsm/machine";
@@ -130,6 +131,10 @@ export function useCoach(
 
     const attempt = () => {
       if (cancelled) return;
+      if (sessionBudgetHardStop(schedulerRef.current.calls, config.sessionCap)) {
+        setHighlightsPaused(true);
+        return;
+      }
       if (!shouldPollSam(cameraPhase)) return;
       const frame = cameraPhase === "live" && videoRef.current ? grabJpeg(videoRef.current) : undefined;
       if (cameraPhase === "live" && !frame) {

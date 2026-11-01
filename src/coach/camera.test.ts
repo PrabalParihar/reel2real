@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cameraBlockMessage, classifyCameraError, FALLBACK_CAMERA_CONSTRAINTS, openRearCamera, REAR_CAMERA_CONSTRAINTS, shouldPollSam } from "./camera";
-import { KEYFRAME_JPEG_QUALITY, KEYFRAME_LONGEST_PX, keyframeSize } from "./keyframe";
+import { INSTRUCT_STILL_WIDTH, KEYFRAME_JPEG_QUALITY, KEYFRAME_LONGEST_PX, instructStillSize, keyframeSize } from "./keyframe";
 
 describe("rear camera", () => {
   it("prefers facingMode environment and falls back unless permission was denied", async () => {
@@ -50,5 +50,13 @@ describe("keyframe size", () => {
     expect(keyframeSize(1920, 1080)).toEqual({ width: 640, height: 360 });
     expect(keyframeSize(1080, 1920)).toEqual({ width: 360, height: 640 });
     expect(keyframeSize(320, 240)).toEqual({ width: 320, height: 240 });
+  });
+
+  it("downscales an instruction still to about 720px wide", () => {
+    expect(INSTRUCT_STILL_WIDTH).toBe(720);
+    expect(instructStillSize(1920, 1080)).toEqual({ width: 720, height: 405 });
+    expect(instructStillSize(1080, 1920)).toEqual({ width: 720, height: 1280 });
+    expect(instructStillSize(640, 480)).toEqual({ width: 640, height: 480 });
+    expect(instructStillSize(0, 480)).toEqual({ width: 0, height: 0 });
   });
 });

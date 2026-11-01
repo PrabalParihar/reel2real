@@ -23,6 +23,14 @@ export function initialSamSchedulerState(): SamSchedulerState {
   return { inFlight: false, calls: 0, lastStartedAt: null };
 }
 
+/** Client hard stop. Once the per-session budget is spent, no more highlight calls. */
+export function sessionBudgetHardStop(calls: number, sessionCap: number): boolean {
+  return calls >= sessionCap;
+}
+
+/** Same honest degrade the coach already uses when highlights cannot be drawn. */
+export const SESSION_BUDGET_STOP_LABEL = "Highlights unavailable";
+
 export function readSamSchedulerConfig(env: Record<string, string | undefined> = {}): SamSchedulerConfig {
   return {
     minIntervalMs: positiveInt(env.NEXT_PUBLIC_SAM_MIN_INTERVAL_MS, DEFAULT_SAM_MIN_INTERVAL_MS),

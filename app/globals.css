@@ -632,6 +632,7 @@ p { margin: 0; color: var(--ink-2); }
   box-shadow: var(--shadow-float);
 }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.chip-row.is-start { justify-content: flex-start; }
 .licence-set { border: 0; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .licence-set legend { width: 100%; padding: 0; margin-bottom: 6px; font-size: 13px; color: var(--ink-2); }
 .ring strong { font-size: 22px; color: var(--ink); }
@@ -1029,6 +1030,52 @@ p { margin: 0; color: var(--ink-2); }
 }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes sheen { to { background-position: -200% 0; } }
+
+.instruct-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px;
+}
+.instruct-banner p { max-width: 40rem; margin-top: 8px; }
+.instruct-screen { display: grid; gap: 12px; padding-bottom: 48px; }
+.instruct-screen h1 { font-size: clamp(36px, 6vw, 64px); }
+.instruct-layout { display: grid; gap: 16px; align-items: start; }
+.instruct-form { display: grid; gap: 12px; align-content: start; }
+.instruct-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.instruct-actions .btn { flex: 1 1 160px; }
+.instruct-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  padding: 16px;
+  overflow: hidden;
+  background: #101218;
+  text-align: center;
+}
+.instruct-stage p { max-width: 28rem; }
+.instruct-stage img,
+.instruct-video {
+  width: 100%;
+  height: 100%;
+  max-height: 520px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.instruct-video { background: #000; }
+.instruct-block { display: grid; gap: 8px; }
+.instruct-block h2 { font-size: 22px; }
+.mask.is-box { border-radius: 16px; }
+@media (min-width: 900px) {
+  .instruct-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
+  .instruct-stage { min-height: 420px; }
+}
+@media (max-width: 390px) {
+  .instruct-actions .btn { flex-basis: 100%; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

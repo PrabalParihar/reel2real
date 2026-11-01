@@ -1,0 +1,425 @@
+import { SPARK_MODEL_ID } from "@/src/models";
+import { tutorialFromSparkPayload } from "@/src/schema/attribution";
+import type { ToolCall, TutorialSteps } from "@/src/schema/types";
+import { validateTutorialSteps } from "@/src/schema/validate";
+import { INSTRUCT_STILL_WIDTH } from "@/src/coach/keyframe";
+import { consumeMetaCalls, DailyCapError } from "./daily-cap";
+import { readModelApiKey } from "./env";
+import { guardMetaRoute, dailyCapResponse } from "./meta-guard";
+import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
+import { redactSecrets } from "./redact";
+import { responsesUrl } from "./sam-request";
+import { buildSparkResponsesBody, goalInstruction } from "./spark-request";
+import type { SparkResult } from "./types";
+
+export const INSTRUCT_STILL_MAX_BYTES = 2 * 1024 * 1024;
+export const INSTRUCT_GOAL_MAX = 240;
+export const INSTRUCT_CREDIT = "You · instruction mode";
+
+const UNSAFE_GOAL = [
+  /\bbombs?\b/i,
+  /\bexplosives?\b/i,
+  /\bgrenades?\b/i,
+  /\b(gun|guns|pistol|rifle|firearm|ammunition)\b/i,
+  /\bpoison(ing|ed|ous)?\b/i,
+  /\b(ricin|anthrax|fentanyl|heroin|cocaine|meth)\b/i,
+  /\b(suicide|self-harm)\b/i,
+  /\b(murder|kill someone)\b/i,
+  /\b(napalm|molotov)\b/i,
+  /\bweapons?\b/i,
+];
+
+const NOT_VISUAL_GOAL = [
+  /\b(essay|novel|homework|calculus|algebra)\b/i,
+  /\b(hack|phishing|malware|password)\b/i,
+  /\b(crypto|bitcoin|stock market|invest|day trade)\b/i,
+  /\bwrite (an? )?(code|program|app|website|email|paper)\b/i,
+  /\b(summarize|translate) (this|the|an?) (article|pdf|document|book)\b/i,
+];
+
+export const REFUSAL_UNSAFE = "This goal is not a safe household task the camera can check.";
+export const REFUSAL_NOT_VISUAL = "This goal is not something a camera can check step by step.";
+
+export interface InstructInput {
+  goal: string;
+  imageDataUrl: string;
+  mimeType: string;
+}
+
+export interface InstructModelReply {
+  status: number;
+  payload: unknown;
+}
+
+export type InstructAsk = (body: ReturnType<typeof buildSparkResponsesBody>) => Promise<InstructModelReply>;
+
+export interface InstructDeps {
+  env?: Record<string, string | undefined>;
+  fetchImpl?: typeof fetch;
+  ask?: InstructAsk;
+}
+
+type InputResult =
+  | { ok: true; value: InstructInput }
+  | { ok: false; status: number; code: string; message: string };
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+export function cleanRefusalReason(reason: unknown, fallback = REFUSAL_UNSAFE): string {
+  if (typeof reason !== "string") return fallback;
+  const text = reason.replace(/[—–]/g, "-").replace(/\s+/g, " ").trim();
+  if (!text || text.length > 240) return fallback;
+  if (/[<>]|https?:/i.test(text)) return fallback;
+  return text;
+}
+
+export function screenGoal(goal: string): { reason: string } | null {
+  const text = goal.trim();
+  if (UNSAFE_GOAL.some((pattern) => pattern.test(text))) return { reason: REFUSAL_UNSAFE };
+  if (NOT_VISUAL_GOAL.some((pattern) => pattern.test(text))) return { reason: REFUSAL_NOT_VISUAL };
+  return null;
+}
+
+function decodedBytes(base64: string): number {
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
+
+export function validateInstructInput(raw: unknown): InputResult {
+  const record = asRecord(raw);
+  if (!record) return { ok: false, status: 400, code: "invalid", message: "Enter a goal and a still." };
+  const goal = typeof record.goal === "string" ? record.goal.trim() : "";
+  const imageDataUrl = typeof record.imageDataUrl === "string" ? record.imageDataUrl.trim() : "";
+  const mimeType = typeof record.mimeType === "string" ? record.mimeType.trim().toLowerCase() : "";
+  if (!goal) return { ok: false, status: 400, code: "empty_goal", message: "Enter a goal." };
+  if (goal.length > INSTRUCT_GOAL_MAX) {
+    return { ok: false, status: 400, code: "goal_too_long", message: "Keep the goal under 240 characters." };
+  }
+  if (mimeType !== "image/jpeg") return { ok: false, status: 400, code: "bad_type", message: "The still must be a JPEG." };
+  const prefix = "data:image/jpeg;base64,";
+  if (!imageDataUrl.startsWith(prefix)) {
+    return { ok: false, status: 400, code: "bad_type", message: "The still must be a JPEG data URL." };
+  }
+  const base64 = imageDataUrl.slice(prefix.length);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64) || base64.length < 16) {
+    return { ok: false, status: 400, code: "bad_type", message: "The still must be a JPEG data URL." };
+  }
+  if (decodedBytes(base64) > INSTRUCT_STILL_MAX_BYTES) {
+    return { ok: false, status: 413, code: "too_large", message: "The still is too large. Move closer or try again." };
+  }
+  return { ok: true, value: { goal, imageDataUrl, mimeType } };
+}
+
+function outputText(payload: unknown): string {
+  const record = asRecord(payload);
+  if (!record) return "";
+  if (typeof record.output_text === "string") return record.output_text;
+  const chunks: string[] = [];
+  const output = Array.isArray(record.output) ? record.output : [];
+  for (const item of output) {
+    const content = asRecord(item)?.content;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      const text = asRecord(part)?.text;
+      if (typeof text === "string") chunks.push(text);
+    }
+  }
+  return chunks.join("\n");
+}
+
+function jsonFromText(text: string): unknown {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end < start) throw new Error("Spark response did not contain JSON");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+export function readModelPayload(body: unknown): unknown {
+  let parsed = body;
+  if (typeof body === "string") {
+    try {
+      parsed = JSON.parse(body) as unknown;
+    } catch {
+      return jsonFromText(body);
+    }
+  }
+  const text = outputText(parsed);
+  if (!text.trim()) return parsed;
+  return jsonFromText(text);
+}
+
+function readRefusal(payload: unknown): string | null {
+  const record = asRecord(payload);
+  if (!record || record.refused !== true) return null;
+  return cleanRefusalReason(record.reason);
+}
+
+function clampPlan(tutorial: TutorialSteps, goal: string): { ok: true; value: TutorialSteps } | { ok: false; message: string } {
+  const steps = tutorial.steps.slice(0, 4);
+  if (steps.length < 2) return { ok: false, message: "The plan needs 2 to 4 steps." };
+  for (const step of steps) {
+    if (step.objects.length < 2) return { ok: false, message: "Each step needs 2 to 4 visually checkable objects." };
+    step.objects = step.objects.slice(0, 4);
+  }
+  steps.forEach((step, index) => {
+    step.index = index;
+  });
+  tutorial.steps = steps;
+  tutorial.sampleLabel = false;
+  tutorial.title = goal.trim().slice(0, 80) || "Instruction mode";
+  tutorial.attribution = {
+    creatorName: "You",
+    creditLine: INSTRUCT_CREDIT,
+    licence: "self_filmed_sample",
+  };
+  tutorial.runtimeHints = {
+    preferredLiveMode: "keyframe_still",
+    maxObjectsPerStep: 4,
+  };
+  for (const step of tutorial.steps) {
+    step.credit = { creditLine: INSTRUCT_CREDIT, creatorName: "You", sampleLabel: false };
+  }
+  const validated = validateTutorialSteps(tutorial);
+  if (!validated.ok) return { ok: false, message: validated.errors[0]?.message || "The steps JSON did not validate." };
+  return { ok: true, value: validated.value };
+}
+
+export function normalizeInstructPayload(
+  payload: unknown,
+  goal: string,
+  mode: "live" | "mock",
+  latencyMs = 0,
+): SparkResult {
+  const refusal = readRefusal(payload);
+  if (refusal) {
+    return {
+      mode,
+      modelId: SPARK_MODEL_ID,
+      latencyMs,
+      schemaValid: false,
+      parseOk: true,
+      errors: [],
+      tutorial: null,
+      toolCalls: [],
+      inputKind: "instruct",
+      refused: true,
+      refusalReason: refusal,
+    };
+  }
+  const toolCalls: ToolCall[] = [
+    {
+      tool: "muse_spark",
+      modelId: SPARK_MODEL_ID,
+      purpose: mode === "mock" ? "mock_instruction_no_live_call" : "goal_still_to_steps_json",
+      inputKind: "image",
+      latencyMs,
+    },
+  ];
+  const normalized = tutorialFromSparkPayload(payload, {
+    creatorName: "You",
+    licence: "self_filmed",
+  }, {
+    title: goal.slice(0, 80),
+    domain: "other",
+    filename: "workspace-still.jpg",
+    durationSec: 24,
+    mode: "muse_spark_live",
+  });
+  if (!normalized.ok) {
+    return {
+      mode,
+      modelId: SPARK_MODEL_ID,
+      latencyMs,
+      schemaValid: false,
+      parseOk: true,
+      errors: normalized.errors.map((error) => error.message),
+      tutorial: null,
+      toolCalls,
+      inputKind: "instruct",
+    };
+  }
+  normalized.value.generation.toolCalls = toolCalls;
+  normalized.value.generation.modelId = SPARK_MODEL_ID;
+  const clamped = clampPlan(normalized.value, goal);
+  if (!clamped.ok) {
+    return {
+      mode,
+      modelId: SPARK_MODEL_ID,
+      latencyMs,
+      schemaValid: false,
+      parseOk: true,
+      errors: [clamped.message],
+      tutorial: null,
+      toolCalls,
+      inputKind: "instruct",
+    };
+  }
+  clamped.value.generation.toolCalls = toolCalls;
+  return {
+    mode,
+    modelId: SPARK_MODEL_ID,
+    latencyMs,
+    schemaValid: true,
+    parseOk: true,
+    errors: [],
+    tutorial: clamped.value,
+    toolCalls,
+    inputKind: "instruct",
+  };
+}
+
+function cannedPayload(goal: string) {
+  const title = goal.trim().slice(0, 80);
+  return {
+    title,
+    steps: [
+      {
+        instructionText: "Set the cup and spoon fully in frame.",
+        objects: [
+          { noun: "cup", samPrompt: "cup" },
+          { noun: "spoon", samPrompt: "spoon" },
+        ],
+      },
+      {
+        instructionText: "Bring the bowl and cloth into the workspace.",
+        objects: [
+          { noun: "bowl", samPrompt: "bowl" },
+          { noun: "cloth", samPrompt: "cloth" },
+        ],
+      },
+      {
+        instructionText: "Leave the cup and bowl fully visible.",
+        objects: [
+          { noun: "cup", samPrompt: "cup" },
+          { noun: "bowl", samPrompt: "bowl" },
+        ],
+      },
+    ],
+  };
+}
+
+export async function askInstructModel(
+  body: ReturnType<typeof buildSparkResponsesBody>,
+  env: Record<string, string | undefined>,
+  fetchImpl: typeof fetch,
+): Promise<InstructModelReply> {
+  const key = readModelApiKey(env);
+  if (!key) return { status: 200, payload: cannedPayload("Instruction mode") };
+  const reserved = consumeMetaCalls(1);
+  if (!reserved.ok) throw new DailyCapError(reserved.message);
+  const url = responsesUrl(env);
+  const started = performance.now();
+  const response = await fetchImpl(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  const ids = readUpstreamHeaders(response.headers);
+  const latencyMs = Math.round(performance.now() - started);
+  const safe = redactSecrets(text, [key]);
+  if (response.status < 200 || response.status >= 300) {
+    console.error(sparkFailureLog({
+      status: response.status,
+      url,
+      body: safe,
+      requestId: ids.requestId,
+      route: ids.route,
+      latencyMs,
+      model: SPARK_MODEL_ID,
+      secrets: [key],
+    }));
+    return { status: response.status, payload: null };
+  }
+  console.error(metaUpstreamLog({
+    path: pathnameOf(url),
+    model: SPARK_MODEL_ID,
+    status: response.status,
+    requestId: ids.requestId,
+    route: ids.route,
+    latencyMs,
+  }));
+  try {
+    return { status: response.status, payload: readModelPayload(safe) };
+  } catch {
+    return { status: 502, payload: null };
+  }
+}
+
+function jsonError(status: number, code: string, message: string): Response {
+  return Response.json({ error: code, message }, { status });
+}
+
+export function instructSparkBody(goal: string, imageDataUrl: string) {
+  return buildSparkResponsesBody({
+    instruction: goalInstruction(goal),
+    imageDataUrl,
+  });
+}
+
+export async function handleInstructRequest(request: Request, deps: InstructDeps = {}): Promise<Response> {
+  const blocked = guardMetaRoute(request);
+  if (blocked) return blocked;
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return jsonError(400, "invalid_json", "The request was not JSON.");
+  }
+  const parsed = validateInstructInput(raw);
+  if (!parsed.ok) return jsonError(parsed.status, parsed.code, parsed.message);
+  const screened = screenGoal(parsed.value.goal);
+  if (screened) {
+    return Response.json({
+      refused: true,
+      reason: screened.reason,
+      tutorial: null,
+      schemaValid: false,
+      parseOk: true,
+      errors: [],
+      mode: readModelApiKey(deps.env ?? process.env) ? "live" : "mock",
+      modelId: SPARK_MODEL_ID,
+      inputKind: "instruct",
+      toolCalls: [],
+      latencyMs: 0,
+    });
+  }
+  const sparkBody = instructSparkBody(parsed.value.goal, parsed.value.imageDataUrl);
+  const env = deps.env ?? process.env;
+  const fetchImpl = deps.fetchImpl ?? fetch;
+  const ask = deps.ask ?? ((body) => askInstructModel(body, env, fetchImpl));
+  try {
+    const reply = await ask(sparkBody);
+    if (reply.status < 200 || reply.status >= 300 || reply.payload == null) {
+      return jsonError(502, "spark_failed", "Spark did not return a plan.");
+    }
+    const mode = readModelApiKey(env) ? "live" : "mock";
+    const result = normalizeInstructPayload(reply.payload, parsed.value.goal, mode);
+    if (result.refused) {
+      return Response.json({
+        refused: true,
+        reason: result.refusalReason,
+        tutorial: null,
+        schemaValid: false,
+        parseOk: true,
+        errors: [],
+        mode: result.mode,
+        modelId: result.modelId,
+        inputKind: "instruct",
+        toolCalls: [],
+        latencyMs: result.latencyMs,
+      });
+    }
+    return Response.json(result, { status: result.schemaValid ? 200 : 422 });
+  } catch (error) {
+    const capped = dailyCapResponse(error);
+    if (capped) return capped;
+    const message = error instanceof Error ? error.message : "Spark did not return a plan.";
+    return jsonError(502, "spark_failed", redactSecrets(message, [readModelApiKey(env)]) || "Spark did not return a plan.");
+  }
+}
+
+export const instructStillWidth = INSTRUCT_STILL_WIDTH;

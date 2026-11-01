@@ -4,8 +4,11 @@ import {
   initialSamSchedulerState,
   markSamSettled,
   readSamSchedulerConfig,
+  SESSION_BUDGET_STOP_LABEL,
+  sessionBudgetHardStop,
   type SamSchedulerState,
 } from "./sam-scheduler";
+import { highlightsChip } from "@/src/fsm/ui";
 
 const config = { minIntervalMs: 2000, sessionCap: 60 };
 
@@ -64,6 +67,10 @@ describe("SAM poll scheduler", () => {
     }
     expect(state.calls).toBe(60);
     expect(poll(state, 60 * config.minIntervalMs)).toEqual({ action: "pause", reason: "session_cap" });
+    expect(sessionBudgetHardStop(state.calls, config.sessionCap)).toBe(true);
+    expect(sessionBudgetHardStop(state.calls - 1, config.sessionCap)).toBe(false);
+    expect(SESSION_BUDGET_STOP_LABEL).toBe("Highlights unavailable");
+    expect(highlightsChip("upstream")).toBe(SESSION_BUDGET_STOP_LABEL);
   });
 
   it("reads the public interval and cap", () => {

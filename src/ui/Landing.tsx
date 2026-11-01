@@ -29,6 +29,7 @@ export function Landing() {
           <div className="nav-links">
             <a href="#how">How it works</a>
             <a href="#demos">Demos</a>
+            <Link href="/instruct">Instruction mode</Link>
             <a href="#meta">Built with Meta</a>
           </div>
           <div className="nav-actions">
@@ -45,11 +46,24 @@ export function Landing() {
           <p className="lead">Put the phone on a stand. The objects in each step light up as you match the lesson.</p>
           <div className="cta-row">
             <Link className="btn btn-primary" href="/upload">Try the coach <ArrowRight size={18} strokeWidth={1.5} /></Link>
+            <Link className="btn btn-ghost" href="/instruct">Instruction mode</Link>
             <a className="btn btn-ghost" href="#demos">Watch the demos</a>
           </div>
+          <p className="quiet honesty">No tutorial. Phone or laptop camera only.</p>
         </div>
             <HeroStage scene={chai} />
       </header>
+
+      <section className="section wrap" id="instruct">
+        <article className="panel instruct-banner">
+          <div>
+            <p className="kicker">No tutorial</p>
+            <h2>Instruction mode</h2>
+            <p>Type a goal, like making chai. Your phone or laptop camera takes one still, then the coach checks the workspace.</p>
+          </div>
+          <Link className="btn btn-primary" href="/instruct">Instruction mode</Link>
+        </article>
+      </section>
 
       <section className="section wrap" id="how">
         <p className="kicker">How it works</p>
@@ -203,6 +217,7 @@ export function Landing() {
         <p className="footer-links">
           <a href="#how">How it works</a>
           <a href="#demos">Demos</a>
+          <Link href="/instruct">Instruction mode</Link>
           <Link href="/upload">App</Link>
         </p>
       </footer>
