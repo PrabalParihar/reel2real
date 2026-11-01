@@ -1,27 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IG_BAD_URL, IG_FAIL, IG_FIELD_LABEL, IG_SAVE_HINT, IG_SECTION_TITLE, IG_SHOW } from "@/src/instagram/copy";
+import { IG_BAD_URL, IG_FAIL, IG_FIELD_LABEL, IG_SAVE_HINT, IG_SECTION_TITLE, IG_SHOW, IG_VIEW, instagramCredit } from "@/src/instagram/copy";
 import { parsePublicInstagramUrl } from "@/src/instagram/url";
 
 interface ShowResult {
   ok?: boolean;
   html?: string;
   authorName?: string;
-  providerName?: string;
+  permalink?: string;
   message?: string;
-}
-
-function creditLine(authorName?: string, providerName?: string): string {
-  const author = authorName?.trim();
-  const provider = providerName?.trim() || "Instagram";
-  return author ? `Credit · ${author} · ${provider}` : `Credit · ${provider}`;
 }
 
 export function InstagramShow() {
   const [value, setValue] = useState("");
   const [html, setHtml] = useState<string | null>(null);
   const [credit, setCredit] = useState<string | null>(null);
+  const [permalink, setPermalink] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -51,6 +46,7 @@ export function InstagramShow() {
     if (!permalink) {
       setHtml(null);
       setCredit(null);
+      setPermalink(null);
       setNote(IG_BAD_URL);
       return;
     }
@@ -66,14 +62,17 @@ export function InstagramShow() {
       if (!response.ok || !data.ok || !data.html) {
         setHtml(null);
         setCredit(null);
+        setPermalink(null);
         setNote(data.message || IG_FAIL);
         return;
       }
       setHtml(data.html);
-      setCredit(creditLine(data.authorName, data.providerName));
+      setPermalink(data.permalink || permalink);
+      setCredit(instagramCredit(data.authorName).credit);
     } catch {
       setHtml(null);
       setCredit(null);
+      setPermalink(null);
       setNote(IG_FAIL);
     } finally {
       setBusy(false);
@@ -103,8 +102,9 @@ export function InstagramShow() {
         {busy ? "Showing" : IG_SHOW}
       </button>
       {note ? <p className="form-note" role="status">{note}</p> : null}
-      {credit ? <p className="credit">{credit}</p> : null}
       <div className="ig-embed" ref={hostRef} />
+      {credit ? <p className="quiet ig-credit">{credit}</p> : null}
+      {permalink ? <a className="ig-permalink" href={permalink} target="_blank" rel="noreferrer">{IG_VIEW}</a> : null}
     </section>
   );
 }

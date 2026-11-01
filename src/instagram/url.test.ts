@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { IG_SAVE_HINT, IG_USER_COPY } from "./copy";
+import { IG_CREDIT_IN_POST, IG_SAVE_HINT, IG_USER_COPY, IG_VIEW, instagramCredit } from "./copy";
 import { parsePublicInstagramUrl } from "./url";
 
 describe("public Instagram URL", () => {
@@ -41,5 +41,26 @@ describe("public Instagram URL", () => {
       expect(line).not.toContain("\u2014");
       expect(line).not.toContain("\u2013");
     }
+  });
+
+  it("credits a named author and does not invent one when oEmbed omits the name", () => {
+    expect(instagramCredit("diegoquinteiro")).toEqual({
+      credit: "Credit: diegoquinteiro on Instagram",
+      authorKnown: true,
+    });
+    expect(instagramCredit("Ada Cook").credit).toBe("Credit: Ada Cook on Instagram");
+    for (const missing of [undefined, "", "   "]) {
+      const result = instagramCredit(missing);
+      expect(result.authorKnown).toBe(false);
+      expect(result.credit).toBe(IG_CREDIT_IN_POST);
+      expect(result.credit).not.toMatch(/Credit: Instagram/);
+      expect(result.credit).not.toContain("\u2014");
+      expect(result.credit).not.toContain("\u2013");
+    }
+    expect(IG_VIEW).toBe("View on Instagram");
+    const ui = readFileSync("src/ui/InstagramShow.tsx", "utf8");
+    expect(ui).toContain("instagramCredit");
+    expect(ui).toContain("IG_VIEW");
+    expect(ui).not.toContain("Credit ·");
   });
 });

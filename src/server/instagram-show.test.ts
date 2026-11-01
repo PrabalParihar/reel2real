@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { IG_BAD_URL, IG_FAIL } from "@/src/instagram/copy";
+import { IG_BAD_URL, IG_CREDIT_IN_POST, IG_FAIL, instagramCredit } from "@/src/instagram/copy";
 import { POST } from "../../app/api/instagram-show/route";
 import { instagramOembedRequestUrl, sanitizeOembedHtml } from "./instagram-show";
 
@@ -57,6 +57,22 @@ describe("Instagram show", () => {
     const built = new URL(instagramOembedRequestUrl(PERMALINK));
     expect(built.hostname).toBe("graph.facebook.com");
     expect(built.hostname).not.toBe("instagram.com");
+  });
+
+  it("keeps an empty author when tokenless oEmbed omits author_name", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      html: HTML,
+      provider_name: "Instagram",
+    }), { status: 200, headers: { "content-type": "application/json" } }));
+    const { handleInstagramShow } = await import("./instagram-show");
+    const response = await handleInstagramShow(request({ url: PERMALINK }, "198.51.100.43"), { fetchImpl });
+    const body = await response.json() as { ok?: boolean; authorName?: string; permalink?: string; providerName?: string };
+    expect(body.ok).toBe(true);
+    expect(body.authorName).toBe("");
+    expect(body.permalink).toBe(PERMALINK);
+    expect(instagramCredit(body.authorName).credit).toBe(IG_CREDIT_IN_POST);
+    expect(instagramCredit("diegoquinteiro").credit).toBe("Credit: diegoquinteiro on Instagram");
+    expect(JSON.stringify(body)).not.toContain("Credit · Instagram");
   });
 
   it("does not fetch when the link is not a public post", async () => {
