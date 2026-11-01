@@ -7,6 +7,7 @@ import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import type { LicenceChoice } from "@/src/schema/attribution";
 import { applyUserAttribution } from "@/src/schema/attribution";
 import { AppShell } from "./chrome";
+import { InstagramShow } from "./InstagramShow";
 import { sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
 import { useSession } from "./session";
@@ -108,6 +109,7 @@ export function UploadScreen() {
         <p className="lead">A clip you filmed, or one you have permission to use.</p>
         <div className="upload-grid">
           <section>
+            <InstagramShow />
             <label
               className={`drop${over ? " is-over" : ""}`}
               onDragOver={(event) => { event.preventDefault(); setOver(true); }}
