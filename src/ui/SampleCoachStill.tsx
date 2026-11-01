@@ -7,6 +7,8 @@ import { PhotoFrame } from "./PhotoFrame";
 
 const CHAI = PUBLISHED_SAMPLES.find((sample) => sample.id === "masala-chai") ?? PUBLISHED_SAMPLES[0];
 
+export const SAMPLE_OUTLINE_CAPTION = "Sample: recorded outlines. Live coach draws a box.";
+
 /** Recorded chai step 1 still, with the existing SAM overlay. Nothing is redrawn. */
 export function SampleCoachStill() {
   const scene = CHAI.scene;
@@ -27,7 +29,10 @@ export function SampleCoachStill() {
           overlay={nouns.length ? { samUrl: sceneAsset(scene, step.samFile), nouns } : null}
         />
       </div>
-      <figcaption>{step.instruction}</figcaption>
+      <figcaption>
+        <p className="quiet">{SAMPLE_OUTLINE_CAPTION}</p>
+        <p className="sample-step">{step.instruction}</p>
+      </figcaption>
     </figure>
   );
 }

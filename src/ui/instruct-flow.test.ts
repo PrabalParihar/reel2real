@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { SAMPLE_OUTLINE_CAPTION } from "./SampleCoachStill";
 import { INSTRUCT_GOALS, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
 
 function uiFiles(dir: string): string[] {
@@ -41,6 +42,24 @@ describe("instruction flow", () => {
     expect(planStepsEnabled(filled, false)).toBe(false);
     expect(instructProgress(filled, false).map((step) => step.state)).toEqual(["done", "current", "wait"]);
     expect(instructProgress("", false).map((step) => step.id)).toEqual(["Goal", "Still", "Coach"]);
+  });
+
+  it("captions the sample still and keeps the hero under the sticky header", () => {
+    expect(SAMPLE_OUTLINE_CAPTION).toBe("Sample: recorded outlines. Live coach draws a box.");
+    expect(SAMPLE_OUTLINE_CAPTION).not.toMatch(/[—–]/);
+    const still = readFileSync("src/ui/SampleCoachStill.tsx", "utf8");
+    expect(still).toContain("SAMPLE_OUTLINE_CAPTION");
+    expect(still).toContain('className="quiet"');
+    expect(readFileSync("src/ui/InstructScreen.tsx", "utf8")).toContain("SampleCoachStill");
+    expect(readFileSync("src/ui/Landing.tsx", "utf8")).toContain("SampleCoachStill");
+    const css = readFileSync("app/globals.css", "utf8");
+    const nav = css.match(/\.nav-wrap\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(nav).toMatch(/position:\s*sticky/);
+    expect(nav).toMatch(/z-index:\s*40/);
+    expect(nav).toMatch(/background:\s*var\(--bg\)/);
+    const below = css.match(/\.landing > :not\(\.nav-wrap\)\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(below).toMatch(/z-index:\s*0/);
+    expect(below).toMatch(/isolation:\s*isolate/);
   });
 
   it("has no Gate 0 string in UI copy", () => {

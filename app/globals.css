@@ -129,7 +129,20 @@ p { margin: 0; color: var(--ink-2); }
 .spark-mark { width: 16px; height: 16px; fill: var(--saffron); }
 .wordmark { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.03em; text-decoration: none; color: var(--ink); }
 
-.nav-wrap { position: sticky; top: 0; z-index: 30; display: flex; justify-content: center; padding: 14px 12px 0; }
+.nav-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding: 14px 12px 0;
+  background: var(--bg);
+}
+.landing > :not(.nav-wrap) {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
 #how, #demos, #meta, #instruct { scroll-margin-top: 84px; }
 .nav {
   display: flex;
@@ -1047,7 +1060,9 @@ p { margin: 0; color: var(--ink-2); }
 }
 .instruct-home-copy p { font-size: 16px; }
 .sample-coach { margin: 0; width: 100%; min-width: 0; }
-.sample-coach figcaption { margin-top: 12px; font-size: 15px; color: var(--ink); }
+.sample-coach figcaption { margin: 0; }
+.sample-coach .quiet { margin: 12px 0 0; }
+.sample-coach .sample-step { margin: 6px 0 0; font-size: 15px; color: var(--ink); }
 .instruct-screen { display: grid; gap: 12px; padding-bottom: 48px; }
 .instruct-screen h1 { font-size: clamp(36px, 6vw, 64px); }
 .instruct-progress {
