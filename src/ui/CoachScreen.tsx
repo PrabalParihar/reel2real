@@ -7,7 +7,7 @@ import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
 import { formatCredit } from "@/src/schema/attribution";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { presentNouns, recordedFrameFile, recordedSampleStatus, RECORDED_SAM_LABEL, sceneAsset, unverifiedStep, unverifiedStepHint, usesRecordedSam } from "@/src/samples/scene";
+import { presentNouns, recordedFrameFile, recordedSampleStatus, RECORDED_SAM_LABEL, sampleFrameNote, sceneAsset, unverifiedStep, unverifiedStepHint, usesRecordedSam } from "@/src/samples/scene";
 import type { PreferredLiveMode } from "@/src/schema/types";
 import type { MockScenario } from "@/src/server/types";
 import { AppShell, Chip } from "./chrome";
@@ -139,10 +139,10 @@ function CoachBody() {
     stillPlaceholder: tutorial.sourceClip.stillPlaceholder,
   });
   const recordedStatus = recordedSampleStatus(recordedRun && showRecorded, noVerifiedMask);
-  const coachStatus = recordedRun && showRecorded
-    ? recordedStatus
-    : noVerifiedMask
-      ? null
+  const coachStatus = noVerifiedMask
+    ? sampleFrameNote(true)
+    : recordedRun && showRecorded
+      ? recordedStatus
       : coach.highlightsPaused
         ? SESSION_BUDGET_STOP_LABEL
         : highlights
