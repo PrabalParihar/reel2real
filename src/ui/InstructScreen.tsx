@@ -173,7 +173,7 @@ export function InstructScreen() {
   return (
     <AppShell backHref="/">
       <main className={`screen instruct-screen${coachingOff ? " is-off" : ""}`}>
-        {coachingOff ? <LiveCoachingOff /> : null}
+        {coachingOff ? <LiveCoachingOff goal={goal} onEdit={() => setCoachingOff(false)} /> : null}
         {coachingOff ? null : <>
         <p className="kicker">No tutorial</p>
         <h1>Instruction mode</h1>

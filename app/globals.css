@@ -1057,22 +1057,71 @@ p { margin: 0; color: var(--ink-2); }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes sheen { to { background-position: -200% 0; } }
 
+.screen.is-off {
+  width: min(560px, calc(100% - 32px));
+  min-height: calc(100dvh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  padding-bottom: 16px;
+}
 .live-off {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
   margin: 0;
   padding: 20px 16px;
   align-content: start;
 }
-.live-off h1 { font-size: clamp(28px, 4vw, 40px); margin: 0; }
+.screen.is-off h1 {
+  font-size: clamp(28px, 2.5vw, 40px);
+  line-height: 1.15;
+  margin: 0;
+}
 .live-off p { margin: 0; font-size: 16px; }
-.live-off .btn { justify-self: start; min-height: 44px; }
+.live-off-goal { color: var(--ink); }
+.live-off .btn { justify-self: start; min-height: 40px; }
+.live-off-samples {
+  display: flex;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 0 0 4px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.live-off-samples li { flex: 0 0 148px; scroll-snap-align: start; }
+.live-off-samples a {
+  display: grid;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+.live-off-samples img {
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #000;
+}
+.live-off-sample-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--saffron);
+}
+.live-off-sample-title { font-size: 14px; color: var(--ink); }
 .instruct-screen.is-off,
-.extract.is-off { padding-top: 12px; }
+.extract.is-off { padding-top: 8px; }
 @media (max-width: 390px) {
-  .live-off { padding: 12px; }
-  .live-off h1 { font-size: 26px; }
-  .live-off .btn { width: 100%; }
+  .live-off { padding: 12px; gap: 6px; }
+  .screen.is-off h1 { font-size: 28px; }
+  .live-off p { font-size: 15px; }
+  .live-off-samples img { height: 72px; }
+  .live-off-samples li { flex-basis: 132px; }
 }
 
 .instruct-home {

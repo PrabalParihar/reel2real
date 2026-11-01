@@ -5,7 +5,9 @@ import {
   LIVE_COACHING_OFF_BODY,
   LIVE_COACHING_OFF_TITLE,
   SAMPLES_HREF,
+  goalEcho,
   isLiveCoachingOff,
+  liveOffSampleCards,
 } from "./LiveCoachingOff";
 import { musePublicDegrade } from "@/src/server/muse-forward";
 import { samForwardDegrade } from "@/src/server/sam-forward";
@@ -28,8 +30,33 @@ describe("public degrade", () => {
     expect(isLiveCoachingOff(musePublicDegrade("transcript"))).toBe(true);
     expect(isLiveCoachingOff({ mode: "degraded", refused: true })).toBe(false);
     expect(LIVE_COACHING_OFF_TITLE).toBe("Live coaching is off right now.");
-    expect(LIVE_COACHING_OFF_BODY).toBe("Try a Sample.");
+    expect(LIVE_COACHING_OFF_BODY).toBe("Recorded Samples still show every step.");
     expect(SAMPLES_HREF).toBe("/#demos");
+    expect(goalEcho("Make a chai spice mix")).toBe("Your goal: Make a chai spice mix");
+    expect(goalEcho("  brew   <b>tea</b>  ")).toBe("Your goal: brew btea/b");
+    expect(goalEcho("x".repeat(90)).startsWith("Your goal: ")).toBe(true);
+    expect(goalEcho("x".repeat(90)).endsWith("...")).toBe(true);
+    expect(goalEcho("x".repeat(90)).length).toBeLessThan(90);
+    const samples = liveOffSampleCards();
+    expect(samples.length).toBeGreaterThanOrEqual(2);
+    expect(samples.length).toBeLessThanOrEqual(3);
+    expect(samples.map((sample) => sample.id)).toEqual(["masala-chai", "latte-art", "origami"]);
+    expect(samples.some((sample) => sample.id.includes("flask"))).toBe(false);
+    expect(samples.map((sample) => sample.href)).toEqual([
+      "/extracting?demo=masala-chai",
+      "/extracting?demo=latte-art",
+      "/extracting?demo=origami",
+    ]);
+    expect(samples.map((sample) => sample.image)).toEqual([
+      "/samples/masala-chai/hero.jpg",
+      "/samples/latte-art/hero.jpg",
+      "/samples/origami/hero.jpg",
+    ]);
+    expect(readFileSync("src/ui/InstructScreen.tsx", "utf8")).toContain("goal={goal}");
+    expect(readFileSync("src/ui/InstructScreen.tsx", "utf8")).toContain("value={goal}");
+    expect(readFileSync("src/ui/InstructScreen.tsx", "utf8")).toContain("setCoachingOff(false)");
+    expect(readFileSync("src/ui/LiveCoachingOff.tsx", "utf8")).toContain("Edit goal");
+    expect(readFileSync("src/ui/ExtractingScreen.tsx", "utf8")).toContain('backHref="/upload"');
     const instruct = readFileSync("src/ui/InstructScreen.tsx", "utf8");
     const extracting = readFileSync("src/ui/ExtractingScreen.tsx", "utf8");
     expect(instruct).toContain("LiveCoachingOff");

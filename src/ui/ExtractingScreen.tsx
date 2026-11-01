@@ -145,7 +145,7 @@ export function ExtractingScreen() {
     return (
       <AppShell backHref="/upload">
         <main className="screen extract is-off">
-          <LiveCoachingOff />
+          <LiveCoachingOff goal={session.prepare?.transcript?.trim() || undefined} backHref="/upload" />
         </main>
       </AppShell>
     );
