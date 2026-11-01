@@ -105,7 +105,8 @@ describe("recorded mask alignment", () => {
     expect(frame).toContain("scaleFrameBox");
     expect(frame).toContain("SAMPLE_STILL");
     expect(coach).toContain("unverifiedStepHint");
-    expect(coach).toContain("noVerifiedMask\n    ? null");
+    expect(coach).toContain("recordedSampleStatus(recordedRun && showRecorded, noVerifiedMask)");
+    expect(coach).toContain(": noVerifiedMask\n      ? null");
     expect(coach).toContain("sampleChip={!noVerifiedMask}");
     for (const demo of DEMOS) {
       demo.scene.steps.forEach((step, index) => {

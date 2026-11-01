@@ -28,7 +28,7 @@ function secureCameraAvailable(): boolean {
 export function useCoach(
   tutorial: TutorialSteps,
   videoRef: React.RefObject<HTMLVideoElement | null>,
-  options: { mock?: boolean } = {},
+  options: { mock?: boolean; recordedSample?: boolean } = {},
 ) {
   const [machine, setMachine] = useState<MachineState>(() => transition(createCoach(tutorial), { type: "START_COACH" }, tutorial).machine);
   const [masks, setMasks] = useState<MaskHit[]>([]);
@@ -71,6 +71,12 @@ export function useCoach(
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
+    if (options.recordedSample) {
+      dispatch({ type: "CAMERA_GRANTED" });
+      return () => {
+        cancelled = true;
+      };
+    }
     if (debug) {
       setCameraPhase("mock");
       dispatch({ type: "CAMERA_GRANTED" });
@@ -110,7 +116,7 @@ export function useCoach(
       cancelled = true;
       stop();
     };
-  }, [dispatch, videoRef]);
+  }, [dispatch, options.recordedSample, videoRef]);
 
   useEffect(() => {
     if (machine.state !== "step_ready") return;
@@ -141,7 +147,7 @@ export function useCoach(
     const config = configRef.current;
 
     const attempt = () => {
-      if (cancelled) return;
+      if (cancelled || options.recordedSample) return;
       if (sessionBudgetHardStop(schedulerRef.current.calls, config.sessionCap)) {
         setHighlightsPaused(true);
         return;
@@ -225,7 +231,7 @@ export function useCoach(
       controller?.abort();
       schedulerRef.current = markSamSettled(schedulerRef.current);
     };
-  }, [cameraPhase, dispatch, hidden, machine.context.liveMode, machine.context.stepIndex, machine.context.tick, machine.state, options.mock, tutorial, videoRef]);
+  }, [cameraPhase, dispatch, hidden, machine.context.liveMode, machine.context.stepIndex, machine.context.tick, machine.state, options.mock, options.recordedSample, tutorial, videoRef]);
 
   useEffect(() => {
     if (!voiceOn || typeof window === "undefined" || !window.speechSynthesis) return;
