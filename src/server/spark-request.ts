@@ -37,6 +37,18 @@ The learner has no tutorial. They stated a goal and attached one still of the wo
 Return 2 to 4 steps. Each step lists 2 to 4 visually checkable nouns.
 Safe household tasks only. The camera must be able to check each noun.
 If the goal is unsafe, or it is not something a camera can check, return only {"refused":true,"reason":"short reason"} with no steps.
+Do not invent tutorialId.
+Use only these values:
+domain: indian_recipe, non_cooking_diy, other.
+sourceClip.mediaType: video/mp4, video/webm.
+sourceClip.durationSec greater than 0.
+generation.mode: muse_spark_live, muse_spark_curated, hand_authored.
+runtimeHints.preferredLiveMode: chunk_video_1_2s, keyframe_still, stills_only.
+object role: required_present, required_absent, optional, safety_prop.
+successCheck.kind: all_required_present, required_present_and_absent, ordered_presence, manual_confirm_only.
+tool: muse_spark, sam_3_1, tts, other.
+inputKind: transcript, clip, image, video_chunk, text.
+Each sourceTimeRange.endSec must be greater than 0.
 Goal: ${goal.trim()}`;
 }
 

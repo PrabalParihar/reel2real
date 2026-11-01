@@ -10,8 +10,11 @@ import { forwardMuseRequest, museForwardEnabled } from "./muse-forward";
 import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
+import { coerceInstructDocument } from "./instruct-coerce";
 import { buildSparkResponsesBody, goalInstruction } from "./spark-request";
 import type { SparkResult } from "./types";
+
+export const INSTRUCT_DEBUG_MAX = 4096;
 
 export const INSTRUCT_STILL_MAX_BYTES = 2 * 1024 * 1024;
 export const INSTRUCT_GOAL_MAX = 240;
@@ -50,6 +53,7 @@ export interface InstructInput {
 export interface InstructModelReply {
   status: number;
   payload: unknown;
+  rawText?: string;
 }
 
 export type InstructAsk = (body: ReturnType<typeof buildSparkResponsesBody>) => Promise<InstructModelReply>;
@@ -192,11 +196,46 @@ function clampPlan(tutorial: TutorialSteps, goal: string): { ok: true; value: Tu
   return { ok: true, value: validated.value };
 }
 
+function valueAt(root: unknown, path: string): unknown {
+  if (!path || path === "/") return root;
+  let current: unknown = root;
+  for (const part of path.split("/").filter(Boolean)) {
+    if (Array.isArray(current)) current = current[Number(part)];
+    else if (current && typeof current === "object") current = (current as Record<string, unknown>)[part];
+    else return undefined;
+  }
+  return current;
+}
+
+function previewValue(value: unknown): string {
+  let text = "";
+  try {
+    text = typeof value === "string" ? value : JSON.stringify(value) ?? "";
+  } catch {
+    text = "";
+  }
+  text = text.replace(/\s+/g, " ");
+  if (text.length > 80) text = `${text.slice(0, 80)}...`;
+  return text;
+}
+
+export function instructDebugText(raw: string, secrets: Array<string | null | undefined> = []): string {
+  return redactSecrets(raw, secrets).slice(0, INSTRUCT_DEBUG_MAX);
+}
+
+export function logInstructSchemaErrors(payload: unknown, errors: Array<{ path: string; message: string }>) {
+  for (const error of errors) {
+    const path = error.path || "/";
+    console.error(`instruct schema path=${path} value=${previewValue(valueAt(payload, path))}`);
+  }
+}
+
 export function normalizeInstructPayload(
   payload: unknown,
   goal: string,
   mode: "live" | "mock",
   latencyMs = 0,
+  rawText?: string,
 ): SparkResult {
   const refusal = readRefusal(payload);
   if (refusal) {
@@ -223,7 +262,8 @@ export function normalizeInstructPayload(
       latencyMs,
     },
   ];
-  const normalized = tutorialFromSparkPayload(payload, {
+  const coerced = coerceInstructDocument(payload, goal);
+  const normalized = tutorialFromSparkPayload(coerced, {
     creatorName: "You",
     licence: "self_filmed",
   }, {
@@ -234,6 +274,7 @@ export function normalizeInstructPayload(
     mode: "muse_spark_live",
   });
   if (!normalized.ok) {
+    logInstructSchemaErrors(coerced, normalized.errors);
     return {
       mode,
       modelId: SPARK_MODEL_ID,
@@ -244,6 +285,7 @@ export function normalizeInstructPayload(
       tutorial: null,
       toolCalls,
       inputKind: "instruct",
+      debug: rawText === undefined ? undefined : instructDebugText(rawText),
     };
   }
   normalized.value.generation.toolCalls = toolCalls;
@@ -312,7 +354,7 @@ export async function askInstructModel(
   fetchImpl: typeof fetch,
 ): Promise<InstructModelReply> {
   const key = readModelApiKey(env);
-  if (!key) return { status: 200, payload: cannedPayload("Instruction mode") };
+  if (!key) return { status: 200, payload: cannedPayload("Instruction mode"), rawText: "" };
   const reserved = consumeMetaCalls(1);
   if (!reserved.ok) throw new DailyCapError(reserved.message);
   const url = responsesUrl(env);
@@ -326,6 +368,7 @@ export async function askInstructModel(
   const ids = readUpstreamHeaders(response.headers);
   const latencyMs = Math.round(performance.now() - started);
   const safe = redactSecrets(text, [key]);
+  const rawText = safe.slice(0, INSTRUCT_DEBUG_MAX);
   if (response.status < 200 || response.status >= 300) {
     console.error(sparkFailureLog({
       status: response.status,
@@ -337,7 +380,7 @@ export async function askInstructModel(
       model: SPARK_MODEL_ID,
       secrets: [key],
     }));
-    return { status: response.status, payload: null };
+    return { status: response.status, payload: null, rawText };
   }
   console.error(metaUpstreamLog({
     path: pathnameOf(url),
@@ -348,9 +391,9 @@ export async function askInstructModel(
     latencyMs,
   }));
   try {
-    return { status: response.status, payload: readModelPayload(safe) };
+    return { status: response.status, payload: readModelPayload(safe), rawText };
   } catch {
-    return { status: 502, payload: null };
+    return { status: 502, payload: null, rawText };
   }
 }
 
@@ -420,7 +463,12 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
       return jsonError(502, "spark_failed", "Spark did not return a plan.");
     }
     const mode = readModelApiKey(env) ? "live" : "mock";
-    const result = normalizeInstructPayload(reply.payload, parsed.value.goal, mode);
+    const result = normalizeInstructPayload(reply.payload, parsed.value.goal, mode, 0, reply.rawText);
+    if (!result.schemaValid && result.debug === undefined && reply.rawText) {
+      result.debug = instructDebugText(reply.rawText, [readModelApiKey(env)]);
+    } else if (result.debug) {
+      result.debug = instructDebugText(result.debug, [readModelApiKey(env)]);
+    }
     if (result.refused) {
       return Response.json({
         refused: true,

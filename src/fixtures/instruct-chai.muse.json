@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "title": "Make a chai spice mix",
+  "domain": "recipe",
+  "sampleLabel": false,
+  "sourceClip": { "mediaType": "image/jpeg", "durationSec": 24 },
+  "generation": {
+    "mode": "muse_spark_live",
+    "modelId": "muse-spark-1.3",
+    "toolCalls": [
+      { "tool": "muse_spark", "modelId": "muse-spark-1.3", "purpose": "goal_still_to_steps_json", "inputKind": "image" }
+    ]
+  },
+  "runtimeHints": { "preferredLiveMode": "keyframe_still" },
+  "steps": [
+    {
+      "id": "step_1",
+      "index": 0,
+      "instructionText": "Set the mortar and the spices fully in frame.",
+      "sourceTimeRange": { "startSec": 0, "endSec": 8 },
+      "objects": [
+        { "objectId": "mortar", "noun": "mortar", "role": "present", "samPrompt": "mortar" },
+        { "objectId": "spices", "noun": "spices", "role": "ingredient", "samPrompt": "spices" }
+      ],
+      "successCheck": { "kind": "highlight", "description": "Mortar and spices are fully visible." },
+      "generation": { "toolCalls": [{ "tool": "spark", "modelId": "muse-spark-1.3", "purpose": "highlight" }] }
+    },
+    {
+      "id": "step_2",
+      "index": 1,
+      "instructionText": "Crush the spices in the mortar.",
+      "sourceTimeRange": { "startSec": 8, "endSec": 16 },
+      "objects": [
+        { "objectId": "mortar", "noun": "mortar", "role": "present", "samPrompt": "mortar" },
+        { "objectId": "pestle", "noun": "pestle", "role": "ingredient", "samPrompt": "pestle" }
+      ],
+      "successCheck": { "kind": "highlight", "description": "Mortar and pestle are fully visible." },
+      "generation": { "toolCalls": [{ "tool": "spark", "modelId": "muse-spark-1.3", "purpose": "highlight" }] }
+    },
+    {
+      "id": "step_3",
+      "index": 2,
+      "instructionText": "Leave the cup and the mortar fully in frame.",
+      "sourceTimeRange": { "startSec": 16, "endSec": 24 },
+      "objects": [
+        { "objectId": "cup", "noun": "cup", "role": "present", "samPrompt": "cup" },
+        { "objectId": "mortar", "noun": "mortar", "role": "ingredient", "samPrompt": "mortar" }
+      ],
+      "successCheck": { "kind": "highlight", "description": "Cup and mortar are fully visible." },
+      "generation": { "toolCalls": [{ "tool": "spark", "modelId": "muse-spark-1.3", "purpose": "highlight" }] }
+    }
+  ]
+}
