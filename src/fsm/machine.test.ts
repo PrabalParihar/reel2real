@@ -29,7 +29,7 @@ describe("step fsm", () => {
     expect(TIMEOUTS.SAM_TIMEOUT_MS).toBe(8000);
   });
 
-  it("does not advance when a required object is skipped", () => {
+  it("does not record a skipped action when required objects are not highlighted", () => {
     let machine = boot();
     const absent = { obj_mortar: false, obj_pestle: false };
     machine = check(machine, absent);
@@ -38,10 +38,15 @@ describe("step fsm", () => {
     machine = check(machine, absent);
     expect(machine.state).toBe("skip_detected");
     expect(machine.context.stepIndex).toBe(0);
+    expect(stateChip(machine.state)).toBe("Required object not highlighted");
+    expect(machine.context.skippedStepIds).toEqual([]);
+    expect(machine.context.stepOutcomes[SAMPLE_CHAI.steps[0].id]).toBe("unvisited");
     const skipped = transition(machine, { type: "USER_SKIP" }, SAMPLE_CHAI);
     expect(skipped.trail).toContain("user_skip");
+    expect(stateChip("user_skip")).toBe("Skipped");
     expect(skipped.machine.context.stepIndex).toBe(1);
     expect(skipped.machine.context.skippedStepIds).toHaveLength(1);
+    expect(skipped.machine.context.stepOutcomes[SAMPLE_CHAI.steps[0].id]).toBe("skipped");
   });
 
   it("reaches success without changing step until Next", () => {
@@ -110,7 +115,7 @@ describe("step fsm", () => {
     expect(skipped.context.skippedStepIds).toHaveLength(1);
   });
 
-  it("flags out of order before a silent advance", () => {
+  it("asks to check current-step objects when later objects are visible, without inferring action order", () => {
     let machine = boot();
     const early = { obj_mortar: false, obj_pestle: false, obj_hand: true };
     machine = check(machine, early);
@@ -118,6 +123,9 @@ describe("step fsm", () => {
     machine = check(machine, early);
     expect(machine.state).toBe("out_of_order");
     expect(machine.context.stepIndex).toBe(0);
+    expect(stateChip(machine.state)).toBe("Check current-step objects");
+    expect(machine.context.skippedStepIds).toEqual([]);
+    expect(machine.context.stepOutcomes[SAMPLE_CHAI.steps[0].id]).toBe("unvisited");
   });
 
   it("arms stills mode and returns to waiting", () => {
@@ -133,7 +141,7 @@ describe("step fsm", () => {
     expect(coachHonesty("keyframe_still", false, true)).toBe("Keyframe stills · Sample steps");
     expect(honestyChip("chunk_video_1_2s")).toBe("Chunk mode");
     expect(stateChip("tracking")).toBe("Checking…");
-    expect(stateChip("skip_detected")).toBe("Skip");
+    expect(stateChip("skip_detected")).toBe("Required object not highlighted");
     expect(stateChip("safety_halt")).toBe("Safety");
   });
 

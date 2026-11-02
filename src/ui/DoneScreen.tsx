@@ -32,6 +32,10 @@ export function DoneScreen() {
   }
   const resultMock = session.resultProvenance ? session.resultProvenance.mode === "mock" : session.runtime.mock;
   const sampleSteps = resultMock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
+  const stillPlan = hidesClipTiming({ stepsSource: session.stepsSource, stillPlaceholder: tutorial.sourceClip.stillPlaceholder });
+  const recapOrigin = stillPlan
+    ? `Plan from still${resultMock ? " · Mock" : ""}`
+    : coachHonesty(tutorial.runtimeHints?.preferredLiveMode === "stills_only" ? "stills_only" : "keyframe_still", tutorial.runtimeHints?.preferredLiveMode === "stills_only", sampleSteps);
   const published = !session.prepare?.hasClip
     ? sampleByPublishedId(session.prepare?.sampleId) ?? sampleByPublishedId(tutorial?.tutorialId)
     : undefined;
@@ -46,7 +50,7 @@ export function DoneScreen() {
       <main className="screen done">
         <article className="panel done-card">
           <div className="chip-row">
-            <Chip tone="match">{coachHonesty(tutorial.runtimeHints?.preferredLiveMode === "stills_only" ? "stills_only" : "keyframe_still", tutorial.runtimeHints?.preferredLiveMode === "stills_only", sampleSteps)}</Chip>
+            <Chip tone="match">{recapOrigin}</Chip>
           </div>
           <h1>{summary.title}</h1>
           <p className="quiet">Object visibility does not verify the action, technique or general safety. Next records your own confirmation.</p>
@@ -78,7 +82,7 @@ export function DoneScreen() {
             </ol>
           ) : null}
           <ul className="counts counts-quiet">
-            <li><strong>{Object.values(summary.stepOutcomes ?? {}).filter((outcome) => outcome === "manual_confirmed" || outcome === "objects_visible").length}</strong><span>visited steps</span></li>
+            <li><strong>{Object.values(summary.stepOutcomes ?? {}).filter((outcome) => outcome === "manual_confirmed" || outcome === "objects_visible").length}</strong><span>confirmed or visible steps</span></li>
             <li><strong>{summary?.skips ?? 0}</strong><span>skips</span></li>
             <li><strong>{summary?.safetyHits ?? 0}</strong><span>configured safety cues</span></li>
           </ul>

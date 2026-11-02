@@ -1,6 +1,6 @@
 # Verified event requirements
 
-Checked **2026-11-02** against the [official event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) and its directly linked [Official Rules and Event Waiver](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/waiver). Both returned HTTP 200 through the current environment's proxy with TLS verification enabled. The waiver's rules were extracted as data from its embedded page document; no account, browser or submission was used.
+Refreshed **November 3, 2026, Asia/Calcutta** against the [official event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon), its directly linked [Official Rules and Event Waiver](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/waiver), and public application/submission routes. All returned HTTP 200 through the current environment's proxy with TLS verification enabled. Rules and public application questions were extracted as page data; no account or submission was used. The public submission route exposes the event shell rather than authenticated artifact fields.
 
 ## Deadline
 
@@ -13,6 +13,20 @@ The stated application deadline was October 25, or earlier if 20,000 acceptances
 - Every participant must have applied and been accepted, be at least 18 and the age of majority in their home jurisdiction, and meet the rules' geographic, sanctions, employment, government-affiliation and family/household restrictions. This repository does not establish the user's eligibility, acceptance or signed-waiver status.
 - A participant and project may enter one track only. Indie Developer permits individuals, students and teams of up to four. Startup is for technical founders building a product; its representative must be an authorized active employee. The retrieved rules state no startup team-size cap.
 - A team representative submits, identifies members and must be authorized to act for the team. Consult the full official rules for the complete restrictions and agreements.
+- The official public application question says **“you can change your track anytime.”** The user prefers Indie Developer after applying to Startup. Update the existing application; the event warns against duplicate applications. The saved track, acceptance and self-service edit procedure remain unverified.
+
+## Public participation and communication limits
+
+The 20,000 figure is an acceptance cap, not an observed participant or submitted-build total. The public gallery and voting are disabled; no reliable submitted-project count was found. Public pages mention Discord office hours without a public invite. The accepted participant view or acceptance email may contain it, but neither was accessed. See [competition research and the delivery task board](competitive-readiness.md) for current public builds, posts, sources and remaining actions.
+
+The user subsequently supplied a welcome-event blast with the real participant
+routes: [Event Details](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/details)
+and [Connect Discord](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/discord).
+Their signed-out responses and linked route clients establish an authentication/
+approved-attendee boundary. Discord linking uses OAuth before exposing an invite.
+No login, OAuth, membership or messaging action was performed. Private problem
+statements, activation instructions and Discord content remain unobserved; the
+original application account must open these routes to supply that evidence.
 
 ## Project themes and rubric
 
