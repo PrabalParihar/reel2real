@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { classifyCameraError, openRearCamera, type CameraBlock } from "@/src/coach/camera";
+import { openRearCamera, type CameraBlock } from "@/src/coach/camera";
 import { grabInstructJpeg } from "@/src/coach/keyframe";
 import type { SparkResult } from "@/src/server/types";
 import { modelRefusalReason, screenGoal } from "@/src/safety/goal-screen";
 import { AppShell } from "./chrome";
 import { PHONE_STAND_HINT } from "./instruct-chips";
-import { INSTRUCT_GOALS, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
-import { isLiveCoachingOff, LiveCoachingOff } from "./LiveCoachingOff";
+import { INSTRUCT_GOALS, CAMERA_FAILED_COPY, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
+import { isLiveCoachingOff, LiveCoachingOff, SAMPLES_HREF } from "./LiveCoachingOff";
 import { SampleCoachStill } from "./SampleCoachStill";
 import { useSession } from "./session";
 
@@ -34,49 +35,121 @@ export function InstructScreen() {
   const [coachingOff, setCoachingOff] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
+  const [frameReady, setFrameReady] = useState(false);
+  const [cameraFailed, setCameraFailed] = useState(false);
+  const readyTimer = useRef<number | null>(null);
+  const detachVideo = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || phase !== "live" || !streamRef.current) return;
-    video.srcObject = streamRef.current;
-    void video.play().catch(() => undefined);
-  }, [phase]);
+  function clearReadyTimer() {
+    if (readyTimer.current == null) return;
+    window.clearTimeout(readyTimer.current);
+    readyTimer.current = null;
+  }
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
   }
 
+  function failCamera() {
+    clearReadyTimer();
+    detachVideo.current?.();
+    detachVideo.current = null;
+    stopCamera();
+    setFrameReady(false);
+    setCameraFailed(true);
+    setPhase("idle");
+  }
+
+  function armReadyTimer() {
+    clearReadyTimer();
+    readyTimer.current = window.setTimeout(() => {
+      readyTimer.current = null;
+      if (instructVideoReady(videoRef.current)) {
+        setFrameReady(true);
+        setCameraFailed(false);
+        return;
+      }
+      failCamera();
+    }, CAMERA_FRAME_TIMEOUT_MS);
+  }
+
+  function attachStream(video: HTMLVideoElement, stream: MediaStream) {
+    detachVideo.current?.();
+    const mark = () => {
+      if (!instructVideoReady(video)) return;
+      clearReadyTimer();
+      setFrameReady(true);
+      setCameraFailed(false);
+    };
+    const events = ["loadeddata", "loadedmetadata", "canplay", "resize"] as const;
+    for (const name of events) video.addEventListener(name, mark);
+    detachVideo.current = () => {
+      for (const name of events) video.removeEventListener(name, mark);
+    };
+    video.srcObject = stream;
+    mark();
+    const playback = video.play();
+    if (playback) {
+      void playback.catch(() => {
+        if (!instructVideoReady(video)) failCamera();
+      });
+    }
+  }
+
+  function takeVideo(node: HTMLVideoElement | null) {
+    videoRef.current = node;
+    if (!node) {
+      detachVideo.current?.();
+      detachVideo.current = null;
+      return;
+    }
+    const stream = streamRef.current;
+    if (!stream) return;
+    attachStream(node, stream);
+  }
+
+  useEffect(() => {
+    return () => {
+      clearReadyTimer();
+      detachVideo.current?.();
+      detachVideo.current = null;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    };
+  }, []);
+
   async function allowCamera() {
+    clearReadyTimer();
+    setCameraFailed(false);
+    setFrameReady(false);
     setNote(null);
     setError(null);
     setRefusal(null);
     setStill(null);
     setPhase("opening");
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setPhase("insecure");
+      setCameraFailed(true);
+      setPhase("idle");
       return;
     }
     try {
       stopCamera();
       const stream = await openRearCamera((constraints) => navigator.mediaDevices.getUserMedia(constraints));
       streamRef.current = stream;
+      armReadyTimer();
       setPhase("live");
-    } catch (cause) {
-      setPhase(classifyCameraError(cause));
+    } catch {
+      failCamera();
     }
   }
 
   function captureStill() {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !instructVideoReady(video)) {
+      setNote("The camera is not ready yet. Wait a moment and try again.");
+      return;
+    }
     const shot = grabInstructJpeg(video);
     if (!shot) {
       setNote("The camera is not ready yet. Wait a moment and try again.");
@@ -211,8 +284,16 @@ export function InstructScreen() {
             </div>
             <div className="instruct-actions">
               {phase === "live" ? (
-                <button className={primary === "capture" ? "btn btn-primary" : "btn btn-ghost"} type="button" onClick={captureStill}>Capture still</button>
-              ) : (
+                <button
+                  className={frameReady && primary === "capture" ? "btn btn-primary" : "btn btn-ghost"}
+                  type="button"
+                  disabled={!frameReady}
+                  aria-disabled={frameReady ? "false" : "true"}
+                  onClick={captureStill}
+                >
+                  {frameReady ? "Capture still" : CAMERA_STARTING_LABEL}
+                </button>
+              ) : cameraFailed ? null : (
                 <button className={primary === "allow" ? "btn btn-primary" : "btn btn-ghost"} type="button" onClick={() => void allowCamera()}>
                   {blocked || still ? "Allow camera again" : "Allow camera"}
                 </button>
@@ -222,10 +303,19 @@ export function InstructScreen() {
               </button>
             </div>
             <div aria-live="polite">
+              {phase === "live" && !frameReady ? <p className="form-note">{CAMERA_STARTING_LABEL}</p> : null}
               {note ? <p className="form-note">{note}</p> : null}
               {phase === "opening" ? <p className="form-note">Opening the camera…</p> : null}
-              {!ready && !note ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
+              {!ready && !note && phase !== "live" ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
             </div>
+            {cameraFailed ? (
+              <div className="panel error-panel" role="alert">
+                <h2>Camera didn't start</h2>
+                <p>{CAMERA_FAILED_COPY}</p>
+                <button className="btn btn-primary" type="button" onClick={() => void allowCamera()}>Try again</button>
+                <Link className="btn btn-primary" href={SAMPLES_HREF}>Try a Sample</Link>
+              </div>
+            ) : null}
             {refusal ? (
               <div className="panel error-panel" role="status">
                 <h2>Cannot coach this goal</h2>
@@ -244,7 +334,7 @@ export function InstructScreen() {
           <section className="instruct-stage panel" aria-label="Camera">
             {phase === "live" ? (
               <div className="reel-phone instruct-live">
-                <video ref={videoRef} className="instruct-video" playsInline muted autoPlay />
+                <video ref={takeVideo} className="instruct-video" playsInline muted autoPlay />
               </div>
             ) : null}
             {still && phase !== "live" ? (

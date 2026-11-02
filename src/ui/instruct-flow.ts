@@ -12,6 +12,15 @@ export function planStepsEnabled(goal: string, hasStill: boolean): boolean {
   return goal.trim().length > 0 && hasStill;
 }
 
+/** A still can be grabbed only after a real frame is available. */
+export const CAMERA_FRAME_TIMEOUT_MS = 8000;
+export const CAMERA_STARTING_LABEL = "Camera starting…";
+export const CAMERA_FAILED_COPY = "Camera didn't start. You can try again or watch a recorded Sample.";
+
+export function instructVideoReady(video: { readyState: number; videoWidth: number } | null | undefined): boolean {
+  return Boolean(video && video.readyState >= 2 && video.videoWidth > 0);
+}
+
 /** Allow camera first, then capture. Plan is primary only when both pieces exist. */
 export function instructPrimary(input: { cameraLive: boolean; hasStill: boolean; goal: string }): InstructPrimary {
   if (planStepsEnabled(input.goal, input.hasStill)) return "plan";

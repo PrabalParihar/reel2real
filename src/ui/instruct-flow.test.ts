@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { SAMPLE_OUTLINE_CAPTION } from "./SampleCoachStill";
-import { INSTRUCT_GOALS, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
+import { INSTRUCT_GOALS, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
 
 function uiFiles(dir: string): string[] {
   const found: string[] = [];
@@ -24,6 +24,14 @@ describe("instruction flow", () => {
     expect(instructPrimary({ cameraLive: true, hasStill: false, goal: "Make a chai spice mix" })).toBe("capture");
     expect(instructPrimary({ cameraLive: false, hasStill: true, goal: "Make a chai spice mix" })).toBe("plan");
     expect(instructPrimary({ cameraLive: true, hasStill: true, goal: "Make a chai spice mix" })).toBe("plan");
+  });
+
+  it("treats a frame as ready only when readyState is at least 2 and the width is known", () => {
+    expect(instructVideoReady(null)).toBe(false);
+    expect(instructVideoReady({ readyState: 1, videoWidth: 640 })).toBe(false);
+    expect(instructVideoReady({ readyState: 2, videoWidth: 0 })).toBe(false);
+    expect(instructVideoReady({ readyState: 2, videoWidth: 640 })).toBe(true);
+    expect(instructVideoReady({ readyState: 4, videoWidth: 320 })).toBe(true);
   });
 
   it("fills the goal from the sample domain chips", () => {
