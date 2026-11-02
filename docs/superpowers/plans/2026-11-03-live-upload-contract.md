@@ -42,7 +42,7 @@
 
 ## Task 2: Verify the release and refresh evidence
 
-Use a dedicated manually uploaded candidate worker because the existing worker tracks GitHub main and can rebuild on merge. Select `deploy/railway.worker.json` via the candidate service's `railwayConfigFile`; it binds IPv6 port 8080 and uses the reviewed app source. Preserve the existing worker until protected candidate acceptance and primary forwarding promotion pass. Keep keys and forward authentication as server-side Railway references. No new model endpoints or credentials are introduced.
+Use a dedicated manually uploaded candidate worker because the existing worker tracks GitHub main and can rebuild on merge. Use the existing root start command with `PORT=8080`; the production build's default `npm start` was verified on both IPv6 and IPv4 locally. Verify the actual worker bind before promotion. The platform rejects new legacy config-file selectors, so no custom config selector or project-wide IaC migration is needed. Preserve the existing worker until protected candidate acceptance and primary forwarding promotion pass. Keep keys and forward authentication as server-side Railway references. No new model endpoints or credentials are introduced.
 
 
 - [ ] Root reviews the full diff and existing browser checks; resolve material findings.
