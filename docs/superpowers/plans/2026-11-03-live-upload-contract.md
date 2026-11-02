@@ -32,15 +32,18 @@
 
 **Interface:** Keep `buildSparkResponsesBody` and `createLiveSparkClient` public signatures unchanged. Enrich only the live response draft before `tutorialFromSparkPayload`; do not change the shared strict schema or still coercer.
 
-- [ ] Add a failing integration regression through `createLiveSparkClient` using a synthetic versioned response without an ID. Assert valid tutorial, preserved later range/IDs/absent role, correct user attribution, unique generated identity and actual clip generation metadata.
-- [ ] Run the regression on unchanged code and record its intended failure.
-- [ ] Implement minimum live-only enrichment: generate an omitted ID, set actual generation model/mode/tool call, and use validated clip media/duration with `stillPlaceholder:false`. Preserve other content; malformed existing IDs stay invalid. Avoid touching curated/sample payloads.
-- [ ] Extend the base planning instruction with the schema's exact allowed enum values and tell it which metadata the server supplies. Preserve goal safety guidance and complete video bytes.
-- [ ] Verify rejection of unknown role/kind, unsupported version, broken object references and a step beyond the actual clip duration; verify recorded/sample provenance is stable. Keep server-side validation diagnostics limited to bounded paths/messages if needed, never raw model/media/header data.
-- [ ] Run targeted tests, then `npm test` and `npm run build` under Node 22. Report exact results; root runs browser verification after review.
-- [ ] Write the implementation report and hand off the diff for review. Do not commit, push, deploy or invoke real models; root integrates after review and current live acceptance.
+- [x] Add a failing integration regression through `createLiveSparkClient` using a synthetic versioned response without an ID. Assert valid tutorial, preserved later range/IDs/absent role, correct user attribution, unique generated identity and actual clip generation metadata.
+- [x] Run the regression on unchanged code and record its intended failure.
+- [x] Implement minimum live-only enrichment: generate an omitted ID, set actual generation model/mode/tool call, and use validated clip media/duration with `stillPlaceholder:false`. Preserve other content; malformed existing IDs stay invalid. Avoid touching curated/sample payloads.
+- [x] Extend the base planning instruction with the schema's exact allowed enum values and tell it which metadata the server supplies. Preserve goal safety guidance and complete video bytes.
+- [x] Verify rejection of unknown role/kind, unsupported version, broken object references and a step beyond the actual clip duration; verify recorded/sample provenance is stable. Keep server-side validation diagnostics limited to bounded paths/messages if needed, never raw model/media/header data.
+- [x] Run targeted tests, then `npm test` and `npm run build` under Node 22. Report exact results; root runs browser verification after review.
+- [x] Write the implementation report and hand off the diff for review. Do not commit, push, deploy or invoke real models; root integrates after review and current live acceptance.
 
 ## Task 2: Verify the release and refresh evidence
+
+Use a dedicated manually uploaded candidate worker because the existing worker tracks GitHub main and can rebuild on merge. Select `deploy/railway.worker.json` via the candidate service's `railwayConfigFile`; it binds IPv6 port 8080 and uses the reviewed app source. Preserve the existing worker until protected candidate acceptance and primary forwarding promotion pass. Keep keys and forward authentication as server-side Railway references. No new model endpoints or credentials are introduced.
+
 
 - [ ] Root reviews the full diff and existing browser checks; resolve material findings.
 - [ ] Commit/push the reviewed source and updated runbook/readiness evidence under the user's existing authorization.
