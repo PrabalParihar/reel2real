@@ -40,6 +40,14 @@
 - [x] Run targeted tests, then `npm test` and `npm run build` under Node 22. Report exact results; root runs browser verification after review.
 - [x] Write the implementation report and hand off the diff for review. Do not commit, push, deploy or invoke real models; root integrates after review and current live acceptance.
 
+## Task 1b: Bound reasoning effort for practical planning latency
+
+**Files:** `src/server/spark-request.ts`, `src/server/spark-request.test.ts`.
+
+- [x] Add a failing request-contract test covering goal/image, inline clip, Files reference and transcript requests: each carries `reasoning: { effort: "low" }` alongside its unchanged input and model.
+- [x] Observe the intended failure, then add only `reasoning: { effort: "low" as const }` to `buildSparkResponsesBody`'s returned object. No token cap, sampling option, model change, retries or deadline changes.
+- [x] Run targeted tests, full unit suite and build under Node 22. Commit only after fresh review; root performs same-fixture real goal/clip quality and latency verification on the existing staging worker.
+
 ## Task 2: Verify the release and refresh evidence
 
 Use a dedicated manually uploaded candidate worker because the existing worker tracks GitHub main and can rebuild on merge. Use the existing root start command with `PORT=8080`; the production build's default `npm start` was verified on both IPv6 and IPv4 locally. Verify the actual worker bind before promotion. The platform rejects new legacy config-file selectors, so no custom config selector or project-wide IaC migration is needed. Preserve the existing worker until protected candidate acceptance and primary forwarding promotion pass. Keep keys and forward authentication as server-side Railway references. No new model endpoints or credentials are introduced.

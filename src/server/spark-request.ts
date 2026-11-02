@@ -84,6 +84,7 @@ export function buildSparkResponsesBody(args: {
   }
   return {
     model: SPARK_MODEL_ID,
+    reasoning: { effort: "low" as const },
     input: [{ type: "message", role: "user", content }],
   };
 }

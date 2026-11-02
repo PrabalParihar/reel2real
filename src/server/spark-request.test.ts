@@ -10,6 +10,44 @@ import {
 } from "./spark-request";
 
 describe("Spark request builder", () => {
+  it.each([
+    {
+      name: "goal image",
+      args: { instruction: goalInstruction("Make chai"), imageDataUrl: "data:image/jpeg;base64,aGVsbG8=" },
+      content: [
+        { type: "input_text", text: goalInstruction("Make chai") },
+        { type: "input_image", image_url: "data:image/jpeg;base64,aGVsbG8=" },
+      ],
+    },
+    {
+      name: "inline video",
+      args: { videoBase64: "aGVsbG8=", mimeType: "video/webm" },
+      content: [
+        { type: "input_text", text: SPARK_STEPS_INSTRUCTION },
+        { type: "input_video", video_url: "data:video/webm;base64,aGVsbG8=" },
+      ],
+    },
+    {
+      name: "Files reference",
+      args: { fileId: "file_abc" },
+      content: [
+        { type: "input_text", text: SPARK_STEPS_INSTRUCTION },
+        { type: "input_file", file_id: "file_abc" },
+      ],
+    },
+    {
+      name: "transcript",
+      args: { transcript: "Crush the ginger." },
+      content: [{ type: "input_text", text: `${SPARK_STEPS_INSTRUCTION}\n\nTranscript:\nCrush the ginger.` }],
+    },
+  ])("requests low reasoning effort for $name without changing model or input", ({ args, content }) => {
+    expect(buildSparkResponsesBody(args)).toEqual({
+      model: SPARK_MODEL_ID,
+      reasoning: { effort: "low" },
+      input: [{ type: "message", role: "user", content }],
+    });
+  });
+
   it("sends a short clip as an input_video data URL", () => {
     expect(chooseSparkMediaPlan({ durationSec: 2, byteLength: 200_000 })).toBe("full_video_data_url");
     expect(SHORT_CLIP_MAX_SEC).toBe(10);
