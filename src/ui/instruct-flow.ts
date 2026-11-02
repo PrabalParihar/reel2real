@@ -28,3 +28,10 @@ export function instructProgress(goal: string, hasStill: boolean): Array<{ id: "
     { id: "Coach", state: goalDone && stillDone ? "current" : "wait" },
   ];
 }
+
+export function instructCameraBusyMessage(cause: unknown): string | null {
+  const name = cause && typeof cause === "object" && "name" in cause ? String(cause.name) : "";
+  return name === "NotReadableError" || name === "TrackStartError"
+    ? "Close other apps or browser tabs using your camera, then retry the camera. You can also choose a recorded sample."
+    : null;
+}

@@ -1239,6 +1239,16 @@ p { margin: 0; color: var(--ink-2); }
   border-radius: 0;
   background: #000;
 }
+.instruct-stage .instruct-live[hidden] { display: none; }
+.instruct-preview-status {
+  position: absolute;
+  inset: auto 12px 12px;
+  z-index: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #101218e6;
+  color: #fff;
+}
 .instruct-block { display: grid; gap: 8px; padding: 12px; }
 .instruct-block h2 { font-size: 22px; }
 .mask.is-box { border-radius: 16px; }

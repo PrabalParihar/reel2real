@@ -38,7 +38,9 @@ export async function openRearCamera(
     return await getUserMedia(REAR_CAMERA_CONSTRAINTS);
   } catch (error) {
     signal?.throwIfAborted();
-    if (classifyCameraError(error) === "denied") throw error;
+    const name = error && typeof error === "object" && "name" in error ? String(error.name) : "";
+    // Different constraints cannot release a device already held by another app.
+    if (classifyCameraError(error) === "denied" || name === "NotReadableError" || name === "TrackStartError") throw error;
     return getUserMedia(FALLBACK_CAMERA_CONSTRAINTS);
   }
 }
