@@ -2,6 +2,13 @@ import type { TutorialSteps } from "@/src/schema/types";
 import { DEMOS } from "@/src/samples/demos";
 
 export const RECORDED_SAM_LABEL = "Sample · recorded SAM output";
+/** Shown where the recorded label sits when this step has no verified overlay. */
+export const SAMPLE_NO_HIGHLIGHTS_LABEL = "Sample · no highlights for this step";
+
+/** On-frame note for a Sample still. Unverified steps do not claim an overlay. */
+export function sampleFrameNote(unverified: boolean): string {
+  return unverified ? SAMPLE_NO_HIGHLIGHTS_LABEL : RECORDED_SAM_LABEL;
+}
 
 /** A published Sample card plays the stored SAM file. It does not open a live segment call. */
 export function usesRecordedSam(stepsSource: string | null | undefined): boolean {
