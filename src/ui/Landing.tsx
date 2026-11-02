@@ -10,6 +10,7 @@ import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, 
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
+import { INSTRUCT_SECTION_LABEL } from "./instruct-flow";
 import { SampleCoachStill } from "./SampleCoachStill";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
 
@@ -56,7 +57,7 @@ export function Landing() {
       </header>
 
       <section className="section wrap" id="instruct">
-        <p className="kicker">No tutorial</p>
+        <p className="kicker">{INSTRUCT_SECTION_LABEL}</p>
         <h2>Instruction mode</h2>
         <div className="instruct-home">
           <SampleCoachStill />

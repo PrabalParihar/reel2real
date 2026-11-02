@@ -12,10 +12,14 @@ export function planStepsEnabled(goal: string, hasStill: boolean): boolean {
   return goal.trim().length > 0 && hasStill;
 }
 
+/** Section eyebrow on Instruction mode. The kicker style uppercases it. */
+export const INSTRUCT_SECTION_LABEL = "Live coach";
+
 /** A still can be grabbed only after a real frame is available. */
 export const CAMERA_FRAME_TIMEOUT_MS = 8000;
 export const CAMERA_STARTING_LABEL = "Camera starting…";
-export const CAMERA_FAILED_COPY = "Camera didn't start. You can try again or watch a recorded Sample.";
+export const CAMERA_FAILED_HEADING = "Camera didn't start";
+export const CAMERA_FAILED_COPY = "You can try again or watch a recorded Sample.";
 
 export function instructVideoReady(video: { readyState: number; videoWidth: number } | null | undefined): boolean {
   return Boolean(video && video.readyState >= 2 && video.videoWidth > 0);

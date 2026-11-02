@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { SAMPLE_OUTLINE_CAPTION } from "./SampleCoachStill";
-import { INSTRUCT_GOALS, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
+import { CAMERA_FAILED_COPY, CAMERA_FAILED_HEADING, INSTRUCT_GOALS, INSTRUCT_SECTION_LABEL, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
 
 function uiFiles(dir: string): string[] {
   const found: string[] = [];
@@ -24,6 +24,23 @@ describe("instruction flow", () => {
     expect(instructPrimary({ cameraLive: true, hasStill: false, goal: "Make a chai spice mix" })).toBe("capture");
     expect(instructPrimary({ cameraLive: false, hasStill: true, goal: "Make a chai spice mix" })).toBe("plan");
     expect(instructPrimary({ cameraLive: true, hasStill: true, goal: "Make a chai spice mix" })).toBe("plan");
+  });
+
+  it("names instruction mode Live coach and keeps the camera error body short", () => {
+    expect(INSTRUCT_SECTION_LABEL).toBe("Live coach");
+    expect(CAMERA_FAILED_HEADING).toBe("Camera didn't start");
+    expect(CAMERA_FAILED_COPY).toBe("You can try again or watch a recorded Sample.");
+    expect(CAMERA_FAILED_COPY).not.toContain(CAMERA_FAILED_HEADING);
+    const instruct = readFileSync("src/ui/InstructScreen.tsx", "utf8");
+    const landing = readFileSync("src/ui/Landing.tsx", "utf8");
+    expect(instruct).toContain("INSTRUCT_SECTION_LABEL");
+    expect(instruct).not.toContain("No tutorial");
+    expect(landing).toContain("INSTRUCT_SECTION_LABEL");
+    expect(landing).not.toContain('kicker">No tutorial');
+    const css = readFileSync("app/globals.css", "utf8");
+    expect(css).toContain(".visually-hidden");
+    const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+    expect(reduced).toContain(".instruct-starting-mark { display: none; }");
   });
 
   it("treats a frame as ready only when readyState is at least 2 and the width is known", () => {

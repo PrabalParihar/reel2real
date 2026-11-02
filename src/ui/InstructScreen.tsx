@@ -9,7 +9,7 @@ import type { SparkResult } from "@/src/server/types";
 import { modelRefusalReason, screenGoal } from "@/src/safety/goal-screen";
 import { AppShell } from "./chrome";
 import { PHONE_STAND_HINT } from "./instruct-chips";
-import { INSTRUCT_GOALS, CAMERA_FAILED_COPY, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
+import { INSTRUCT_GOALS, CAMERA_FAILED_COPY, CAMERA_FAILED_HEADING, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL, INSTRUCT_SECTION_LABEL, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
 import { isLiveCoachingOff, LiveCoachingOff, SAMPLES_HREF } from "./LiveCoachingOff";
 import { SampleCoachStill } from "./SampleCoachStill";
 import { useSession } from "./session";
@@ -248,7 +248,7 @@ export function InstructScreen() {
       <main className={`screen instruct-screen${coachingOff ? " is-off" : ""}`}>
         {coachingOff ? <LiveCoachingOff goal={goal} onEdit={() => setCoachingOff(false)} /> : null}
         {coachingOff ? null : <>
-        <p className="kicker">No tutorial</p>
+        <p className="kicker">{INSTRUCT_SECTION_LABEL}</p>
         <h1>Instruction mode</h1>
         <p className="lead">Type a goal. The camera takes one still, then the coach checks your workspace.</p>
         <p className="quiet">{PHONE_STAND_HINT}</p>
@@ -302,18 +302,18 @@ export function InstructScreen() {
                 {planning ? "Planning steps" : "Plan steps"}
               </button>
             </div>
-            <div aria-live="polite">
-              {phase === "live" && !frameReady ? <p className="form-note">{CAMERA_STARTING_LABEL}</p> : null}
-              {note ? <p className="form-note">{note}</p> : null}
-              {phase === "opening" ? <p className="form-note">Opening the camera…</p> : null}
-              {!ready && !note && phase !== "live" ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
+            <div className="visually-hidden" aria-live="polite">
+              {phase === "live" && !frameReady ? CAMERA_STARTING_LABEL : ""}
             </div>
+            {note ? <p className="form-note">{note}</p> : null}
+            {phase === "opening" ? <p className="form-note">Opening the camera…</p> : null}
+            {!ready && !note && phase !== "live" && !cameraFailed ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
             {cameraFailed ? (
               <div className="panel error-panel" role="alert">
-                <h2>Camera didn't start</h2>
+                <h2>{CAMERA_FAILED_HEADING}</h2>
                 <p>{CAMERA_FAILED_COPY}</p>
                 <button className="btn btn-primary" type="button" onClick={() => void allowCamera()}>Try again</button>
-                <Link className="btn btn-primary" href={SAMPLES_HREF}>Try a Sample</Link>
+                <Link className="btn btn-ghost" href={SAMPLES_HREF}>Try a Sample</Link>
               </div>
             ) : null}
             {refusal ? (
@@ -335,6 +335,12 @@ export function InstructScreen() {
             {phase === "live" ? (
               <div className="reel-phone instruct-live">
                 <video ref={takeVideo} className="instruct-video" playsInline muted autoPlay />
+                {frameReady ? null : (
+                  <div className="instruct-starting" aria-hidden="true">
+                    <span className="instruct-starting-mark" />
+                    <p>{CAMERA_STARTING_LABEL}</p>
+                  </div>
+                )}
               </div>
             ) : null}
             {still && phase !== "live" ? (

@@ -108,7 +108,13 @@ describe("instruct capture still", () => {
     expect(button.textContent).toBe(CAMERA_STARTING_LABEL);
     expect(button.disabled).toBe(true);
     expect(button.getAttribute("aria-disabled")).toBe("true");
-    expect(host.querySelector("[aria-live='polite']")?.textContent).toContain(CAMERA_STARTING_LABEL);
+    const status = host.querySelector("[aria-live='polite']");
+    expect(status?.classList.contains("visually-hidden")).toBe(true);
+    expect(status?.textContent).toContain(CAMERA_STARTING_LABEL);
+    expect(host.querySelector(".instruct-starting")?.textContent).toContain(CAMERA_STARTING_LABEL);
+    expect([...host.querySelectorAll(".form-note")].some((node) => node.textContent === CAMERA_STARTING_LABEL)).toBe(false);
+    expect(host.textContent).toContain("Live coach");
+    expect(host.textContent).not.toMatch(/no tutorial/i);
     expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
   });
 
@@ -132,7 +138,8 @@ describe("instruct capture still", () => {
     expect(button.textContent).toBe("Capture still");
     expect(button.disabled).toBe(false);
     expect(button.getAttribute("aria-disabled")).toBe("false");
-    expect(host.querySelector("[aria-live='polite']")?.textContent).not.toContain(CAMERA_STARTING_LABEL);
+    expect(host.querySelector("[aria-live='polite']")?.textContent ?? "").not.toContain(CAMERA_STARTING_LABEL);
+    expect(host.querySelector(".instruct-starting")).toBeNull();
   });
 
   it.each(["loadedmetadata", "canplay", "resize"])("enables Capture from the %s event once a frame has a width", async (eventName) => {
@@ -174,19 +181,26 @@ describe("instruct capture still", () => {
 
   it("shows the camera error and the Sample CTA when permission is denied", async () => {
     await mount();
+    expect(host.textContent).toContain("Enter a goal, then capture one still.");
     const pending = await allowCamera();
     await act(async () => {
       pending.reject(new DOMException("Permission denied", "NotAllowedError"));
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(host.textContent).toContain(CAMERA_FAILED_COPY);
-    expect(host.textContent).toContain("Camera didn't start");
+    const panel = host.querySelector(".error-panel");
+    expect(panel?.querySelector("h2")?.textContent).toBe("Camera didn't start");
+    expect(panel?.querySelector("p")?.textContent).toBe(CAMERA_FAILED_COPY);
+    expect(CAMERA_FAILED_COPY).toBe("You can try again or watch a recorded Sample.");
     const sample = host.querySelector(`a[href="${SAMPLES_HREF}"]`);
     expect(sample?.textContent).toBe("Try a Sample");
+    expect(sample?.classList.contains("btn-ghost")).toBe(true);
+    expect(sample?.classList.contains("btn-primary")).toBe(false);
+    const again = buttonNamed(host, "Try again");
+    expect(again?.classList.contains("btn-primary")).toBe(true);
+    expect(host.textContent).not.toContain("Enter a goal, then capture one still.");
     expect(buttonNamed(host, "Capture still")).toBeUndefined();
     expect(buttonNamed(host, CAMERA_STARTING_LABEL)).toBeUndefined();
-    expect(buttonNamed(host, "Try again")).toBeTruthy();
   });
 
   it("shows the camera error and the Sample CTA when no frame arrives within 8 seconds", async () => {
@@ -217,8 +231,9 @@ describe("instruct capture still", () => {
       armed.clear();
     });
     expect(host.textContent).toContain(CAMERA_FAILED_COPY);
-    expect(host.querySelector(`a[href="${SAMPLES_HREF}"]`)?.textContent).toBe("Try a Sample");
-    expect(buttonNamed(host, "Try again")).toBeTruthy();
+    expect(host.querySelector(`a[href="${SAMPLES_HREF}"]`)?.classList.contains("btn-ghost")).toBe(true);
+    expect(host.textContent).not.toContain("Enter a goal, then capture one still.");
+    expect(buttonNamed(host, "Try again")?.classList.contains("btn-primary")).toBe(true);
   });
 
   it("clears the frame timer once a frame is ready so the error does not appear later", async () => {
