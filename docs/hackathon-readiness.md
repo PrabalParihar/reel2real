@@ -1,8 +1,8 @@
 # Hackathon readiness runbook and audit closure
 
-Updated 2026-11-02 for the readiness implementation and Railway launch. This records source-level closure and remaining acceptance work; it is not a deployment receipt, an official eligibility assessment, or a claim that all audit scenarios passed. The original audit described the earlier tree; preserve it as historical evidence rather than reading its old failures or test counts as the current result.
+Updated November 3, 2026 (Asia/Calcutta). See the [fresh competition assessment and role-based task board](competitive-readiness.md) for current priorities. This records source-level closure and remaining acceptance work; it is not an official eligibility assessment or a claim that all audit scenarios passed. Earlier checkpoints retain their historical dates and test counts.
 
-Current launch status supersedes the earlier checkpoints below: [public Railway deployment](railway-launch.md), 448 passing local tests, 17 passing hosted checks, and a verified upstream model-access blocker. Earlier descriptions of provider work as unrun describe their historical stage.
+The latest observed baseline is [public Railway deployment](railway-launch.md) of main `a522a73`, with 458 unit and 31 browser regressions from PR #19. A fresh representative hosted audit captured 14 accepted screenshots and confirmed recorded progression/Skip/recap/replay. Real hosted instruction still returned 502 and SAM upstream404. Provider IDs and DNS/egress contradict a general Railway outbound block. A Railway-internal controlled catalog check confirms the existing key is accepted (200 vs unauthenticated401), but its validated catalog is empty. Team/project entitlement or provider source policy remains unresolved. Enhancement verification is recorded separately rather than folded into older checkpoint counts.
 
 ## Product assessment
 

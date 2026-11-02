@@ -15,11 +15,11 @@ export function voiceLine(state: CoachStateId, step: TutorialStep | null): strin
     case "step_ready":
       return clip(step?.hinglishPrompt || "Step shuru.");
     case "success":
-      return "Ho gaya.";
+      return "Objects dikh rahe hain. Step khud confirm karo.";
     case "skip_detected":
-      return "Yeh step chhoot gaya.";
+      return "Zaroori object highlight nahi hua. Poora frame mein dikhao.";
     case "out_of_order":
-      return "Galat order. Is step pe wapas aao.";
+      return "Is step ke objects frame mein dikhao.";
     case "safety_halt":
       return clip(step?.safety?.message || "Ruko.");
     case "mask_lost":

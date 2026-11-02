@@ -45,7 +45,7 @@ export function Landing() {
           <p className="discovery-nav-label">Discover</p>
           <a className="discovery-rail-current" href="#demos"><Grid2X2 size={17} /> Recorded lessons <span>{PUBLISHED_SAMPLES.length}</span></a>
           <a href="#how"><ListChecks size={17} /> How it works</a>
-          <Link href="/upload"><Upload size={17} /> Use my clip</Link>
+          <Link href="/upload#use-my-clip"><Upload size={17} /> Use my clip</Link>
           <Link href="/instruct"><Camera size={17} /> Goal + camera</Link>
           <p className="discovery-nav-label discovery-nav-label-next">Behind the coach</p>
           <a href="#meta"><SparkMark /> The models</a>
@@ -69,7 +69,7 @@ export function Landing() {
             <a className="discovery-breadcrumb" href="#demos"><Grid2X2 size={15} /> Explore lessons</a>
             <div className="discovery-top-actions">
               <a className="discovery-top-link" href="#how">How it works</a>
-              <Link className="btn btn-primary btn-sm" href="/upload">Use my clip <ArrowUpRight size={14} /></Link>
+              <Link className="btn btn-primary btn-sm" href="/upload#use-my-clip">Use my clip <ArrowUpRight size={14} /></Link>
             </div>
           </nav>
         </div>
@@ -81,7 +81,7 @@ export function Landing() {
             <p className="discovery-lead">Turn a short tutorial into steps, then follow along with your phone on a stand. Object highlights help you frame the workspace.</p>
             <div className="discovery-actions">
               <a className="btn btn-primary" href="#demos">Try a recorded sample <ArrowRight size={16} /></a>
-              <Link className="btn btn-ghost" href="/upload">Use my clip</Link>
+              <Link className="btn btn-ghost" href="/upload#use-my-clip">Use my clip</Link>
               <Link className="btn btn-ghost" href="/instruct">Goal + camera</Link>
             </div>
             <p className="discovery-intro-note">Recorded samples need no camera. Your own plan starts with a clip, or a goal and one workspace photo.</p>

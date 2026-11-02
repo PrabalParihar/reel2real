@@ -1,0 +1,1 @@
+participant_id,variant,condition,order,device,setup_seconds,model_wait_seconds,task_seconds,total_seconds,video_interruptions,help_requests,physical_result_rubric,outcome,ease_1_to_5,failure_reason,notes

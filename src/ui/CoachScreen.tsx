@@ -18,6 +18,7 @@ import { PHONE_STAND_HINT, instructHonestyChips, instructSamChip, instructSamOve
 import { stepHeadlineFontPx } from "./step-headline";
 import { Filmstrip } from "./filmstrip";
 import { PhotoFrame } from "./PhotoFrame";
+import { ObjectChecklist } from "./ObjectChecklist";
 import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
@@ -263,6 +264,17 @@ function CoachBody() {
             <SafetyNote note={published?.safetyNote} />
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
+            {!recordedRun ? <ObjectChecklist
+              step={step}
+              evidence={{
+                presence: coach.presence,
+                expired: coach.pausedReason === "stale",
+                unavailable: coach.samStale || cameraBlocked || coach.pausedReason === "camera" || coach.pausedReason === "frame" || coach.machine.state === "error_recoverable",
+              }}
+              illustrative={resultMock}
+              recheckAvailable={coach.recheckAvailable}
+              onRecheck={coach.recheck}
+            /> : null}
             <p className="quiet">Next confirms you performed this step. Object checks show visibility in a still frame; they do not verify the action, order or general safety.</p>
             {!hideTiming && showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
@@ -287,7 +299,6 @@ function CoachBody() {
             <button type="button" className="btn btn-primary" disabled={coach.machine.state === "safety_halt"} onClick={() => coach.dispatch({ type: "USER_ADVANCE" })}>Next</button>
           </div>
           <div className="cta-row">
-            {!recordedRun ? <button type="button" className="btn btn-ghost btn-sm" disabled={!coach.recheckAvailable} onClick={coach.recheck}>Recheck objects</button> : null}
             {cameraBlocked ? <button type="button" className="btn btn-ghost btn-sm" onClick={coach.retryCamera}>Retry camera</button> : null}
             {cameraBlocked || coach.pausedReason === "session_cap" ? <Link className="btn btn-ghost btn-sm" href="/#demos">Recorded Samples</Link> : null}
             <button type="button" className="btn btn-ghost btn-sm" aria-pressed={coach.voiceOn} onClick={() => coach.setVoiceOn((value) => !value)}>{coach.voiceOn ? "Voice on" : "Voice off"}</button>

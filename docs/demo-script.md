@@ -1,6 +1,6 @@
 # DRAFT. Demonstration script. Not filmed, not submitted.
 
-This is a proposed filming plan for the current implementation. **The hosted live sequence below has not been verified in this session.** The [official event page and linked rules were checked on 2026-11-02](event-requirements.md); submissions are due **November 5, 2026 at 07:30 IST**. Personal eligibility and acceptance, portal artifacts, video duration and project-specific prior-work questions remain unresolved. The suggested 2-3 minute structure is an editing assumption, not an official limit. Complete those checks and live acceptance before filming a final take. Nothing in this repo publishes or submits this draft.
+This is a proposed filming plan. **The November 3 hosted probes failed; the successful live sequence below remains unverified.** [Official sources were refreshed November 3, 2026, Asia/Calcutta](event-requirements.md); submissions are due **November 5 at 07:30 IST**. Desired track is Indie Developer, with the stored application switch/acceptance still to confirm. Portal fields, video duration and project-specific rights/prior-work questions remain unresolved. The suggested 2-3 minute structure is an editing assumption, not an official limit. Complete the [priority gates](competitive-readiness.md) and live acceptance before filming. Nothing here publishes or submits this draft.
 
 ## Story and supported claims
 

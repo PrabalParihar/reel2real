@@ -137,6 +137,9 @@ export function UploadScreen() {
               </div>
             </section>
             {session.uploadDraft ? <button className="btn btn-ghost" type="button" disabled={busy} onClick={restoreDraft}>Restore my previous clip</button> : null}
+            <section id="use-my-clip" aria-label="Use my tutorial clip">
+            {unavailable ? <p className="capability-note">{session.runtimeStatus === "loading" ? "Checking clip extraction availability…" : "Clip extraction is unavailable here. Try a recorded sample above."}</p> : null}
+            {session.runtime.capabilities?.segment === false && !unavailable ? <p className="capability-note">Live object highlights are unavailable here. You can still read the plan and move through it yourself.</p> : null}
             <details className="upload-form-details" open={!unavailable}>
               <summary>Use my tutorial clip</summary>
               <p id="clip-limits" className="quiet">MP4 or WebM, up to 16 MB and 2 minutes. This browser must be able to play the video.</p>
@@ -178,6 +181,7 @@ export function UploadScreen() {
               <details className="optional-details"><summary>Optional Instagram reference</summary><p className="quiet">Preview a public post for reference. This does not extract the link; upload a permitted video file separately.</p><InstagramShow /></details>
               <details className="optional-details"><summary>Saved lessons on this device</summary><p className="quiet">Successful clip plans may be cached in this browser so you can reuse them. Clearing saved lessons removes those plans from this device.</p><button className="btn btn-ghost btn-sm" type="button" onClick={() => void clearStepsCache().then((cleared) => setCacheNote(cleared ? "Saved lessons cleared from this browser." : "Saved lesson storage is unavailable. No lessons were cleared."))}>Clear saved lessons</button>{cacheNote ? <p className="form-note" role="status">{cacheNote}</p> : null}</details>
             </details>
+            </section>
           </section>
           <aside className="panel tips">
             <h2>Before you follow along</h2>

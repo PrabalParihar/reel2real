@@ -32,9 +32,9 @@ export function stateChip(state: CoachStateId): string | null {
     case "success":
       return "Objects visible";
     case "skip_detected":
-      return "Skip";
+      return "Required object not highlighted";
     case "out_of_order":
-      return "Out of order";
+      return "Check current-step objects";
     case "safety_halt":
       return "Safety";
     case "mask_lost":
