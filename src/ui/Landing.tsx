@@ -170,7 +170,7 @@ export function Landing() {
                   <p>{sample.tutorial.steps[cover.index]?.successCheck.description}</p>
                   {!sample.cardOutlines && tags.length ? (
                     <ul className="demo-tags">
-                      {tags.map((noun) => <li key={noun.noun} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
+                      {tags.map((noun) => <li key={noun.objectId} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
                     </ul>
                   ) : null}
                   <SceneCredit scene={sample.scene} />

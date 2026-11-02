@@ -1,4 +1,5 @@
 import type { PreferredLiveMode, TutorialStep } from "@/src/schema/types";
+import { uniqueNames } from "@/src/samples/scene";
 import type { CoachStateId } from "./types";
 
 export function honestyChip(mode: PreferredLiveMode, stillsArmed = false): string {
@@ -62,11 +63,11 @@ export function missingObjectHint(step: TutorialStep, presence: Record<string, b
   const label = (id: string) => step.objects.find((object) => object.objectId === id)?.noun.replaceAll("_", " ") ?? id;
   if (!required.length) return "No highlight on this frame. Press Next when the step looks right.";
   if (!presence) {
-    return `Keep these fully in frame: ${required.map(label).join(", ")}.`;
+    return `Keep these fully in frame: ${uniqueNames(required.map(label)).join(", ")}.`;
   }
   const missing = required.filter((id) => !presence[id]);
   if (!missing.length) return null;
-  const names = missing.map(label);
+  const names = uniqueNames(missing.map(label));
   if (names.length === 1) return `${names[0]} isn't highlighted. Bring the whole object into frame.`;
   return `Not highlighted: ${names.join(", ")}. Frame each one fully.`;
 }
