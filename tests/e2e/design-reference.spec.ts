@@ -44,26 +44,42 @@ test("mobile discovery keeps clip and goal entry accessible", async ({ page }) =
 
 test("lesson counts remain readable in selected and unselected filters", async ({ page }) => {
   await page.goto("/");
+  const filters = page.locator(".discovery-filters");
+  const counts = filters.locator("button > span");
+  await expect(counts).toHaveCount(3);
   for (const selected of [/^All lessons/, /^Kitchen/]) {
-    await page.getByRole("button", { name: selected }).click();
-    const contrasts = await page.locator(".discovery-filters button > span").evaluateAll((counts) => {
-      const rgb = (color: string) => (color.match(/[\d.]+/g) || []).map(Number);
-      const luminance = (color: number[]) => color.slice(0, 3).reduce((total, value, index) => {
-        const channel = value / 255;
-        return total + [0.2126, 0.7152, 0.0722][index] * (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
-      }, 0);
-      return counts.map((count) => {
-        const style = getComputedStyle(count);
-        const foreground = rgb(style.color);
-        const background = rgb(getComputedStyle(count.parentElement!).backgroundColor);
-        const alpha = Number(style.opacity) * (foreground[3] ?? 1);
-        const rendered = foreground.slice(0, 3).map((value, index) => value * alpha + background[index] * (1 - alpha));
-        const light = Math.max(luminance(rendered), luminance(background));
-        const dark = Math.min(luminance(rendered), luminance(background));
-        return { label: count.parentElement!.textContent, ratio: (light + 0.05) / (dark + 0.05) };
+    const button = page.getByRole("button", { name: selected });
+    await button.click();
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expect(async () => {
+      // Inherited count color can settle a frame after its button background.
+      await page.evaluate(() => new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }));
+      const animating = await filters.evaluate((element) => {
+        for (const button of element.querySelectorAll("button")) void getComputedStyle(button).backgroundColor;
+        return element.getAnimations({ subtree: true }).some((animation) => animation.pending || animation.playState === "running");
       });
-    });
-    for (const count of contrasts) expect(count.ratio, count.label || "Filter count").toBeGreaterThanOrEqual(4.5);
+      expect(animating).toBe(false);
+      const contrasts = await counts.evaluateAll((elements) => {
+        const rgb = (color: string) => (color.match(/[\d.]+/g) || []).map(Number);
+        const luminance = (color: number[]) => color.slice(0, 3).reduce((total, value, index) => {
+          const channel = value / 255;
+          return total + [0.2126, 0.7152, 0.0722][index] * (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+        }, 0);
+        return elements.map((count) => {
+          const style = getComputedStyle(count);
+          const foreground = rgb(style.color);
+          const background = rgb(getComputedStyle(count.parentElement!).backgroundColor);
+          const alpha = Number(style.opacity) * (foreground[3] ?? 1);
+          const rendered = foreground.slice(0, 3).map((value, index) => value * alpha + background[index] * (1 - alpha));
+          const light = Math.max(luminance(rendered), luminance(background));
+          const dark = Math.min(luminance(rendered), luminance(background));
+          return { label: count.parentElement!.textContent, ratio: (light + 0.05) / (dark + 0.05) };
+        });
+      });
+      for (const count of contrasts) expect(count.ratio, count.label || "Filter count").toBeGreaterThanOrEqual(4.5);
+    }).toPass({ timeout: 10_000 });
   }
 });
 
