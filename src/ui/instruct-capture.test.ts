@@ -1,8 +1,8 @@
 /** @vitest-environment happy-dom */
-import { act, createElement, type ReactNode } from "react";
+import { act, createElement, StrictMode, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CAMERA_DENIED_COPY, CAMERA_DENIED_HEADING, CAMERA_FAILED_COPY, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL } from "./instruct-flow";
+import { CAMERA_BUSY_COPY, CAMERA_BUSY_HEADING, CAMERA_DENIED_COPY, CAMERA_DENIED_HEADING, CAMERA_FAILED_COPY, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL } from "./instruct-flow";
 import { SAMPLES_HREF } from "./LiveCoachingOff";
 import { InstructScreen } from "./InstructScreen";
 import { SessionProvider } from "./session";
@@ -389,5 +389,102 @@ describe("instruct capture still", () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
     expect(host.querySelector(".error-panel h2")?.textContent).toBe("Camera didn't start");
+  });
+
+  it("mounts the video while getUserMedia is still pending and attaches when it resolves", async () => {
+    const order: string[] = [];
+    const proto = HTMLMediaElement.prototype;
+    const original = Object.getOwnPropertyDescriptor(proto, "srcObject");
+    Object.defineProperty(proto, "srcObject", {
+      configurable: true,
+      get() {
+        return original?.get?.call(this);
+      },
+      set(value: MediaStream | null) {
+        if (value) order.push("attached");
+        original?.set?.call(this, value);
+      },
+    });
+    vi.spyOn(window, "setTimeout").mockImplementation(((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+      if (ms === CAMERA_FRAME_TIMEOUT_MS) order.push("timer");
+      return realSetTimeout(fn as never, ms as number, ...(args as []));
+    }) as typeof window.setTimeout);
+    try {
+      await mount();
+      expect(host.querySelector("video.instruct-video")).toBeNull();
+      const pending = await allowCamera();
+      const video = host.querySelector("video.instruct-video");
+      expect(video).toBeTruthy();
+      expect(order).not.toContain("timer");
+      const again = buttonNamed(host, "Allow camera");
+      expect(again).toBeUndefined();
+      const asked = requests.length;
+      await act(async () => {
+        buttonNamed(host, CAMERA_STARTING_LABEL)?.click();
+      });
+      expect(requests.length).toBe(asked);
+      const stream = makeStream();
+      await act(async () => {
+        pending.resolve(stream);
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(host.querySelector("video.instruct-video")).toBe(video);
+      expect((video as HTMLVideoElement).srcObject).toBe(stream);
+      expect(order.indexOf("attached")).toBeGreaterThanOrEqual(0);
+      expect(order.indexOf("attached")).toBeLessThan(order.indexOf("timer"));
+      await act(async () => {
+        root.render(createElement(SessionProvider, null, createElement(InstructScreen)));
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      const after = host.querySelector("video.instruct-video") as HTMLVideoElement | null;
+      expect(after).toBeTruthy();
+      expect(after?.srcObject).toBe(stream);
+      expect(host.querySelector(".error-panel")).toBeNull();
+    } finally {
+      if (original) Object.defineProperty(proto, "srcObject", original);
+    }
+  });
+
+  it("keeps the attached stream when StrictMode remounts the effect", async () => {
+    await act(async () => {
+      root.render(createElement(StrictMode, null, createElement(SessionProvider, null, createElement(InstructScreen))));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const pending = await allowCamera();
+    expect(host.querySelector("video.instruct-video")).toBeTruthy();
+    const stream = makeStream();
+    await act(async () => {
+      pending.resolve(stream);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const video = host.querySelector("video.instruct-video") as HTMLVideoElement | null;
+    expect(video?.srcObject).toBe(stream);
+    expect(host.querySelector(".error-panel")).toBeNull();
+    expect(captureButton().textContent).toBe(CAMERA_STARTING_LABEL);
+  });
+
+  it("shows Camera is in use immediately when getUserMedia returns NotReadableError", async () => {
+    await mount();
+    const pending = await allowCamera();
+    const asked = requests.length;
+    await act(async () => {
+      pending.reject(new DOMException("busy", "NotReadableError"));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(requests.length).toBe(asked);
+    const panel = host.querySelector(".error-panel");
+    expect(panel?.querySelector("h2")?.textContent).toBe(CAMERA_BUSY_HEADING);
+    expect(panel?.querySelector("p")?.textContent).toBe(CAMERA_BUSY_COPY);
+    expect(buttonNamed(host, "Try again")?.classList.contains("btn-primary")).toBe(true);
+    expect(host.querySelector(`a[href="${SAMPLES_HREF}"]`)?.classList.contains("btn-ghost")).toBe(true);
+    expect(host.textContent).not.toContain("Enter a goal, then capture one still.");
+    expect(host.querySelector("video.instruct-video")).toBeNull();
   });
 });

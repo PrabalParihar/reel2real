@@ -25,6 +25,15 @@ describe("rear camera", () => {
       error.name = "NotAllowedError";
       throw error;
     })).rejects.toMatchObject({ name: "NotAllowedError" });
+
+    const busyCalls: MediaStreamConstraints[] = [];
+    await expect(openRearCamera(async (constraints) => {
+      busyCalls.push(constraints);
+      const error = new Error("in use");
+      error.name = "NotReadableError";
+      throw error;
+    })).rejects.toMatchObject({ name: "NotReadableError" });
+    expect(busyCalls).toEqual([REAR_CAMERA_CONSTRAINTS]);
   });
 
   it("names permission, missing camera, and insecure context", () => {

@@ -33,7 +33,9 @@ export async function openRearCamera(getUserMedia: (constraints: MediaStreamCons
   try {
     return await getUserMedia(REAR_CAMERA_CONSTRAINTS);
   } catch (error) {
-    if (classifyCameraError(error) === "denied") throw error;
+    const name = error && typeof error === "object" && "name" in error ? String(error.name) : "";
+    // A busy camera will not open under a different constraint. Permission errors neither.
+    if (classifyCameraError(error) === "denied" || name === "NotReadableError") throw error;
     return getUserMedia(FALLBACK_CAMERA_CONSTRAINTS);
   }
 }
