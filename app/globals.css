@@ -393,6 +393,25 @@ p { margin: 0; color: var(--ink-2); }
 .how-reels .reel-phone, .demo-card .reel-phone { width: 100%; }
 .filmstrip { display: flex; gap: 8px; overflow: hidden; width: min(720px, 100%); margin: 0; padding: 0; list-style: none; }
 .filmstrip li { flex: 1 1 0; min-width: 0; }
+.film-jump {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.film-jump:focus-visible {
+  outline: 2px solid var(--saffron);
+  outline-offset: -2px;
+}
 .filmstrip.is-scroll {
   overflow-x: auto;
   mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);

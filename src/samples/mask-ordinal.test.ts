@@ -8,6 +8,7 @@ import { DEMOS } from "./demos";
 import {
   selectMaskRecord,
   tutorialFromScene,
+  uniqueByNoun,
   unverifiedStep,
   type SamStepFile,
   type SceneNoun,
@@ -112,6 +113,14 @@ describe("explicit mask ordinals", () => {
     expect(html).toContain('data-object-id="obj_gloves"');
     expect(html).toContain('data-object-id="obj_gloves_1"');
     expect(html.match(/<path /g)?.length).toBe(6);
+  });
+
+  it("shows gloves once in the chip row and the landing tags", () => {
+    const step = scene("seed-planting").scene.steps[0];
+    const chips = uniqueByNoun(step.nouns.filter((noun) => noun.verified === true));
+    expect(chips.map((noun) => noun.noun)).toEqual(["gloves", "tray"]);
+    expect(chips.filter((noun) => noun.noun === "gloves")).toHaveLength(1);
+    expect(step.nouns.filter((noun) => noun.noun === "gloves")).toHaveLength(2);
   });
 
   it("lists gloves once in the seed step 1 hint", () => {

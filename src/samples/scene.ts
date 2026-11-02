@@ -23,6 +23,18 @@ export function recordedSampleStatus(recorded: boolean, unverified: boolean): st
 /** Coach fallback when a step has no verified mask. Grid cards must not use this. */
 export const NO_RECORDED_HIGHLIGHT = "No recorded highlight on this frame. Press Next when the step looks right.";
 
+/** Same noun on two ordinals should read once in a sentence or a chip row. */
+export function uniqueByNoun<T extends { noun: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const unique: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.noun)) continue;
+    seen.add(item.noun);
+    unique.push(item);
+  }
+  return unique;
+}
+
 /** Same noun on two ordinals should read once in a sentence. */
 export function uniqueNames(names: string[]): string[] {
   const seen = new Set<string>();

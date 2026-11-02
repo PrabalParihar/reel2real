@@ -219,6 +219,25 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
         next = { state: "user_skip", context };
       }
       break;
+    case "JUMP_TO_STEP": {
+      const index = event.index;
+      const canJump = state === "step_ready"
+        || state === "waiting"
+        || state === "tracking"
+        || state === "evaluating"
+        || state === "success"
+        || state === "skip_detected"
+        || state === "out_of_order"
+        || state === "mask_lost"
+        || state === "error_recoverable"
+        || state === "paused";
+      if (!canJump || !Number.isInteger(index) || index < 0 || index >= context.stepCount || index === context.stepIndex) break;
+      next = {
+        state: "step_ready",
+        context: clearSoft(context, { stepIndex: index, armImmediate: false, tick: context.tick + 1 }),
+      };
+      break;
+    }
     case "USER_ADVANCE":
     case "STEP_LOADED":
       if (state === "skip_detected") {

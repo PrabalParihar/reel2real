@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
 import { shapeClass } from "@/src/samples/frame-fit";
-import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, type SampleScene } from "@/src/samples/scene";
+import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, uniqueByNoun, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
@@ -146,7 +146,7 @@ export function Landing() {
         <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : " is-set"}`}>
           {PUBLISHED_SAMPLES.map((sample) => {
             const cover = cardCoverStep(sample.scene, sample.cardOutlines);
-            const tags = presentNouns(cover).filter((noun) => noun.verified !== false);
+            const tags = uniqueByNoun(presentNouns(cover).filter((noun) => noun.verified !== false));
             return (
               <article className="panel demo-card" key={sample.id}>
                 <div className="reel-phone card-frame">

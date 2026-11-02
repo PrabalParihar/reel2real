@@ -9,6 +9,7 @@ import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
   selectMaskRecord,
+  uniqueByNoun,
   type SamStepFile,
   type SceneNoun,
 } from "@/src/samples/scene";
@@ -348,7 +349,7 @@ export function PhotoFrame({
       </div>
       {labelMode === "tags" ? (
         <div className="noun-tags">
-          {(overlay?.nouns ?? []).filter((noun) => noun.present).map((noun) => (
+          {uniqueByNoun((overlay?.nouns ?? []).filter((noun) => noun.present)).map((noun) => (
             <span key={noun.objectId} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
           ))}
         </div>

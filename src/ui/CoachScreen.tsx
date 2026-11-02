@@ -15,6 +15,7 @@ import { hidesClipTiming } from "./clip-timing";
 import { coverNormalizedBox } from "./cover-box";
 import { PHONE_STAND_HINT, instructHonestyChips, instructSamChip, instructSamOverlay, instructSamPhase } from "./instruct-chips";
 import { stepHeadlineFontPx } from "./step-headline";
+import { Filmstrip } from "./filmstrip";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
@@ -223,9 +224,13 @@ function CoachBody() {
           {session.stepsSource === "instruct" ? <p className="quiet">{PHONE_STAND_HINT}</p> : null}
           {session.stepsSource === "instruct" && session.runtime.mock ? <p className="quiet">Mock client. This is not a live Muse call.</p> : null}
           {published ? (
-            <ol className={`filmstrip${tutorial.steps.length > 3 ? " is-scroll" : ""}`}>
-              {tutorial.steps.map((item, index) => (
-                <li key={item.id} className={index === coach.machine.context.stepIndex ? "is-current" : ""}>
+            <Filmstrip
+              current={coach.machine.context.stepIndex}
+              onJump={(index) => coach.dispatch({ type: "JUMP_TO_STEP", index })}
+              steps={tutorial.steps.map((item, index) => ({
+                id: item.id,
+                title: item.instructionText,
+                thumb: (
                   <PhotoFrame
                     className={published.stepFullFrame[index] ? "is-source" : shapeClass(published.shape)}
                     src={sceneAsset(published.scene, published.scene.steps[index]?.keyframe ?? published.poster)}
@@ -234,11 +239,9 @@ function CoachBody() {
                     zoom={published.stepFullFrame[index] ? 1 : published.stepZooms[index] ?? published.zoom}
                     sizes="160px"
                   />
-                  <span className="film-num">{index + 1}</span>
-                  {index === coach.machine.context.stepIndex ? <span className="film-title">{item.instructionText}</span> : null}
-                </li>
-              ))}
-            </ol>
+                ),
+              }))}
+            />
           ) : null}
           <ol className="rail">
             {tutorial.steps.map((item, index) => (
