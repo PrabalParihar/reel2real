@@ -3,12 +3,13 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { readableChipColor } from "@/src/ui/chip-color";
 import { durationChipLabel } from "@/src/ui/duration-chip";
-import { chooseLabelPosition, LABEL_CLEARANCE, type LabelRect } from "@/src/ui/label-place";
-import { clipPathToRect, framePathFromPayload, frameToView, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, sharedStillRect, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition, type Point } from "@/src/samples/mask-geometry";
+import { LABEL_CLEARANCE, maskBoxInView, placeAnchoredLabels, type LabelRect } from "@/src/ui/label-place";
+import { clipPathToRect, framePathFromPayload, MASK_FRAME, SAMPLE_STILL, scaleFrameBox, sharedStillRect, visibleFrameRect, type CoverTransform, type FrameBox, type MaskDraw, type ObjectPosition } from "@/src/samples/mask-geometry";
 import {
   RECORDED_SAM_LABEL,
   SAM_FRAME,
   selectMaskRecord,
+  uniqueByNoun,
   type SamStepFile,
   type SceneNoun,
 } from "@/src/samples/scene";
@@ -19,6 +20,7 @@ export interface OverlayRequest {
 }
 
 interface DrawItem {
+  key: string;
   noun: string;
   color: string;
   draw: MaskDraw;
@@ -27,37 +29,36 @@ interface DrawItem {
   box: FrameBox;
 }
 
-function boxFullyInside(box: FrameBox, view: FrameBox): boolean {
-  return box.x1 >= view.x1 - 0.5 && box.y1 >= view.y1 - 0.5 && box.x2 <= view.x2 + 0.5 && box.y2 <= view.y2 + 0.5;
+export function RecordedOutlineLayer({
+  items,
+  clipRect,
+  stillScale,
+  glowId,
+}: {
+  items: DrawItem[];
+  clipRect: FrameBox | null;
+  stillScale: number;
+  glowId: string;
+}) {
+  return (
+    <>
+      {items.map((item) => {
+        const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
+        if (!d) return null;
+        return (
+          <g key={item.key} data-noun={item.noun} data-object-id={item.key}>
+            <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
+            <path d={d} fill="none" stroke={item.color} strokeWidth={14 * stillScale} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
+            <path d={d} fill="none" stroke={item.color} strokeWidth={4.5 * stillScale} strokeLinejoin="round" strokeLinecap="round" />
+          </g>
+        );
+      })}
+    </>
+  );
 }
 
-function outlineSegments(d: string, frameW: number, frameH: number, cover: CoverTransform): Array<[Point, Point]> {
-  const tokens = d.match(/[MLZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
-  const segments: Array<[Point, Point]> = [];
-  let cursor: Point | null = null;
-  let start: Point | null = null;
-  const at = (x: number, y: number) => frameToView(x, y, frameW, frameH, cover);
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index].toUpperCase();
-    if (token === "M" || token === "L") {
-      const x = Number(tokens[index + 1]);
-      const y = Number(tokens[index + 2]);
-      index += 2;
-      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-      const next = at(x, y);
-      if (token === "M") {
-        cursor = next;
-        start = next;
-      } else if (cursor) {
-        segments.push([cursor, next]);
-        cursor = next;
-      }
-    } else if (token === "Z" && cursor && start) {
-      segments.push([cursor, start]);
-      cursor = start;
-    }
-  }
-  return segments;
+function boxFullyInside(box: FrameBox, view: FrameBox): boolean {
+  return box.x1 >= view.x1 - 0.5 && box.y1 >= view.y1 - 0.5 && box.x2 <= view.x2 + 0.5 && box.y2 <= view.y2 + 0.5;
 }
 
 /** Outer painted contour. The 4.5 core sits inside this glow stroke. */
@@ -89,46 +90,18 @@ function placeLabels(
   cover: CoverTransform,
   view: { w: number; h: number },
   status: LabelRect | null,
-  strokeWidth = OUTLINE_STROKE,
-): Array<{ noun: string; color: string; x: number; y: number }> {
-  const labels: Array<{ noun: string; color: string; x: number; y: number }> = [];
-  const blocked: LabelRect[] = status ? [status] : [];
-  const strokes = items.flatMap((item) => outlineSegments(item.draw.d, frameW, frameH, cover));
-  const strokeScale = Math.max(cover.width / frameW, cover.height / frameH);
-  const strokeRadius = (strokeWidth / 2) * strokeScale;
-  for (const item of items) {
-    const outline = outlineSegments(item.draw.d, frameW, frameH, cover);
-    if (!outline.length) continue;
-    const bounds = outline.reduce((acc, [start, end]) => ({
-      minX: Math.min(acc.minX, start.x, end.x),
-      minY: Math.min(acc.minY, start.y, end.y),
-      maxX: Math.max(acc.maxX, start.x, end.x),
-      maxY: Math.max(acc.maxY, start.y, end.y),
-    }), { minX: Number.POSITIVE_INFINITY, minY: Number.POSITIVE_INFINITY, maxX: Number.NEGATIVE_INFINITY, maxY: Number.NEGATIVE_INFINITY });
-    // Matches the 12px mono chip: 7.2px a glyph, 10px padding, 1px border.
-    const labelW = item.noun.length * 7.2 + 22;
-    const labelH = 27;
-    const chosen = chooseLabelPosition({
-      viewW: view.w,
-      viewH: view.h,
-      labelW,
-      labelH,
-      bounds,
-      strokes,
-      strokeRadius,
-      clearance: LABEL_CLEARANCE,
-      blocked,
-    });
-    if (!chosen) continue;
-    blocked.push({
-      x1: chosen.x - labelW / 2,
-      y1: chosen.y - labelH / 2,
-      x2: chosen.x + labelW / 2,
-      y2: chosen.y + labelH / 2,
-    });
-    labels.push({ noun: item.noun, color: readableChipColor(item.color), x: chosen.x, y: chosen.y });
-  }
-  return labels;
+): Array<{ key: string; noun: string; color: string; x: number; y: number }> {
+  const targets = items.flatMap((item) => {
+    const box = maskBoxInView(item.box, frameW, frameH, cover, view.w, view.h);
+    if (!box) return [];
+    return [{ key: item.key, noun: item.noun, color: readableChipColor(item.color), box }];
+  });
+  return placeAnchoredLabels({
+    viewW: view.w,
+    viewH: view.h,
+    targets,
+    blocked: status ? [status] : [],
+  });
 }
 
 function formatClock(seconds: number): string {
@@ -232,6 +205,7 @@ export function PhotoFrame({
             const draw = framePathFromPayload(selected.mask, imageBox);
             if (!draw.d) continue;
             next.push({
+              key: noun.objectId,
               noun: noun.noun,
               color: noun.color || "#2dd4bf",
               draw,
@@ -308,29 +282,23 @@ export function PhotoFrame({
           {playLoop ? null : (
             <image href={src} x="0" y="0" width={frameW} height={frameH} preserveAspectRatio="none" />
           )}
-          {items.map((item) => {
-            if (!drawOutlines || (visible && !boxFullyInside(item.box, visible))) return null;
-            const d = clipRect ? clipPathToRect(item.draw.d, clipRect) : item.draw.d;
-            if (!d) return null;
-            return (
-              <g key={item.noun} data-noun={item.noun}>
-                <path d={d} fill={item.color} fillOpacity={0.2} stroke="none" />
-                <path d={d} fill="none" stroke={item.color} strokeWidth={14 * stillScale} strokeLinejoin="round" strokeLinecap="round" strokeOpacity={0.55} filter={`url(#${glowId})`} />
-                <path d={d} fill="none" stroke={item.color} strokeWidth={4.5 * stillScale} strokeLinejoin="round" strokeLinecap="round" />
-              </g>
-            );
-          })}
+          <RecordedOutlineLayer
+            items={drawOutlines ? items.filter((item) => !visible || boxFullyInside(item.box, visible)) : []}
+            clipRect={clipRect}
+            stillScale={stillScale}
+            glowId={glowId}
+          />
         </svg>
       </div>
       {labelMode === "tags" ? (
         <div className="noun-tags">
-          {(overlay?.nouns ?? []).filter((noun) => noun.present).map((noun) => (
-            <span key={noun.noun} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
+          {uniqueByNoun((overlay?.nouns ?? []).filter((noun) => noun.present)).map((noun) => (
+            <span key={noun.objectId} className="noun-chip" style={{ borderColor: readableChipColor(noun.color), color: readableChipColor(noun.color) }}>{noun.noun}</span>
           ))}
         </div>
-      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null, OUTLINE_STROKE * stillScale).map((label) => (
+      ) : cover ? placeLabels(items, frameW, frameH, cover, view, statusText ? statusRect(statusText, view.w, view.h, mediaBottom) : null).map((label) => (
           <span
-            key={label.noun}
+            key={label.key}
             className="noun-chip"
             style={{
               left: label.x,

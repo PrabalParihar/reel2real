@@ -23,6 +23,30 @@ export function recordedSampleStatus(recorded: boolean, unverified: boolean): st
 /** Coach fallback when a step has no verified mask. Grid cards must not use this. */
 export const NO_RECORDED_HIGHLIGHT = "No recorded highlight on this frame. Press Next when the step looks right.";
 
+/** Same noun on two ordinals should read once in a sentence or a chip row. */
+export function uniqueByNoun<T extends { noun: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const unique: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.noun)) continue;
+    seen.add(item.noun);
+    unique.push(item);
+  }
+  return unique;
+}
+
+/** Same noun on two ordinals should read once in a sentence. */
+export function uniqueNames(names: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const name of names) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    unique.push(name);
+  }
+  return unique;
+}
+
 export function unverifiedStep(nouns: SceneNoun[] | undefined): boolean {
   const present = (nouns ?? []).filter((noun) => noun.present !== false && noun.noun.trim());
   return present.length > 0 && present.every((noun) => noun.verified === false);
@@ -30,7 +54,7 @@ export function unverifiedStep(nouns: SceneNoun[] | undefined): boolean {
 
 /** Plain hint for a step whose masks are not verified. No Sample chip and no highlight wording. */
 export function unverifiedStepHint(nouns: SceneNoun[] | undefined): string {
-  const names = (nouns ?? []).filter((noun) => noun.present !== false && noun.verified === false).map((noun) => noun.noun);
+  const names = uniqueNames((nouns ?? []).filter((noun) => noun.present !== false && noun.verified === false).map((noun) => noun.noun));
   if (names.length === 1) return `Keep the ${names[0]} fully in frame`;
   if (names.length > 1) return `Keep the ${names.join(" and ")} fully in frame`;
   return "Keep the cup fully in frame";

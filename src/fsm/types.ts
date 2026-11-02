@@ -67,6 +67,7 @@ export type CoachEvent =
   | { type: "USER_RETRY" }
   | { type: "USER_SKIP" }
   | { type: "USER_ADVANCE" }
+  | { type: "JUMP_TO_STEP"; index: number }
   | { type: "USER_PAUSE" }
   | { type: "USER_RESUME" }
   | { type: "ENTER_STILLS_FALLBACK"; reason?: string }

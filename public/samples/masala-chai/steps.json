@@ -69,7 +69,18 @@
           "color": "#50A0E6",
           "present": true,
           "requestId": "9fdfb2ec-af0f-46d0-9781-3be7c68a5e79",
+          "maskOrdinal": "0",
           "verified": true
+        },
+        {
+          "objectId": "obj_hand_1",
+          "noun": "hand",
+          "samPrompt": "hand",
+          "color": "#2DB4AA",
+          "present": true,
+          "requestId": "9fdfb2ec-af0f-46d0-9781-3be7c68a5e79",
+          "maskOrdinal": "1",
+          "verified": false
         }
       ]
     },

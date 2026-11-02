@@ -124,7 +124,7 @@ describe("sample steps with no verified overlay", () => {
       ],
       "masala-chai": [
         { samFile: "sam/step-1.json", nouns: [{ noun: "mortar", verified: true }, { noun: "pestle", verified: true }] },
-        { samFile: "sam/step-2.json", nouns: [{ noun: "spices", verified: false }, { noun: "hand", verified: true }] },
+        { samFile: "sam/step-2.json", nouns: [{ noun: "spices", verified: false }, { noun: "hand", verified: true }, { noun: "hand", verified: false }] },
         { samFile: "sam/step-3.json", nouns: [{ noun: "spices", verified: false }] },
       ],
       origami: [
@@ -133,9 +133,9 @@ describe("sample steps with no verified overlay", () => {
         { samFile: "sam/step-3.json", nouns: [{ noun: "crane", verified: false }] },
       ],
       "seed-planting": [
-        { samFile: "sam/step-1.json", nouns: [{ noun: "gloves", verified: true }, { noun: "tray", verified: true }] },
-        { samFile: "sam/step-2.json", nouns: [{ noun: "gloves", verified: true }] },
-        { samFile: "sam/step-3.json", nouns: [{ noun: "jar", verified: true }, { noun: "gloves", verified: true }] },
+        { samFile: "sam/step-1.json", nouns: [{ noun: "gloves", verified: true }, { noun: "gloves", verified: true }, { noun: "tray", verified: true }] },
+        { samFile: "sam/step-2.json", nouns: [{ noun: "gloves", verified: true }, { noun: "gloves", verified: true }] },
+        { samFile: "sam/step-3.json", nouns: [{ noun: "jar", verified: true }, { noun: "gloves", verified: true }, { noun: "gloves", verified: true }] },
       ],
     });
   });

@@ -23,9 +23,9 @@ const HIT_NOUNS: Record<string, string[][]> = {
     ["crane"],
   ],
   "seed-planting": [
-    ["gloves", "tray"],
-    ["gloves"],
-    ["jar", "gloves"],
+    ["gloves", "gloves", "tray"],
+    ["gloves", "gloves"],
+    ["jar", "gloves", "gloves"],
   ],
   "latte-art": [
     ["cup"],
@@ -232,7 +232,7 @@ describe("catalog frame shapes", () => {
         expect(step.title.trim().length).toBeGreaterThan(0);
         expect(step.instruction.trim().length).toBeGreaterThan(0);
         const listed = (step as { keepFullyInFrame?: string[] }).keepFullyInFrame ?? [];
-        const drawnNames = step.nouns.filter((noun) => noun.present && noun.verified === true).map((noun) => noun.noun);
+        const drawnNames = [...new Set(step.nouns.filter((noun) => noun.present && noun.verified === true).map((noun) => noun.noun))];
         expect(listed).toEqual(drawnNames);
         const drawable = step.nouns.filter((noun) => noun.present && noun.verified !== false);
         if (!drawable.length) {
