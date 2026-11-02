@@ -1,7 +1,4 @@
-import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
+import { readFile, stat } from "node:fs/promises";
 import { SAM_MODEL_ID, SPARK_MODEL_ID, API_ORIGIN } from "@/src/models";
 import { tutorialFromSparkPayload, type UserAttribution } from "@/src/schema/attribution";
 import { parseSamBoxes } from "./sam-parse";
@@ -11,6 +8,8 @@ import { redactSecrets } from "./redact";
 import { buildSparkResponsesBody, chooseSparkMediaPlan, SPARK_STEPS_INSTRUCTION } from "./spark-request";
 import { sampleById } from "./fixtures";
 import { consumeMetaCalls, DailyCapError } from "./daily-cap";
+import { modelDeadline, type ModelDeadline } from "./model-deadline";
+import { CLIP_MAX_BYTES, SEGMENT_MAX_BYTES, decodeModelMedia, validateClipDuration } from "./model-media";
 import type { SegmentRequest, SegmentResult, SegmentationClient, SparkClient, SparkRequest, SparkResult, MaskHit } from "./types";
 
 function assertServer() {
@@ -33,20 +32,19 @@ function modelFromBody(body: unknown): string {
 async function postResponses(
   key: string,
   body: unknown,
-  timeoutMs: number,
+  deadline: ModelDeadline,
   headers: Record<string, string> = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
 ): Promise<{ status: number; text: string; url: string; requestId: string; route: string; latencyMs: number }> {
+  deadline.throwIfExpired();
   reserveMetaCall();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
   const url = responsesUrl(process.env);
   const started = performance.now();
-  try {
+  return deadline.run(async () => {
     const response = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
-      signal: controller.signal,
+      signal: deadline.signal,
     });
     const text = await response.text();
     const ids = readUpstreamHeaders(response.headers);
@@ -60,9 +58,7 @@ async function postResponses(
         : sparkFailureLog({ status: response.status, url, body: text, requestId: ids.requestId, route: ids.route, latencyMs, model, secrets: [key] });
     console.error(line);
     return { status: response.status, text: redactSecrets(text, [key]), url, requestId: ids.requestId, route: ids.route, latencyMs };
-  } finally {
-    clearTimeout(timer);
-  }
+  });
 }
 
 function outputText(payload: string): string {
@@ -163,65 +159,48 @@ async function finishPayload(
   };
 }
 
-async function twoSecondChunk(base64: string): Promise<string> {
-  const probe = spawnSync("ffmpeg", ["-version"], { stdio: "ignore" });
-  if (probe.status !== 0) return base64;
-  const dir = await mkdtemp(path.join(tmpdir(), "reel2real-spark-"));
-  try {
-    const source = path.join(dir, "in.mp4");
-    const target = path.join(dir, "chunk.mp4");
-    await writeFile(source, Buffer.from(base64, "base64"));
-    const copied = spawnSync("ffmpeg", ["-y", "-i", source, "-t", "2", "-c", "copy", target], { stdio: "ignore" });
-    if (copied.status !== 0) {
-      spawnSync("ffmpeg", ["-y", "-i", source, "-t", "2", "-c:v", "libx264", "-preset", "veryfast", "-an", target], { stdio: "ignore" });
-    }
-    const chunk = await readFile(target);
-    return chunk.length > 0 ? chunk.toString("base64") : base64;
-  } catch {
-    return base64;
-  } finally {
-    await rm(dir, { recursive: true, force: true });
-  }
-}
-
-async function uploadClipFile(key: string, base64: string, mime: string): Promise<{ id?: string; status: number }> {
+async function uploadClipFile(key: string, base64: string, mime: string, deadline: ModelDeadline): Promise<{ id?: string; status: number }> {
+  deadline.throwIfExpired();
   reserveMetaCall();
   const started = performance.now();
   const bytes = Buffer.from(base64, "base64");
   const form = new FormData();
   form.append("purpose", "user_data");
   form.append("file", new Blob([new Uint8Array(bytes)], { type: mime }), mime.includes("webm") ? "clip.webm" : "clip.mp4");
-  const response = await fetch(FILES_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}` },
-    body: form,
-  });
-  const ids = readUpstreamHeaders(response.headers);
-  const latencyMs = Math.round(performance.now() - started);
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(sparkFailureLog({
+  return deadline.run(async () => {
+    const response = await fetch(FILES_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+      body: form,
+      signal: deadline.signal,
+    });
+    const ids = readUpstreamHeaders(response.headers);
+    const latencyMs = Math.round(performance.now() - started);
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(sparkFailureLog({
+        status: response.status,
+        url: FILES_URL,
+        body: text,
+        requestId: ids.requestId,
+        route: ids.route,
+        latencyMs,
+        model: "-",
+        secrets: [key],
+      }));
+      return { status: response.status };
+    }
+    console.error(metaUpstreamLog({
+      path: "/v1/files",
+      model: "-",
       status: response.status,
-      url: FILES_URL,
-      body: text,
       requestId: ids.requestId,
       route: ids.route,
       latencyMs,
-      model: "-",
-      secrets: [key],
     }));
-    return { status: response.status };
-  }
-  console.error(metaUpstreamLog({
-    path: "/v1/files",
-    model: "-",
-    status: response.status,
-    requestId: ids.requestId,
-    route: ids.route,
-    latencyMs,
-  }));
-  const payload = (await response.json()) as { id?: string };
-  return { id: payload.id, status: response.status };
+    const payload = (await response.json()) as { id?: string };
+    return { id: payload.id, status: response.status };
+  });
 }
 
 export function createLiveSparkClient(key: string): SparkClient {
@@ -231,6 +210,7 @@ export function createLiveSparkClient(key: string): SparkClient {
     modelId: SPARK_MODEL_ID,
     async generateSteps(input: SparkRequest): Promise<SparkResult> {
       const started = performance.now();
+      const deadline = modelDeadline(SPARK_TIMEOUT_MS, input.signal);
       const meta = userMeta(input);
       try {
         if (!input.videoBase64) {
@@ -252,7 +232,7 @@ export function createLiveSparkClient(key: string): SparkClient {
             };
           }
           if (!meta) return fail(0, ["Creator name and licence are required."], "transcript");
-          const response = await postResponses(key, buildSparkResponsesBody({ transcript: input.transcript || input.title || "Tutorial" }), SPARK_TIMEOUT_MS);
+          const response = await postResponses(key, buildSparkResponsesBody({ transcript: input.transcript || input.title || "Tutorial" }), deadline);
           const latencyMs = Math.round(performance.now() - started);
           if (response.status < 200 || response.status >= 300) {
             return fail(latencyMs, [`Spark failed (HTTP ${response.status}).`], "transcript");
@@ -265,15 +245,15 @@ export function createLiveSparkClient(key: string): SparkClient {
         }
         if (!meta) return fail(0, ["Creator name and licence are required."], "clip");
         const mime = input.mimeType || "video/mp4";
-        const bytes = Buffer.from(input.videoBase64, "base64").length;
+        validateClipDuration(input.durationSec);
+        const bytes = decodeModelMedia(input.videoBase64, mime, "video_chunk", CLIP_MAX_BYTES).length;
         const plan = chooseSparkMediaPlan({ durationSec: input.durationSec, byteLength: bytes });
         let dataUrlError = "";
-        if (plan === "chunk_data_url") {
-          const chunk = await twoSecondChunk(input.videoBase64);
+        if (plan === "full_video_data_url") {
           const response = await postResponses(
             key,
-            buildSparkResponsesBody({ instruction: SPARK_STEPS_INSTRUCTION, videoBase64: chunk, mimeType: mime }),
-            SPARK_TIMEOUT_MS,
+            buildSparkResponsesBody({ instruction: SPARK_STEPS_INSTRUCTION, videoBase64: input.videoBase64, mimeType: mime }),
+            deadline,
           );
           const latencyMs = Math.round(performance.now() - started);
           if (response.status >= 200 && response.status < 300) {
@@ -288,7 +268,7 @@ export function createLiveSparkClient(key: string): SparkClient {
           }
           dataUrlError = `HTTP ${response.status}`;
         }
-        const uploaded = await uploadClipFile(key, input.videoBase64, mime);
+        const uploaded = await uploadClipFile(key, input.videoBase64, mime, deadline);
         if (!uploaded.id) {
           const latencyMs = Math.round(performance.now() - started);
           const both = dataUrlError ? "The short upload and the files upload both failed." : `Files upload failed (HTTP ${uploaded.status}).`;
@@ -297,7 +277,7 @@ export function createLiveSparkClient(key: string): SparkClient {
         const response = await postResponses(
           key,
           buildSparkResponsesBody({ instruction: SPARK_STEPS_INSTRUCTION, fileId: uploaded.id }),
-          SPARK_TIMEOUT_MS,
+          deadline,
         );
         const latencyMs = Math.round(performance.now() - started);
         if (response.status < 200 || response.status >= 300) {
@@ -313,6 +293,8 @@ export function createLiveSparkClient(key: string): SparkClient {
         const latencyMs = Math.round(performance.now() - started);
         const message = error instanceof Error ? error.message : "Spark request failed";
         return fail(latencyMs, [redactSecrets(message, [key]) || "Spark request failed"], input.videoBase64 ? "clip" : "transcript");
+      } finally {
+        deadline.close();
       }
     },
   };
@@ -330,44 +312,56 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
     modelId: SAM_MODEL_ID,
     async segment(input: SegmentRequest): Promise<SegmentResult> {
       const started = performance.now();
-      const prompts = input.prompts.slice(0, 4);
+      const deadline = modelDeadline(Number.isFinite(input.timeoutMs) && input.timeoutMs > 0 ? Math.min(input.timeoutMs, 8000) : 8000, input.signal);
+      const prompts = input.prompts;
       const masks: MaskHit[] = [];
       let status = 0;
       let failed = "";
       try {
+        deadline.throwIfExpired();
+        if (!prompts.length || prompts.length > 4) throw new Error("SAM supports one to four object prompts per request.");
+        const precisePrompts = prompts.map((prompt) => {
+          const text = prompt.samPrompt?.trim() || prompt.noun?.trim();
+          if (!text || text.length > 500) throw new Error("SAM object prompt must contain 1 to 500 characters.");
+          return { ...prompt, text };
+        });
         let base64 = input.mediaBase64;
         if (!base64 && input.mediaPath) {
-          const bytes = await readFile(input.mediaPath);
+          const info = await deadline.run(() => stat(input.mediaPath!));
+          if (!info.isFile() || info.size > SEGMENT_MAX_BYTES) throw new Error("Media exceeds the supported byte limit.");
+          const bytes = await deadline.run(() => readFile(input.mediaPath!, { signal: deadline.signal }));
           base64 = bytes.toString("base64");
         }
         if (!base64) throw new Error("No frame was attached");
         const mime = input.mimeType || (input.inputKind === "video_chunk" ? "video/mp4" : "image/jpeg");
+        decodeModelMedia(base64, mime, input.inputKind, SEGMENT_MAX_BYTES);
         const encoded = dataUrl(mime, base64);
         // One Meta SAM call per noun. A 4-noun step is 4 calls. Instruct plans cap nouns at 3.
-        for (const prompt of prompts) {
+        for (const prompt of precisePrompts) {
           const response = await postResponses(
             key,
             input.inputKind === "video_chunk"
-              ? buildSamResponsesBody({ prompt: prompt.noun, videoDataUrl: encoded })
-              : buildSamResponsesBody({ prompt: prompt.noun, imageDataUrl: encoded }),
-            input.timeoutMs,
+              ? buildSamResponsesBody({ prompt: prompt.text, videoDataUrl: encoded })
+              : buildSamResponsesBody({ prompt: prompt.text, imageDataUrl: encoded }),
+            deadline,
             samRequestHeaders(key),
           );
           status = response.status;
           if (response.status < 200 || response.status >= 300) {
             failed = `SAM failed (HTTP ${response.status}).`;
-            masks.push({ objectId: prompt.objectId, noun: prompt.noun, present: false });
-            continue;
+            break;
           }
           const text = samOutputText(response.text);
           const boxes = parseSamBoxes(text);
           const present = samMaskPresent(text);
+          const candidateBox = boxes[0]?.box;
+          const box = candidateBox && candidateBox.x + candidateBox.w <= 1 && candidateBox.y + candidateBox.h <= 1 ? candidateBox : undefined;
           masks.push({
             objectId: prompt.objectId,
             noun: prompt.noun,
             present,
             trackId: present && boxes[0] ? `f${boxes[0].frame}-o${boxes[0].ordinal}` : undefined,
-            box: boxes[0]?.box,
+            box,
           });
         }
         const latencyMs = Math.round(performance.now() - started);
@@ -392,14 +386,14 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
       } catch (error) {
         if (error instanceof DailyCapError) throw error;
         const latencyMs = Math.round(performance.now() - started);
-        const aborted = error instanceof Error && error.name === "AbortError";
-        const message = aborted ? "SAM timed out." : redactSecrets(error instanceof Error ? error.message : "SAM request failed", [key]);
+        const timedOut = deadline.signal.aborted && deadline.signal.reason?.name === "TimeoutError";
+        const message = timedOut ? "SAM timed out." : redactSecrets(error instanceof Error ? error.message : "SAM request failed", [key]);
         return {
           mode: "live",
           modelId: SAM_MODEL_ID,
           latencyMs,
           ok: false,
-          timedOut: aborted,
+          timedOut,
           error: message,
           httpStatus: status || undefined,
           inputKind: input.inputKind,
@@ -407,11 +401,13 @@ export function createLiveSegmentationClient(key: string): SegmentationClient {
           toolCall: {
             tool: "sam_3_1",
             modelId: SAM_MODEL_ID,
-            purpose: "keyframe_object_masks",
+            purpose: input.inputKind === "video_chunk" ? "chunk_object_masks" : "keyframe_object_masks",
             inputKind: input.inputKind === "video_chunk" ? "video_chunk" : "image",
             latencyMs,
           },
         };
+      } finally {
+        deadline.close();
       }
     },
   };

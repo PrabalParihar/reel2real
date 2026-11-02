@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { TIMEOUTS } from "@/src/fsm/types";
 import type { SegmentResult } from "@/src/server/types";
+import { modelDeadline } from "./model-deadline";
 
 export const SAM_FORWARD_SECRET_HEADER = "x-r2r-forward-secret";
 
@@ -64,26 +65,22 @@ function inputKindOf(rawBody: string): "image" | "video_chunk" {
   }
 }
 
-/** Long enough for the same per-prompt cap the direct segment call uses. */
+/** Match the worker's total deadline; noun count does not multiply the time budget. */
 export function samForwardTimeoutMs(rawBody: string): number {
   let per: number = TIMEOUTS.SAM_TIMEOUT_MS;
-  let count = 1;
   try {
     const parsed = JSON.parse(rawBody) as { timeoutMs?: unknown; prompts?: unknown };
     if (typeof parsed.timeoutMs === "number" && Number.isFinite(parsed.timeoutMs) && parsed.timeoutMs > 0) {
       per = Math.min(parsed.timeoutMs, TIMEOUTS.SAM_TIMEOUT_MS);
     }
-    if (Array.isArray(parsed.prompts) && parsed.prompts.length > 0) {
-      count = Math.min(parsed.prompts.length, MAX_PROMPTS);
-    }
   } catch {
     return TIMEOUTS.SAM_TIMEOUT_MS;
   }
-  return per * count;
+  return per;
 }
 
 function isAbort(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
+  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
 
 export async function forwardSamRequest(options: {
@@ -94,12 +91,12 @@ export async function forwardSamRequest(options: {
   realIp?: string | null;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  signal?: AbortSignal;
 }): Promise<Response> {
   const url = options.env.SAM_FORWARD_URL?.trim() ?? "";
   const secret = options.env.SAM_FORWARD_SECRET ?? "";
   const timeoutMs = options.timeoutMs ?? samForwardTimeoutMs(options.rawBody);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const deadline = modelDeadline(timeoutMs, options.signal);
   const started = performance.now();
   try {
     const headers: Record<string, string> = {
@@ -109,14 +106,14 @@ export async function forwardSamRequest(options: {
     if (options.forwardedFor) headers["x-forwarded-for"] = options.forwardedFor;
     if (options.realIp) headers["x-real-ip"] = options.realIp;
     const fetchImpl = options.fetchImpl ?? fetch;
-    const response = await fetchImpl(url, {
+    const response = await deadline.run(() => fetchImpl(url, {
       method: "POST",
       headers,
       body: options.rawBody,
       redirect: "manual",
-      signal: controller.signal,
-    });
-    const body = await response.arrayBuffer();
+      signal: deadline.signal,
+    }));
+    const body = await deadline.run(() => response.arrayBuffer());
     const outHeaders = new Headers();
     const type = response.headers.get("content-type");
     if (type) outHeaders.set("content-type", type);
@@ -131,6 +128,6 @@ export async function forwardSamRequest(options: {
       latencyMs,
     }));
   } finally {
-    clearTimeout(timer);
+    deadline.close();
   }
 }

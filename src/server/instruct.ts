@@ -6,7 +6,9 @@ import { INSTRUCT_STILL_WIDTH } from "@/src/coach/keyframe";
 import { consumeMetaCalls, DailyCapError } from "./daily-cap";
 import { readModelApiKey } from "./env";
 import { guardMetaRoute, dailyCapResponse } from "./meta-guard";
-import { forwardMuseRequest, museForwardEnabled, musePublicDegrade } from "./muse-forward";
+import { forwardMuseRequest, musePublicDegrade } from "./muse-forward";
+import { modelExecutionMode } from "./model-execution";
+import { readLimitedBody } from "./request-body";
 import { metaUpstreamLog, pathnameOf, readUpstreamHeaders, sparkFailureLog } from "./meta-log";
 import { redactSecrets } from "./redact";
 import { responsesUrl } from "./sam-request";
@@ -354,6 +356,7 @@ export async function askInstructModel(
   body: ReturnType<typeof buildSparkResponsesBody>,
   env: Record<string, string | undefined>,
   fetchImpl: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<InstructModelReply> {
   const key = readModelApiKey(env);
   if (!key) return { status: 200, payload: cannedPayload("Instruction mode"), rawText: "" };
@@ -365,6 +368,7 @@ export async function askInstructModel(
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.any([AbortSignal.timeout(45_000), ...(signal ? [signal] : [])]),
   });
   const text = await response.text();
   const ids = readUpstreamHeaders(response.headers);
@@ -417,7 +421,9 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
   }
   let raw: unknown;
   try {
-    raw = await request.json();
+    const text = await readLimitedBody(request, Math.ceil(INSTRUCT_STILL_MAX_BYTES * 4 / 3) + 4096);
+    if (text === null) return jsonError(413, "image_too_large", "Use a smaller workspace still.");
+    raw = JSON.parse(text);
   } catch {
     return jsonError(400, "invalid_json", "The request was not JSON.");
   }
@@ -441,7 +447,8 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
     });
   }
   const env = deps.env ?? process.env;
-  if (!deps.ask && !deps.skipForward && museForwardEnabled(env)) {
+  const execution = modelExecutionMode(env, "instruct");
+  if (!deps.ask && !deps.skipForward && execution === "forward") {
     const reserved = consumeMetaCalls(1);
     if (!reserved.ok) {
       return dailyCapResponse(new DailyCapError(reserved.message))
@@ -451,18 +458,20 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
       rawBody: JSON.stringify(parsed.value),
       env,
       route: "instruct",
+      signal: request.signal,
       contentType: "application/json",
       forwardedFor: request.headers.get("x-forwarded-for"),
       realIp: request.headers.get("x-real-ip"),
       fetchImpl: deps.fetchImpl,
     });
   }
-  if (!deps.ask && !deps.skipForward) {
+  if (!deps.ask && !deps.skipForward && execution !== "direct") {
     return Response.json(musePublicDegrade("instruct"));
   }
   const sparkBody = instructSparkBody(parsed.value.goal, parsed.value.imageDataUrl);
   const fetchImpl = deps.fetchImpl ?? fetch;
-  const ask = deps.ask ?? ((body) => askInstructModel(body, env, fetchImpl));
+  const ask = deps.ask ?? ((body) => askInstructModel(body, env, fetchImpl, request.signal));
+  const started = performance.now();
   try {
     const reply = await ask(sparkBody);
     const mode = readModelApiKey(env) ? "live" : "mock";
@@ -498,7 +507,7 @@ export async function handleInstructRequest(request: Request, deps: InstructDeps
         debug: instructDebugText(reply.rawText ?? "", [readModelApiKey(env)]),
       }, { status: 422 });
     }
-    const result = normalizeInstructPayload(reply.payload, parsed.value.goal, mode, 0, reply.rawText);
+    const result = normalizeInstructPayload(reply.payload, parsed.value.goal, mode, Math.round(performance.now() - started), reply.rawText);
     if (!result.schemaValid && result.debug === undefined && reply.rawText) {
       result.debug = instructDebugText(reply.rawText, [readModelApiKey(env)]);
     } else if (result.debug) {

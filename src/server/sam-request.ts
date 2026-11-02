@@ -1,4 +1,5 @@
 import { API_ORIGIN, SAM_MODEL_ID } from "@/src/models";
+import { decodeMaskToRaster } from "@meta-sam/parser";
 
 /** Documented Responses base. Railway does not set a base-URL variable. */
 export const DEFAULT_API_BASE = `${API_ORIGIN}/v1`;
@@ -43,46 +44,65 @@ export function buildSamResponsesBody(args: { prompt: string; imageDataUrl?: str
   };
 }
 
-/** A mask is present when the output text contains the mask token. */
+/** Reject truncated tokens rather than treating them as positive detections. */
 export function samMaskPresent(text: string): boolean {
-  return text.includes("<|mask;");
+  if (!text.includes("<|mask;")) return false;
+  const tokens = [...text.matchAll(/<\|mask;([^|>]+)\|>/g)];
+  if (!tokens.length || tokens.length !== text.split("<|mask;").length - 1) throw new Error("SAM returned a malformed mask token.");
+  let present = false;
+  for (const token of tokens) {
+    const fields = Object.fromEntries(token[1].split(";").map((part) => { const at = part.indexOf("="); return [part.slice(0, at), part.slice(at + 1)]; }));
+    const encoded = /^(\d+),(\d+),([!~])(.+)$/.exec(fields.data ?? "");
+    if (!/^\d+$/.test(fields.x ?? "") || !/^\d+$/.test(fields.y ?? "") || !encoded) throw new Error("SAM returned a malformed mask token.");
+    const height = Number(encoded[1]);
+    const width = Number(encoded[2]);
+    if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0 || width * height > 4 * 1024 * 1024) throw new Error("SAM mask dimensions exceed the supported limit.");
+    const raster = decodeMaskToRaster({ width, height, encoding: encoded[3] === "!" ? "one_bit" : "lossless", payload: encoded[3] + encoded[4] });
+    if (raster.some((pixel) => pixel !== 0)) present = true;
+  }
+  return present;
 }
 
-/** Join streamed output_text deltas. A JSON body falls through to output_text. */
+type SamEnvelope = { type?: string; status?: string; error?: unknown; delta?: string; output_text?: string; output?: Array<{ content?: Array<{ text?: string }> }>; response?: SamEnvelope };
+
+function assertSuccessfulEnvelope(event: SamEnvelope) {
+  if (!event || typeof event !== "object" || event.error || event.type === "error" || /(?:failed|incomplete|cancelled)$/.test(event.type ?? "") || (event.status && event.status !== "completed" && event.status !== "in_progress")) {
+    throw new Error("SAM returned an upstream error or incomplete response.");
+  }
+  if (event.response) assertSuccessfulEnvelope(event.response);
+}
+
+function envelopeText(event: SamEnvelope): string {
+  if (typeof event.output_text === "string") return event.output_text;
+  return (event.output ?? []).flatMap((item) => item.content ?? []).filter((part) => typeof part.text === "string").map((part) => part.text).join("\n");
+}
+
+/** Only a complete successful envelope can establish object absence. */
 export function samOutputText(payload: string): string {
-  if (payload.includes("data:")) {
+  if (/^data:/m.test(payload)) {
     const chunks: string[] = [];
+    let completed = false;
+    let seenResponse = false;
+    let finalText = "";
     for (const line of payload.split(/\r?\n/)) {
       const trimmed = line.trim();
       if (!trimmed.startsWith("data:")) continue;
       const data = trimmed.slice(5).trim();
-      if (!data || data === "[DONE]") continue;
-      try {
-        const event = JSON.parse(data) as { type?: string; delta?: string; output_text?: string };
-        if (event.type === "response.output_text.delta" && typeof event.delta === "string") chunks.push(event.delta);
-      } catch {
-        continue;
-      }
+      if (!data) continue;
+      if (data === "[DONE]") { completed = true; continue; }
+      const event = JSON.parse(data) as SamEnvelope;
+      assertSuccessfulEnvelope(event);
+      if (event.type === "response.output_text.delta" && typeof event.delta === "string") { chunks.push(event.delta); seenResponse = true; }
+      if (event.type === "response.completed") { completed = true; seenResponse = true; finalText = envelopeText(event.response ?? event); }
     }
-    if (chunks.length) return chunks.join("");
+    if (!completed || !seenResponse) throw new Error("SAM stream ended before a complete result.");
+    return chunks.length ? chunks.join("") : finalText;
   }
-  try {
-    const parsed = JSON.parse(payload) as {
-      output_text?: string;
-      output?: Array<{ content?: Array<{ text?: string }> }>;
-    };
-    if (typeof parsed.output_text === "string") return parsed.output_text;
-    const chunks: string[] = [];
-    for (const item of parsed.output ?? []) {
-      for (const part of item.content ?? []) {
-        if (typeof part.text === "string") chunks.push(part.text);
-      }
-    }
-    if (chunks.length) return chunks.join("\n");
-  } catch {
-    return payload;
-  }
-  return payload;
+  const parsed = JSON.parse(payload) as SamEnvelope;
+  assertSuccessfulEnvelope(parsed);
+  if (parsed.status && parsed.status !== "completed") throw new Error("SAM response is incomplete.");
+  if (typeof parsed.output_text !== "string" && !Array.isArray(parsed.output)) throw new Error("SAM response has no output envelope.");
+  return envelopeText(parsed);
 }
 
 export { samFailureLog } from "./meta-log";

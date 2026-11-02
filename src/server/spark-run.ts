@@ -26,7 +26,8 @@ export async function executeSpark(body: SparkRequest, options?: { mockSparkDela
   // Screen before the client reserves a daily call or fetches.
   const screened = screenSparkInput(body);
   if (screened) return sparkRefusalResponse(screened.reason);
-  const clients = createModelClients(process.env, { mockSparkDelayMs: options?.mockSparkDelayMs ?? 0 });
+  const recordedSample = Boolean(body.sampleId && !body.transcript?.trim() && !body.videoBase64);
+  const clients = createModelClients(recordedSample ? {} : process.env, { mockSparkDelayMs: options?.mockSparkDelayMs ?? 0 });
   try {
     const result = await clients.spark.generateSteps({
       transcript: body.transcript,
@@ -40,6 +41,7 @@ export async function executeSpark(body: SparkRequest, options?: { mockSparkDela
       creatorName: body.creatorName,
       licenceChoice: body.licenceChoice,
       creditLink: body.creditLink,
+      signal: body.signal,
     });
     return Response.json(result);
   } catch (error) {

@@ -9,15 +9,14 @@ Use visually checkable objects only. Do not use Muse Image. Do not fetch Instagr
 Do not name people and do not add rights fields.`;
 
 export const SHORT_CLIP_MAX_SEC = 10;
-export const CHUNK_SEC = 2;
 export const DATA_URL_MAX_BYTES = 8 * 1024 * 1024;
 
-export type SparkMediaPlan = "chunk_data_url" | "files_api";
+export type SparkMediaPlan = "full_video_data_url" | "files_api";
 
 export function chooseSparkMediaPlan(input: { durationSec?: number; byteLength: number }): SparkMediaPlan {
   if (input.durationSec != null && input.durationSec > SHORT_CLIP_MAX_SEC) return "files_api";
   if (input.byteLength > DATA_URL_MAX_BYTES) return "files_api";
-  return "chunk_data_url";
+  return "full_video_data_url";
 }
 
 type ContentPart =
@@ -44,7 +43,7 @@ domain: indian_recipe, non_cooking_diy, other.
 sourceClip.mediaType: video/mp4, video/webm.
 sourceClip.durationSec greater than 0.
 generation.mode: muse_spark_live, muse_spark_curated, hand_authored.
-runtimeHints.preferredLiveMode: chunk_video_1_2s, keyframe_still, stills_only.
+runtimeHints.preferredLiveMode: keyframe_still.
 object role: required_present, required_absent, optional, safety_prop.
 successCheck.kind: all_required_present, required_present_and_absent, ordered_presence, manual_confirm_only.
 tool: muse_spark, sam_3_1, tts, other.

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { SessionProvider } from "@/src/ui/session";
 import "./globals.css";
+import "@/src/ui/studio-theme.css";
+import "@/src/ui/landing-studio.css";
 
 export const metadata: Metadata = {
   title: "Reel2Real",

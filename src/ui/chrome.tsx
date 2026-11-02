@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { headerChip } from "@/src/fsm/ui";
+import { sessionStatusLabel } from "./session-status";
 import { SparkMark } from "./mark";
 import { useSession } from "./session";
 
@@ -20,21 +20,20 @@ export function Chip({
 export function AppShell({
   children,
   backHref,
+  appearance,
 }: {
   children: React.ReactNode;
   backHref?: string;
+  appearance?: "studio";
 }) {
   const session = useSession();
   const sampleRun = session.stepsSource === "sample"
     || session.stepsSource === "cap_sample"
     || session.stepsSource === "transcript"
     || Boolean(session.prepare?.sampleId && !session.prepare.hasClip);
-  const liveClip = Boolean(session.prepare?.hasClip)
-    && !session.prepare?.sampleId
-    && (session.stepsSource === "clip" || session.stepsSource === "cache" || session.stepsSource == null);
-  const label = headerChip({ mock: session.runtime.mock, sampleRun, liveClip });
+  const label = sessionStatusLabel({ source: session.stepsSource, provenance: session.resultProvenance, sampleRun });
   return (
-    <div className="app-shell">
+    <div className={`app-shell${appearance === "studio" ? " studio-theme" : ""}`}>
       <header className="app-bar">
         {backHref ? <Link className="back" href={backHref}>Back</Link> : <span />}
         <Link href="/" className="wordmark"><SparkMark /> Reel2Real</Link>

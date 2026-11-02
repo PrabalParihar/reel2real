@@ -1,158 +1,89 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell, Chip } from "./chrome";
-import { useSession, type PrepareRequest, type StepsSource } from "./session";
-import type { ToolCall, TutorialSteps } from "@/src/schema/types";
-import { postSpark, type ExtractStage } from "./sparkOnce";
-import { applyUserAttribution } from "@/src/schema/attribution";
-import { validateTutorialSteps } from "@/src/schema/validate";
+import { useSession, prepareSample } from "./session";
+import type { ExtractStage } from "./sparkOnce";
 import { PUBLISHED_SAMPLES, sampleByPublishedId } from "@/src/domains/catalog";
 import { heroNouns, heroSamFile, heroStep, sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
-import { REFUSAL_UNSAFE } from "@/src/safety/goal-screen";
-import { isLiveCoachingOff, LiveCoachingOff } from "./LiveCoachingOff";
-import { readStepsCache, writeStepsCache } from "./steps-cache";
-
-async function useCapFallback(prepare: PrepareRequest): Promise<{ tutorial: TutorialSteps; toolCalls: ToolCall[]; source: StepsSource } | null> {
-  if (!prepare.creatorName || !prepare.licenceChoice) return null;
-  const meta = { creatorName: prepare.creatorName, licence: prepare.licenceChoice, creditLink: prepare.creditLink };
-  if (prepare.clipHash) {
-    const cached = await readStepsCache(prepare.clipHash);
-    if (cached) {
-      return { tutorial: applyUserAttribution(cached.tutorial, meta), toolCalls: cached.toolCalls, source: "cap_cache" };
-    }
-  }
-  const raw = PUBLISHED_SAMPLES.find((item) => item.id === prepare.sampleId)?.tutorial
-    ?? PUBLISHED_SAMPLES.find((item) => item.domain === prepare.domain)?.tutorial
-    ?? PUBLISHED_SAMPLES[0].tutorial;
-  const validated = validateTutorialSteps(raw);
-  if (!validated.ok) return null;
-  return { tutorial: applyUserAttribution(validated.value, meta), toolCalls: [], source: "cap_sample" };
-}
-
-const STAGE_LABEL: Record<ExtractStage, string> = {
-  upload: "Uploading clip",
-  reading: "Spark reading video",
-  validating: "Validating steps",
-  preparing: "Preparing coach",
-};
+import { LiveCoachingOff } from "./LiveCoachingOff";
+import { extractPreparedLesson, extractionReducer, initialExtraction, extractionStageLabel, canRetryExtraction, MAX_PREPARATION_RETRIES } from "./extraction-run";
 
 export function ExtractingScreen() {
   const params = useSearchParams();
   const router = useRouter();
   const session = useSession();
-  const [elapsed, setElapsed] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [coachingOff, setCoachingOff] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const [stage, setStage] = useState<ExtractStage>("reading");
+  const { prepare, setPrepare, setTutorial } = session;
+  const [run, dispatch] = useReducer(extractionReducer, null, initialExtraction);
+  const selectedDemo = useRef<string | null>(null);
   const demo = params.get("demo");
+  const requestedSample = demo ? prepareSample(demo) : null;
+  const unknownDemo = Boolean(demo && !requestedSample);
+  const matchesSelection = !demo || Boolean(requestedSample && prepare?.sampleId === requestedSample.sampleId && !prepare?.hasClip);
 
   useEffect(() => {
-    if (!demo || session.prepare) return;
-    const published = sampleByPublishedId(demo);
-    const sampleId = published?.id ?? (demo === "aloo-jeera" ? "aloo-jeera" : PUBLISHED_SAMPLES[0].id);
-    const prepare: PrepareRequest = {
-      key: `demo:${sampleId}`,
-      sampleId,
-      hasClip: false,
-      creatorName: published?.creatorName ?? "Sample cook",
-      licenceChoice: "self_filmed",
-      domain: published?.domain ?? "indian_recipe",
-      title: published?.tutorial.title,
-    };
-    session.setPrepare(prepare, null);
-  }, [demo, session]);
+    if (selectedDemo.current === demo) return;
+    selectedDemo.current = demo;
+    if (!demo) return;
+    const sample = prepareSample(demo);
+    if (sample) setPrepare(sample, null);
+  }, [demo, setPrepare]);
 
   useEffect(() => {
-    if (!session.prepare && !demo) router.replace("/upload");
-  }, [demo, router, session.prepare]);
+    if (!prepare && !demo) router.replace("/upload");
+  }, [demo, router, prepare]);
 
   useEffect(() => {
-    if (!session.prepare) return;
+    dispatch({ type: "start", prepare: matchesSelection ? prepare : null });
+  }, [prepare, matchesSelection]);
+
+  const activeRun = run.prepare === prepare && matchesSelection;
+  const terminal = Boolean(run.error || run.refusal || run.coachingOff || run.capped);
+  useEffect(() => {
+    if (!prepare || !activeRun || terminal) return;
     const started = performance.now();
-    const timer = setInterval(() => setElapsed(performance.now() - started), 100);
+    const timer = setInterval(() => dispatch({ type: "elapsed", prepare, elapsed: performance.now() - started }), 100);
     return () => clearInterval(timer);
-  }, [session.prepare]);
+  }, [prepare, activeRun, terminal]);
 
   useEffect(() => {
-    const prepare = session.prepare;
-    if (!prepare || error) return;
-    const request = attempt ? { ...prepare, key: `${prepare.key}:retry${attempt}` } : prepare;
-    let cancelled = false;
-    postSpark(request, (next) => {
-      if (!cancelled) setStage(next);
-    }).then(async (result) => {
-      if (cancelled) return;
-      setStage("validating");
-      if (result.refused) {
-        setRefusal(result.refusalReason || REFUSAL_UNSAFE);
-        return;
-      }
-      if (isLiveCoachingOff(result)) {
-        setCoachingOff(true);
-        return;
-      }
-      if (!result.schemaValid || !result.tutorial) {
-        if (attempt < 1) {
-          setAttempt(1);
-          return;
+    if (!prepare || !activeRun || terminal || unknownDemo) return;
+    const controller = new AbortController();
+    extractPreparedLesson(prepare, { signal: controller.signal, onStage: (stage) => { if (!controller.signal.aborted) dispatch({ type: "stage", prepare, stage }); } })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        switch (result.kind) {
+          case "refusal": dispatch({ type: "refusal", prepare, message: result.message }); return;
+          case "invalid": dispatch({ type: "invalid", prepare, message: result.message }); return;
+          case "off": dispatch({ type: "off", prepare }); return;
+          case "cap": dispatch({ type: "cap", prepare }); return;
+          case "tutorial": {
+            dispatch({ type: "stage", prepare, stage: "preparing" });
+            if (setTutorial(result.tutorial, result.latencyMs, result.toolCalls, result.source, { expectedPrepare: prepare, provenance: result.provenance, persistenceNote: result.persistenceNote })) router.push("/coach");
+          }
         }
-        setError(result.errors[0] || "The steps JSON did not validate.");
-        return;
-      }
-      if (request.clipHash && (result.inputKind === "clip" || result.inputKind === "transcript" || result.inputKind === "sample")) {
-        await writeStepsCache(request.clipHash, {
-          tutorial: result.tutorial,
-          toolCalls: result.toolCalls,
-          inputKind: result.inputKind,
-        });
-      }
-      if (cancelled) return;
-      setStage("preparing");
-      session.setTutorial(result.tutorial, result.latencyMs, result.toolCalls, result.inputKind);
-      router.push("/coach");
-    }).catch(async (error: Error & { code?: string }) => {
-      if (cancelled) return;
-      if (error.code === "daily_cap") {
-        const saved = await useCapFallback(request);
-        if (saved) {
-          setStage("preparing");
-          session.setTutorial(saved.tutorial, 0, saved.toolCalls, saved.source);
-          router.push("/coach");
-          return;
-        }
-      }
-      setError(error.message || "Spark did not return steps.");
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [attempt, error, router, session, session.prepare]);
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) dispatch({ type: "error", prepare, message: error instanceof Error ? error.message : "Spark did not return steps." });
+      });
+    return () => controller.abort();
+  }, [prepare, activeRun, terminal, unknownDemo, run.attempt, run.manualRetries, router, setTutorial]);
 
-  const published = sampleByPublishedId(demo) ?? sampleByPublishedId(session.prepare?.sampleId);
+  const published = sampleByPublishedId(demo) ?? sampleByPublishedId(prepare?.sampleId);
   const heroFile = published ? heroSamFile(published.scene) : undefined;
-  const order: ExtractStage[] = session.prepare?.hasClip
-    ? ["upload", "reading", "validating", "preparing"]
-    : ["reading", "validating", "preparing"];
-  const active = order.indexOf(stage);
+  const order: ExtractStage[] = prepare?.hasClip ? ["upload", "reading", "validating", "preparing"] : ["reading", "validating", "preparing"];
+  const active = order.indexOf(run.stage);
+  const error = unknownDemo ? "This recorded sample is unavailable. Choose another sample or return to upload." : activeRun ? run.error : null;
+  const refusal = activeRun ? run.refusal : null;
 
-  if (coachingOff) {
-    return (
-      <AppShell backHref="/upload">
-        <main className="screen extract is-off">
-          <LiveCoachingOff goal={session.prepare?.transcript?.trim() || undefined} backHref="/upload" />
-        </main>
-      </AppShell>
-    );
+  if (activeRun && run.coachingOff) {
+    return <AppShell backHref="/upload" appearance="studio"><main className="screen extract is-off"><LiveCoachingOff goal={session.prepare?.transcript?.trim() || undefined} backHref="/upload" /></main></AppShell>;
   }
-
   return (
-    <AppShell backHref="/upload">
+    <AppShell backHref="/upload" appearance="studio">
       <main className="screen extract">
         <section className="extract-stage panel">
           {published ? (
@@ -167,20 +98,14 @@ export function ExtractingScreen() {
             />
           ) : null}
           <div className="ring is-idle">
-            <strong className="mono">{(elapsed / 1000).toFixed(1)}s</strong>
+            <strong className="mono">{(run.elapsed / 1000).toFixed(1)}s</strong>
             <span>this run</span>
           </div>
           <p className="mono">{session.runtime.sparkModelId}</p>
           <div className="chip-row">
-            {session.runtime.mock ? <Chip tone="mock">Mock</Chip> : null}
-            {session.prepare?.hasClip && !session.runtime.mock ? <Chip>Steps from clip · muse-spark-1.3</Chip> : <Chip>Steps from transcript (Sample)</Chip>}
-            {session.runtime.mock || !session.prepare?.hasClip ? <Chip>Sample</Chip> : null}
+            {prepare?.sampleId && !prepare.hasClip ? <Chip>Recorded sample</Chip> : <Chip>{prepare?.hasClip ? "Preparing uploaded clip" : "Preparing transcript"}</Chip>}
           </div>
-          <p className="quiet">
-            {session.runtime.mock
-              ? "Mock client. This is not a live Spark call."
-              : "A clip often takes 15 to 20 seconds. This clock is this run."}
-          </p>
+          <p className="quiet">{prepare?.sampleId && !prepare.hasClip ? "Recorded instructions and saved overlays. This does not test live coaching." : "Waiting for Spark. Execution source is shown after a result returns."}</p>
         </section>
         <section>
           <ol className="capsules">
@@ -189,7 +114,7 @@ export function ExtractingScreen() {
               return (
                 <li key={id} className={`capsule is-${state}`}>
                   <Chip tone={state === "done" ? "match" : state === "running" ? "running" : "neutral"} pulse={state === "running"}>{state === "running" ? "Running" : state === "done" ? "Done" : "Wait"}</Chip>
-                  {STAGE_LABEL[id]}
+                  {extractionStageLabel(id, prepare)}
                 </li>
               );
             })}
@@ -199,6 +124,16 @@ export function ExtractingScreen() {
             <li />
             <li />
           </ul>
+          {activeRun && run.capped ? (
+            <div className="panel error-panel" role="status">
+              <h1>Today's model limit is reached</h1>
+              <p>Your upload is kept as a draft. Choose a recorded sample with its own instructions, clip and credits, or return to edit your upload.</p>
+              <div className="sample-grid">
+                {PUBLISHED_SAMPLES.map((sample) => <Link key={sample.id} className="btn btn-secondary" href={`/extracting?demo=${sample.id}`}>{sample.tutorial.title}</Link>)}
+              </div>
+              <Link className="btn btn-primary" href="/upload">Return to upload</Link>
+            </div>
+          ) : null}
           {refusal ? (
             <div className="panel error-panel" role="status">
               <h1>Cannot coach this goal</h1>
@@ -209,9 +144,14 @@ export function ExtractingScreen() {
           ) : null}
           {error ? (
             <div className="panel error-panel">
-              <h1>Steps did not validate</h1>
+              <h1>Could not prepare steps</h1>
               <p>{error}</p>
-              {attempt > 0 ? <p className="mono">Retried once.</p> : null}
+              {run.attempt > 0 ? <p className="mono">Used one automatic validation retry.</p> : null}
+              {activeRun && run.error && prepare ? (
+                canRetryExtraction(run)
+                  ? <button className="btn btn-primary" type="button" onClick={() => dispatch({ type: "retry", prepare })}>Retry preparation</button>
+                  : <p>{MAX_PREPARATION_RETRIES} preparation retries used. Return to upload to edit the input.</p>
+              ) : null}
               <Link className="btn btn-primary" href="/upload">Back to upload</Link>
             </div>
           ) : null}

@@ -16,7 +16,7 @@ import * as factory from "./factory";
 
 const SECRET = "test-forward-secret";
 const FORWARD_URL = "http://web-preview.railway.internal:8080/api/internal/segment";
-const RAW_BODY = '{"inputKind": "image", "mediaBase64": "aaaa", "mimeType": "image/jpeg", "prompts": [{"objectId": "o1", "noun": "mortar", "samPrompt": "mortar"}, {"objectId": "o2", "noun": "pestle", "samPrompt": "pestle"}, {"objectId": "o3", "noun": "cup", "samPrompt": "cup"}, {"objectId": "o4", "noun": "ginger", "samPrompt": "ginger"}, {"objectId": "o5", "noun": "extra", "samPrompt": "extra"}], "timeoutMs": 8000}';
+const RAW_BODY = '{"inputKind": "image", "mediaBase64": "/9j/2Q==", "mimeType": "image/jpeg", "prompts": [{"objectId": "o1", "noun": "mortar", "samPrompt": "mortar"}, {"objectId": "o2", "noun": "pestle", "samPrompt": "pestle"}, {"objectId": "o3", "noun": "cup", "samPrompt": "cup"}, {"objectId": "o4", "noun": "ginger", "samPrompt": "ginger"}, {"objectId": "o5", "noun": "extra", "samPrompt": "extra"}], "timeoutMs": 8000}';
 
 const envSnapshot = { ...process.env };
 
@@ -37,6 +37,7 @@ function clearForwardEnv() {
 }
 
 beforeEach(() => {
+  vi.stubEnv("META_DIRECT_ENABLED", "0");
   clearForwardEnv();
   vi.stubGlobal("fetch", vi.fn(async () => {
     throw new Error("network disabled in tests");
@@ -44,6 +45,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   restoreEnv();

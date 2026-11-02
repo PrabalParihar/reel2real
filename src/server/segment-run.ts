@@ -2,6 +2,7 @@ import { TIMEOUTS } from "@/src/fsm/types";
 import { createModelClients } from "@/src/server/factory";
 import { dailyCapResponse } from "@/src/server/meta-guard";
 import type { SegmentRequest } from "@/src/server/types";
+import { readLimitedBody } from "./request-body";
 
 /** Neither segment route had a body limit. Both reject anything over 8MB. */
 export const SEGMENT_MAX_BODY_BYTES = 8 * 1024 * 1024;
@@ -15,14 +16,7 @@ export function segmentTooLargeResponse(): Response {
 
 /** Null when the declared or actual body is over the segment limit. */
 export async function readSegmentBody(request: Request): Promise<string | null> {
-  const header = request.headers.get("content-length");
-  if (header) {
-    const declared = Number(header);
-    if (Number.isFinite(declared) && declared > SEGMENT_MAX_BODY_BYTES) return null;
-  }
-  const rawBody = await request.text();
-  if (Buffer.byteLength(rawBody) > SEGMENT_MAX_BODY_BYTES) return null;
-  return rawBody;
+  return readLimitedBody(request, SEGMENT_MAX_BODY_BYTES);
 }
 
 /**
@@ -40,6 +34,7 @@ export async function executeSegment(body: SegmentRequest): Promise<Response> {
       timeoutMs: Math.min(body.timeoutMs || TIMEOUTS.SAM_TIMEOUT_MS, TIMEOUTS.SAM_TIMEOUT_MS),
       scenario: clients.mode === "mock" ? body.scenario : undefined,
       phase: clients.mode === "mock" ? body.phase : undefined,
+      signal: body.signal,
     });
     return Response.json(result);
   } catch (error) {

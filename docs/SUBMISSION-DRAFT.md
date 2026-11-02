@@ -1,6 +1,6 @@
 # DRAFT. Do not submit.
 
-This is draft text for a hackathon submission. Nothing in this repo submits it. Edit it by hand before anyone sends it.
+This is editable submission copy for Reel2Real. **This submission draft has not been submitted or published.** The [official event page and linked rules were checked on 2026-11-02](event-requirements.md); submissions are due **November 5, 2026 at 07:30 IST**. Personal eligibility and acceptance, track choice, portal artifacts and length limits, and project-specific prior-work questions remain unresolved. Real hosted model acceptance, physical-device testing and learner research are also pending. Resolve those gates and replace the evidence placeholders before using this text externally. Source implementation and mocked/browser regression coverage are not substitutes for live results.
 
 ## Name
 
@@ -8,43 +8,74 @@ Reel2Real
 
 ## One-liner
 
-Put the phone on a stand, upload a short tutorial, and follow each step while the objects light up on camera.
+Turn a tutorial into a step guide that highlights the objects for your next move in your own camera view.
 
-## Problem
+## Problem and initial audience
 
-A tutorial video keeps playing while your hands are busy. It is easy to lose the object the step is about, and easy to move on before the frame actually matches. Pausing, scrubbing, and guessing which thing the narrator means breaks the lesson.
+A beginner following a hands-on lesson has to look back at the video, pause, scrub and work out which object the next step refers to. Their hands may already be occupied. We are starting with short, safe tabletop lessons with a few visually distinct props, using a phone on a stand or a laptop camera.
 
-## What it does
+This is a product hypothesis, not a validated learning-outcome claim. We still need to compare setup cost, interruptions and task outcomes against ordinary tutorial playback and checklists with target learners.
 
-Reel2Real is a browser coach. You upload a clip you filmed. Muse Spark turns that clip into a short list of steps. SAM 3.1 then checks a few objects on keyframes from the laptop or phone camera and draws a highlight when it sees them.
+## What the current implementation does
 
-If a highlight does not come back, the stage says Highlights unavailable. Next still moves the step. The app does not invent a box.
+Upload a playable MP4/WebM lesson you own or are permitted to use, at most 16 MiB and 120 seconds. Supply accurate creator/permission details. The app sends the complete supported clip through its server for Muse Spark to produce a schema-validated step plan. Short/small accepted clips use inline video; longer/larger clips use the Files API. The clip is not silently reduced to its first two seconds.
 
-Five Sample demos ship with recorded SAM output so a judge can watch the coach without spending a live call: masala chai, a kids science flask, origami, seed planting, and latte art. Those outlines are labelled Sample · recorded SAM output. They are not marked Live. The flask demo is for kids science. The card and the coach show Grown-up supervision, and the steps describe only what is visible.
+The coach captures workspace keyframes and asks SAM 3.1 to locate the current step's objects. The learner can reframe and explicitly Recheck objects. Next records the learner's confirmation; Skip remains a deliberate choice. The recap distinguishes learner confirmation, object visibility, skipped and unvisited steps. An object highlight does **not** establish correct technique, the completion or temporal order of an action, or general safety. The current browser camera path uses JPEG keyframes, not continuous video tracking.
 
-The landing hero stays on the chai demo. Every demo card credits the creator, with the source page and the licence.
+Instruction mode offers a second path: state a safe goal, capture one workspace still, request a short plan, and enter the keyframe coach. A still-derived plan is labelled accordingly and does not imply tutorial timestamps. This route needs its own real model-quality acceptance before a final demonstration claims it works live.
 
-## How it uses Meta models
+When live configuration is unavailable, the app says so before lengthy upload/camera work. Failed/expired checks do not invent successful boxes. Users can retry/recheck or move through the lesson manually, except during a specific configured safety halt. Cache persistence is optional; a storage failure does not block a valid plan. Daily-cap recovery uses matching cached output or offers an explicit recorded Sample with that Sample's own media and credit.
 
-| Model | Id | Role |
+## Why the Meta models matter
+
+| Model | ID | Product role |
 | --- | --- | --- |
-| Muse Spark | `muse-spark-1.3` | Once, when a clip is extracted into steps JSON |
-| SAM 3.1 | `sam-3.1` | On coach keyframes, for the objects in the current step |
+| Muse Spark | `muse-spark-1.3` | Turn complete supported tutorial media, or a goal plus still, into a structured plan. |
+| SAM 3.1 | `sam-3.1` | Localize the objects needed for the current step in the learner's workspace frame. |
 
-Both go through the app server to `POST https://api.meta.ai/v1/responses`. The browser does not hold the model key. `/api/spark` extracts steps. `/api/segment` requests a SAM mask. Sample demos do not call those routes for their saved outlines. They replay masks that were recorded from SAM 3.1 earlier.
+The intended distinctive interaction is lesson → current step → learner's actual objects → specific reframing cue → fresh recheck. The planner provides the sequence; localization ties that sequence to the learner's workspace. Both functions must be demonstrated with actual useful returned results before claiming hosted live success.
 
-Muse Image is not used.
+Live requests use the app server and default `POST https://api.meta.ai/v1/responses`. The browser never holds the model key. Muse Image is not used. Public model routes default off: one-service direct mode requires explicit `META_DIRECT_ENABLED=1` and a usable server credential; valid enabled forwarding takes precedence per route. `/api/runtime` reports configured capability, not upstream health. User-visible Live/Mock/Sample/Cached labels follow returned result provenance rather than the presence of a key.
 
-The default coach mode is keyframe stills. A short video chunk was measured slower than the live budget, so chunk tracking stays optional.
+SAM can make one provider call per noun, up to four, under one total eight-second request deadline. Spark has a bounded complete operation across inline/file/fallback/response. These are safeguards, not latency guarantees. Historical first-box benchmarks are not current multi-noun UI performance, and Gate 0 explicitly does not measure first streamed mask time.
 
-## Tech
+## Recorded Samples and attribution
 
-Next.js app, Node 22, deployed as a web service on Railway. Steps are validated against a JSON schema. Sample scenes, crops, and credits are data in `src/samples/demos.ts` plus files under `public/samples/`. Preview pages can sit behind a password. Secrets stay in environment variables and are not written into the repo.
+Five Samples ship with saved instructions, media and recorded SAM output so people can explore the interaction without a model key or camera. These requests stay local even when live configuration is enabled. They are labelled Sample/recorded SAM output; a Sample replay is not a live model demonstration.
 
-## What's next
+| Sample | Creator/source |
+| --- | --- |
+| Masala chai | Pexels contributor, [Pexels 5480225](https://www.pexels.com/video/5480225/) |
+| Kids science flask | AlexKopeykin, [Pixabay 53946](https://pixabay.com/videos/chimie-ballon-chimique-laboratoire-53946/) |
+| Origami | Yogendra Singh, [Pexels 6364305](https://www.pexels.com/video/a-person-making-origami-6364305/) |
+| Seed planting | Tima Miroshnichenko, [Pexels 6508485](https://www.pexels.com/video/top-view-of-a-person-planting-seeds-6508485/) |
+| Latte art | franklandgrave, [Mixkit 810](https://mixkit.co/free-stock-video/latte-art-810/) |
 
-- More Sample reels added as data, without a screen rewrite.
-- A tighter live loop when SAM answers inside the keyframe budget.
-- A clearer path for a teacher to load a class clip and keep the credit on every step.
+The hero stays on chai. Every recorded demo retains its source/licence credit; these stock assets are not described as self-filmed. Licence links are in [CREDITS.md](../public/samples/CREDITS.md). Verify intended submission use and reconcile the existing local permission policy before including footage in a final video. The flask Sample retains **Grown-up supervision**, describes only visible content and does not name chemicals. Some Sample steps have no verified outline and remain honestly unhighlighted.
 
-DRAFT. Do not submit.
+Instagram preview is optional reference viewing, not automatic extraction/import or a share-target integration. Users still need a permitted local tutorial file for the upload route.
+
+## Technology and media handling
+
+Next.js, React, TypeScript and Node 22. Same-origin API routes keep credentials server-side. Plan schemas, bounded input preparation, media/MIME validation, cancellation, per-step request allowances, per-session limits, per-IP throttling and per-process daily budgets constrain work. Recheck resets only the step allowance. Normal mute/camera recovery and mobile instruction/supervision content are available.
+
+Browser preparation inspects/hashes locally; continuing sends the complete clip and supplied details to the configured model service through the server. Camera checks send workspace frames. File-based planning uploads to Meta's Files API. Validated plans, metadata and original execution provenance may be cached locally with seven-day eligibility and a clear control. We do not claim provider retention or deletion guarantees from this repository.
+
+Deployment configuration is provided for a Node web service and optional authenticated worker forwarding. This draft does not establish that a particular deployment is current or live-ready.
+
+## Evidence to insert before submission
+
+- **Participant and portal requirements:** use the [verified sources, deadline and rubric](event-requirements.md); confirm personal eligibility, accepted-participant/waiver status and track, and resolve portal artifacts, length limits and prior-work uncertainty. Do not infer blanket prior-work permission from silence in the retrieved rules.
+- **Hosted build and access:** final reviewed build/origin, fresh judge-access rehearsal and intended direct/forward route. The current environment reports ready credential/switch bindings and unrestricted HTTP access; actual hosted requests returned upstream `404 model_not_found`. Managed-cloud probes succeeded separately; the [Railway launch record](railway-launch.md) distinguishes those contexts. Successful hosted live AI remains unverified.
+- **Real model demonstration:** owned/permitted clip, full plan fidelity including a later action, relevant object localization, missing-object recovery and fresh same-step Recheck. No intercepted response or replay can fill this slot.
+- **Measured performance:** extraction time and capture-to-visible-overlay time, device/network, noun count, sample size, p50/p95 when meaningful, failures/fallbacks and actual per-noun/file/retry call attempts. Do not reuse obsolete first-mask numbers.
+- **Software verification:** fresh post-review unit/build/browser commands and results, with the actually executed scenario subset. Do not say all 95 audit scenarios passed.
+- **Device/accessibility/user evidence:** real Safari/Android camera behavior, permissions/interruption, mobile warnings, keyboard/screenreader/zoom testing, and observed target-user outcomes. Mark any remaining unrun boundary plainly.
+
+These evidence items are currently pending where external prerequisites or unexecuted acceptance remain. See [hackathon-readiness.md](hackathon-readiness.md) for exact audit closure and [demo-script.md](demo-script.md) for a proposed, not yet verified filming sequence. No win probability is supported by the current evidence.
+
+## Next after the core loop is validated
+
+Measure whether target learners get useful corrections and finish with fewer interruptions, including setup time. Then evaluate creator/teacher lesson review and distribution. Expand domains, richer action checks, voice navigation, sharing or other features only when that evidence justifies the added scope.
+
+**DRAFT. Not submitted. Resolve participant/portal requirements, rights, real hosted behavior and evidence before external use.**

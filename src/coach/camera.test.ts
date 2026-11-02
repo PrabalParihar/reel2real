@@ -3,6 +3,17 @@ import { cameraBlockMessage, classifyCameraError, FALLBACK_CAMERA_CONSTRAINTS, o
 import { INSTRUCT_STILL_WIDTH, KEYFRAME_JPEG_QUALITY, KEYFRAME_LONGEST_PX, instructStillSize, keyframeSize } from "./keyframe";
 
 describe("rear camera", () => {
+  it("does not request a camera when acquisition was already cancelled", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const calls: MediaStreamConstraints[] = [];
+    await expect(openRearCamera(async (constraints) => {
+      calls.push(constraints);
+      return {} as MediaStream;
+    }, controller.signal)).rejects.toMatchObject({ name: "AbortError" });
+    expect(calls).toEqual([]);
+  });
+
   it("prefers facingMode environment and falls back unless permission was denied", async () => {
     expect(REAR_CAMERA_CONSTRAINTS).toEqual({ audio: false, video: { facingMode: "environment" } });
     expect(FALLBACK_CAMERA_CONSTRAINTS).toEqual({ audio: false, video: true });

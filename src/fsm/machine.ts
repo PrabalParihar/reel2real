@@ -1,17 +1,19 @@
 import type { PreferredLiveMode, TutorialSteps } from "@/src/schema/types";
 import { DEFAULT_LIVE_MODE } from "@/src/models";
 import { evaluateCheck } from "./evaluate";
-import { TIMEOUTS, type CoachContext, type CoachEvent, type CoachStateId, type MachineState } from "./types";
+import { TIMEOUTS, type CoachContext, type CoachEvent, type CoachStateId, type MachineState, type StepOutcome } from "./types";
 
 export interface TransitionResult {
   machine: MachineState;
   trail: CoachStateId[];
 }
 
-function emptyContext(stepCount: number, liveMode: PreferredLiveMode): CoachContext {
+function emptyContext(stepIds: string[], liveMode: PreferredLiveMode): CoachContext {
   return {
     stepIndex: 0,
-    stepCount,
+    stepCount: stepIds.length,
+    stepIds,
+    stepOutcomes: Object.fromEntries(stepIds.map((id) => [id, "unvisited"])),
     liveMode,
     stillsArmed: liveMode === "stills_only",
     stableHits: 0,
@@ -29,8 +31,10 @@ function emptyContext(stepCount: number, liveMode: PreferredLiveMode): CoachCont
 }
 
 export function createCoach(tutorial: TutorialSteps): MachineState {
-  const liveMode = tutorial.runtimeHints?.preferredLiveMode ?? DEFAULT_LIVE_MODE;
-  return { state: "idle", context: emptyContext(tutorial.steps.length, liveMode) };
+  const preferred = tutorial.runtimeHints?.preferredLiveMode ?? DEFAULT_LIVE_MODE;
+  // Camera capture produces JPEG keyframes. A video hint cannot change those bytes.
+  const liveMode = preferred === "chunk_video_1_2s" ? "keyframe_still" : preferred;
+  return { state: "idle", context: emptyContext(tutorial.steps.map((step) => step.id), liveMode) };
 }
 
 function clearSoft(context: CoachContext, extra: Partial<CoachContext> = {}): CoachContext {
@@ -48,21 +52,25 @@ function clearSoft(context: CoachContext, extra: Partial<CoachContext> = {}): Co
   };
 }
 
-function advance(context: CoachContext, asSkip: boolean): MachineState {
-  const skippedStepIds = asSkip
-    ? [...context.skippedStepIds, `index:${context.stepIndex}`]
-    : context.skippedStepIds;
+function recordOutcome(context: CoachContext, outcome: StepOutcome): CoachContext {
+  const stepOutcomes = { ...context.stepOutcomes, [context.stepIds[context.stepIndex]]: outcome };
+  const skippedStepIds = context.stepIds.flatMap((id, index) => stepOutcomes[id] === "skipped" ? [`index:${index}`] : []);
+  return { ...context, stepOutcomes, skippedStepIds };
+}
+
+function advance(previous: CoachContext, asSkip: boolean, objectsVisible = false): MachineState {
+  const context = recordOutcome(previous, asSkip ? "skipped" : objectsVisible ? "objects_visible" : "manual_confirmed");
   const nextIndex = context.stepIndex + 1;
   if (nextIndex >= context.stepCount) {
     return {
       state: "tutorial_complete",
-      context: { ...context, skippedStepIds, armImmediate: false },
+      context: { ...context, armImmediate: false, explicitAdvances: context.explicitAdvances + (asSkip ? 0 : 1) },
     };
   }
   return {
     state: "step_ready",
     context: clearSoft(
-      { ...context, skippedStepIds, explicitAdvances: context.explicitAdvances + (asSkip ? 0 : 1) },
+      { ...context, explicitAdvances: context.explicitAdvances + (asSkip ? 0 : 1) },
       { stepIndex: nextIndex, armImmediate: false, tick: context.tick + 1 },
     ),
   };
@@ -102,6 +110,8 @@ function same(machine: MachineState): TransitionResult {
 
 export function transition(machine: MachineState, event: CoachEvent, tutorial?: TutorialSteps): TransitionResult {
   const { state, context } = machine;
+  if ((event.type === "SAM_RESULT" || event.type === "SAM_TIMEOUT" || event.type === "SAM_ERROR")
+    && ((event.stepIndex != null && event.stepIndex !== context.stepIndex) || (event.tick != null && event.tick !== context.tick))) return same(machine);
   let next: MachineState | null = null;
 
   switch (event.type) {
@@ -167,7 +177,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
         } else if (evaluation.signal.type === "MASK_LOST_SIGNAL") {
           next = { state: "mask_lost", context: withCounters.context };
         } else {
-          next = { state: "success", context: withCounters.context };
+          next = { state: "success", context: recordOutcome(withCounters.context, "objects_visible") };
         }
       }
       break;
@@ -189,7 +199,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
       }
       break;
     case "SUCCESS_STABLE":
-      if (state === "evaluating") next = { state: "success", context };
+      if (state === "evaluating") next = { state: "success", context: recordOutcome(context, "objects_visible") };
       break;
     case "SAFETY_SIGNAL":
       if (state === "evaluating") {
@@ -206,7 +216,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
       if (state === "evaluating") next = { state: "mask_lost", context };
       break;
     case "USER_RETRY":
-      if (state === "skip_detected" || state === "out_of_order" || state === "mask_lost" || state === "safety_halt") {
+      if (state === "skip_detected" || state === "out_of_order" || state === "mask_lost" || state === "safety_halt" || state === "waiting" || state === "tracking" || state === "success" || state === "step_ready" || state === "paused") {
         next = { state: "retry", context };
       } else if (state === "error_recoverable") {
         next = context.lastError === "camera_denied"
@@ -240,14 +250,12 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
     }
     case "USER_ADVANCE":
     case "STEP_LOADED":
-      if (state === "skip_detected") {
-        next = { state: "user_skip", context };
-      } else if (state === "success" || state === "step_ready" || state === "waiting" || state === "out_of_order" || state === "mask_lost" || state === "tracking" || state === "evaluating" || state === "error_recoverable") {
-        next = advance(context, false);
+      if (state === "skip_detected" || state === "success" || state === "step_ready" || state === "waiting" || state === "out_of_order" || state === "mask_lost" || state === "tracking" || state === "evaluating" || state === "error_recoverable") {
+        next = advance(context, false, state === "success");
       }
       break;
     case "ALL_STEPS_DONE":
-      if (state === "success") next = { state: "tutorial_complete", context };
+      if (state === "success" && context.stepIndex === context.stepCount - 1) next = advance(context, false, true);
       break;
     case "USER_PAUSE":
       if (state === "waiting" || state === "step_ready") next = { state: "paused", context: { ...context, armImmediate: false } };
@@ -261,7 +269,7 @@ export function transition(machine: MachineState, event: CoachEvent, tutorial?: 
     case "SET_LIVE_MODE":
       if (state === "waiting" || state === "step_ready" || state === "paused") {
         if (event.mode === "stills_only") next = { state: "fallback_stills", context };
-        else next = { state, context: { ...context, liveMode: event.mode, stillsArmed: false } };
+        else next = { state, context: { ...context, liveMode: "keyframe_still", stillsArmed: false } };
       }
       break;
     case "AUTO_RETRY":

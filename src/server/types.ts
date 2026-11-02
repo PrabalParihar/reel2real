@@ -4,6 +4,8 @@ export type StepsInputKind = "clip" | "transcript" | "sample" | "instruct";
 export type LicenceChoice = "self_filmed" | "permission_granted";
 
 export interface SparkRequest {
+  /** Internal cancellation signal; never part of the JSON contract. */
+  signal?: AbortSignal;
   transcript?: string;
   title?: string;
   domain?: TutorialSteps["domain"];
@@ -43,6 +45,8 @@ export interface SegmentPromptInput {
 }
 
 export interface SegmentRequest {
+  /** Internal cancellation signal; never part of the JSON contract. */
+  signal?: AbortSignal;
   inputKind: "image" | "video_chunk";
   mediaBase64?: string;
   mediaPath?: string;

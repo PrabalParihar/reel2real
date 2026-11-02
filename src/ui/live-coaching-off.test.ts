@@ -13,6 +13,7 @@ import {
 import { musePublicDegrade } from "@/src/server/muse-forward";
 import { recordedSampleStatus, RECORDED_SAM_LABEL, usesRecordedSam } from "@/src/samples/scene";
 import { samForwardDegrade } from "@/src/server/sam-forward";
+import { interpretInstructResponse } from "./instruct-result";
 
 const instructSource = () => readFileSync("src/ui/InstructScreen.tsx", "utf8");
 const extractingSource = () => readFileSync("src/ui/ExtractingScreen.tsx", "utf8");
@@ -95,10 +96,7 @@ describe("public degrade", () => {
     expect(isLiveCoachingOff(musePublicDegrade("instruct"))).toBe(true);
     expect(isLiveCoachingOff(musePublicDegrade("transcript"))).toBe(true);
     const instruct = instructSource();
-    const refusalAt = instruct.indexOf("modelRefusalReason");
-    const offAt = instruct.indexOf("isLiveCoachingOff");
-    expect(refusalAt).toBeGreaterThan(-1);
-    expect(offAt).toBeGreaterThan(refusalAt);
+    expect(interpretInstructResponse({ ...musePublicDegrade("instruct"), refused: true, reason: "Task refused for safety." }, true)).toEqual({ kind: "refusal", reason: "Task refused for safety." });
     expect(instruct).not.toContain("Highlights unavailable");
     expect(extractingSource()).not.toContain("Highlights unavailable");
   });

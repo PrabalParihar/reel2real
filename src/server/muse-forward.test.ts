@@ -31,6 +31,7 @@ function clearForwardEnv() {
 }
 
 beforeEach(() => {
+  vi.stubEnv("META_DIRECT_ENABLED", "0");
   clearForwardEnv();
   vi.stubGlobal("fetch", vi.fn(async () => {
     throw new Error("network disabled in tests");
@@ -38,6 +39,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   restoreEnv();

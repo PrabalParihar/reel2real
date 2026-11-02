@@ -2,7 +2,7 @@ import { guardMetaRoute } from "@/src/server/meta-guard";
 import { museSecretRejected, museTooLargeResponse, readMuseBody } from "@/src/server/muse-forward";
 import { forwardSecretOk, SAM_FORWARD_SECRET_HEADER } from "@/src/server/sam-forward";
 import { executeSpark } from "@/src/server/spark-run";
-import type { SparkRequest } from "@/src/server/types";
+import { parseSparkRequest } from "@/src/server/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +22,11 @@ export async function POST(request: Request) {
   }
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
-  const rawBody = await readMuseBody(request);
+  let rawBody: string | null;
+  try { rawBody = await readMuseBody(request); }
+  catch { return Response.json({ error: "invalid_request", message: "The request body could not be read." }, { status: 400 }); }
   if (rawBody === null) return museTooLargeResponse();
-  let body: SparkRequest;
-  try {
-    body = JSON.parse(rawBody) as SparkRequest;
-  } catch {
-    return Response.json({ error: "invalid_json", message: "The request was not JSON." }, { status: 400 });
-  }
-  return executeSpark(body);
+  const parsed = parseSparkRequest(rawBody);
+  if (!parsed.ok) return parsed.response;
+  return executeSpark({ ...parsed.value, signal: request.signal });
 }

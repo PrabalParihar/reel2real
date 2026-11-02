@@ -29,10 +29,15 @@ export function cameraBlockMessage(block: CameraBlock): string {
   return "No camera found. Press Next to move the step.";
 }
 
-export async function openRearCamera(getUserMedia: (constraints: MediaStreamConstraints) => Promise<MediaStream>): Promise<MediaStream> {
+export async function openRearCamera(
+  getUserMedia: (constraints: MediaStreamConstraints) => Promise<MediaStream>,
+  signal?: AbortSignal,
+): Promise<MediaStream> {
+  signal?.throwIfAborted();
   try {
     return await getUserMedia(REAR_CAMERA_CONSTRAINTS);
   } catch (error) {
+    signal?.throwIfAborted();
     if (classifyCameraError(error) === "denied") throw error;
     return getUserMedia(FALLBACK_CAMERA_CONSTRAINTS);
   }
