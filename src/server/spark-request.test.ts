@@ -41,6 +41,16 @@ describe("Spark request builder", () => {
     expect(JSON.stringify(body)).not.toContain("input_video");
   });
 
+  it("states exact content enums and server-owned metadata in the base planning instruction", () => {
+    for (const line of [
+      "domain: indian_recipe, non_cooking_diy, other.",
+      "object role: required_present, required_absent, optional, safety_prop.",
+      "successCheck.kind: all_required_present, required_present_and_absent, ordered_presence, manual_confirm_only.",
+      "runtimeHints.preferredLiveMode: chunk_video_1_2s, keyframe_still, stills_only.",
+    ]) expect(SPARK_STEPS_INSTRUCTION).toContain(line);
+    expect(SPARK_STEPS_INSTRUCTION).toContain("server supplies tutorialId, generation metadata, and rights fields");
+  });
+
   it("does not ask the model for attribution fields", () => {
     expect(SPARK_STEPS_INSTRUCTION).not.toMatch(/attribution|creditLine|licence|creatorName|sampleLabel/);
   });
