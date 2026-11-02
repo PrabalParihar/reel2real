@@ -3,7 +3,16 @@ import { SPARK_MODEL_ID } from "@/src/models";
 /** Steps instruction. It does not ask the model for credit, attribution, or licence. */
 export const SPARK_STEPS_INSTRUCTION = `Return JSON only. No markdown.
 schemaVersion "1.0.0".
-Include title, domain, sourceClip with mediaType and durationSec, generation.modelId "muse-spark-1.3", generation.mode "muse_spark_live", generation.toolCalls, and runtimeHints.preferredLiveMode "keyframe_still".
+Include title, domain, sourceClip with mediaType and durationSec, and runtimeHints.preferredLiveMode.
+The server supplies tutorialId, generation metadata, and rights fields. Do not invent these fields.
+For an uploaded clip, the server supplies its actual media type and duration; use source times from the complete clip.
+Use only these values:
+domain: indian_recipe, non_cooking_diy, other.
+sourceClip.mediaType: video/mp4, video/webm.
+object role: required_present, required_absent, optional, safety_prop.
+successCheck.kind: all_required_present, required_present_and_absent, ordered_presence, manual_confirm_only.
+runtimeHints.preferredLiveMode: chunk_video_1_2s, keyframe_still, stills_only.
+Prefer keyframe_still for runtimeHints.preferredLiveMode.
 Each step needs id, index, instructionText, sourceTimeRange with startSec and endSec, 2 to 4 objects (objectId, noun, role, samPrompt), and successCheck with kind and description.
 Use visually checkable objects only. Do not use Muse Image. Do not fetch Instagram.
 Do not name people and do not add rights fields.`;
@@ -75,6 +84,7 @@ export function buildSparkResponsesBody(args: {
   }
   return {
     model: SPARK_MODEL_ID,
+    reasoning: { effort: "low" as const },
     input: [{ type: "message", role: "user", content }],
   };
 }

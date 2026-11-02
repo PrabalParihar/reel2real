@@ -1,6 +1,6 @@
 # DRAFT. Demonstration script. Not filmed, not submitted.
 
-This is a proposed filming plan. **The November 3 hosted probes failed; the successful live sequence below remains unverified.** [Official sources were refreshed November 3, 2026, Asia/Calcutta](event-requirements.md); submissions are due **November 5 at 07:30 IST**. Desired track is Indie Developer, with the stored application switch/acceptance still to confirm. Portal fields, video duration and project-specific rights/prior-work questions remain unresolved. The suggested 2-3 minute structure is an editing assumption, not an official limit. Complete the [priority gates](competitive-readiness.md) and live acceptance before filming. Nothing here publishes or submits this draft.
+This is a proposed filming plan. **Public goal, generated-clip (inline/Files) and red-box SAM checks pass. Restored-blue SAM false negatives leave useful correction and the physical-demo sequence below unverified.** [Official sources were refreshed November 3, 2026, Asia/Calcutta](event-requirements.md); submissions are due **November 5 at 07:30 IST**. Desired track is Indie Developer, with the stored application switch/acceptance still to confirm. Portal fields, video duration and project-specific rights/prior-work questions remain unresolved. The suggested 2-3 minute structure is an editing assumption, not an official limit. Complete the [priority gates](competitive-readiness.md) and live acceptance before filming. Nothing here publishes or submits this draft.
 
 ## Story and supported claims
 
@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Open <http://localhost:3000>. Camera access needs HTTPS outside localhost. For single-service live execution, securely bind `META_MODEL_API_KEY` and explicitly set `META_DIRECT_ENABLED=1`; a key alone leaves public direct calls off. For an intended worker deployment use [SAM-FORWARD.md](SAM-FORWARD.md). Do not print the key, put it in a command argument, or show environment screens on camera. The current managed environment reports ready bindings and unrestricted HTTP access; actual provider output and hosted live behavior remain unrun.
+Open <http://localhost:3000>. Camera access needs HTTPS outside localhost. For single-service live execution, securely bind `META_MODEL_API_KEY` and explicitly set `META_DIRECT_ENABLED=1`; a key alone leaves public direct calls off. For an intended worker deployment use [SAM-FORWARD.md](SAM-FORWARD.md). Do not print the key, put it in a command argument, or show environment screens on camera. Public `d3ee4b77` forwards to manually pinned worker `234f32a`; goal, generated-clip inline/Files and red-box SAM checks pass. Five SAM calls returned upstream200: all three restored-frame checks missed blue; both absent-frame checks were correct. Resolve that quality P0 and rehearse a useful physical-phone correction before filming. See [current evidence and gates](competitive-readiness.md) and [manual worker/key operations](railway-launch.md). Generated QA footage does not replace the owned physical lesson proposed below.
 
 `PREVIEW_PASSWORD` is optional: unset leaves normal routes open; empty returns 503; nonempty requires Basic auth. Rehearse the exact submitted origin and judge access rather than assuming a local take establishes hosted readiness. `/api/runtime` reports configuration, not provider health.
 
@@ -117,4 +117,4 @@ Use only if deliberately chosen and live-tested instead of the upload story. Ent
 
 Instagram preview is optional reference viewing; it is not tutorial import. Do not paste a Reel URL and narrate that it has been extracted. There is no promised browser share-target flow.
 
-**DRAFT. Participant/portal checks, real hosted live acceptance, final filmed evidence and submission remain pending.**
+**DRAFT. Participant/portal checks, useful physical-task correction, real-phone rehearsal, final filmed evidence and submission remain pending.**

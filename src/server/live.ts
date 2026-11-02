@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
 import { SAM_MODEL_ID, SPARK_MODEL_ID, API_ORIGIN } from "@/src/models";
 import { tutorialFromSparkPayload, type UserAttribution } from "@/src/schema/attribution";
@@ -125,6 +126,27 @@ async function finishPayload(
       latencyMs,
     },
   ];
+  // Only actual model responses receive app-owned identity and execution provenance.
+  // Curated samples use this function for attribution too, and retain recorded metadata.
+  if (inputKind === "clip" || inputKind === "transcript") {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
+        typeof (payload as Record<string, unknown>).schemaVersion !== "string") {
+      return { ...fail(latencyMs, ["A versioned tutorial JSON object is required."], inputKind), parseOk: true, toolCalls };
+    }
+    const draft = structuredClone(payload) as Record<string, unknown>;
+    if (!("tutorialId" in draft)) draft.tutorialId = `live_${randomUUID()}`;
+    draft.generation = { mode: "muse_spark_live", modelId: SPARK_MODEL_ID, toolCalls };
+    if (inputKind === "clip") {
+      const source = draft.sourceClip;
+      draft.sourceClip = {
+        ...(source && typeof source === "object" && !Array.isArray(source) ? source : {}),
+        mediaType: input.mimeType || "video/mp4",
+        durationSec: input.durationSec,
+        stillPlaceholder: false,
+      };
+    }
+    payload = draft;
+  }
   const normalized = tutorialFromSparkPayload(payload, meta, {
     title: input.title,
     domain: input.domain,
@@ -145,7 +167,7 @@ async function finishPayload(
       inputKind,
     };
   }
-  normalized.value.generation.toolCalls = toolCalls;
+  if (inputKind === "clip" || inputKind === "transcript") normalized.value.generation.toolCalls = toolCalls;
   return {
     mode: "live",
     modelId: SPARK_MODEL_ID,

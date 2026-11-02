@@ -10,6 +10,44 @@ import {
 } from "./spark-request";
 
 describe("Spark request builder", () => {
+  it.each([
+    {
+      name: "goal image",
+      args: { instruction: goalInstruction("Make chai"), imageDataUrl: "data:image/jpeg;base64,aGVsbG8=" },
+      content: [
+        { type: "input_text", text: goalInstruction("Make chai") },
+        { type: "input_image", image_url: "data:image/jpeg;base64,aGVsbG8=" },
+      ],
+    },
+    {
+      name: "inline video",
+      args: { videoBase64: "aGVsbG8=", mimeType: "video/webm" },
+      content: [
+        { type: "input_text", text: SPARK_STEPS_INSTRUCTION },
+        { type: "input_video", video_url: "data:video/webm;base64,aGVsbG8=" },
+      ],
+    },
+    {
+      name: "Files reference",
+      args: { fileId: "file_abc" },
+      content: [
+        { type: "input_text", text: SPARK_STEPS_INSTRUCTION },
+        { type: "input_file", file_id: "file_abc" },
+      ],
+    },
+    {
+      name: "transcript",
+      args: { transcript: "Crush the ginger." },
+      content: [{ type: "input_text", text: `${SPARK_STEPS_INSTRUCTION}\n\nTranscript:\nCrush the ginger.` }],
+    },
+  ])("requests low reasoning effort for $name without changing model or input", ({ args, content }) => {
+    expect(buildSparkResponsesBody(args)).toEqual({
+      model: SPARK_MODEL_ID,
+      reasoning: { effort: "low" },
+      input: [{ type: "message", role: "user", content }],
+    });
+  });
+
   it("sends a short clip as an input_video data URL", () => {
     expect(chooseSparkMediaPlan({ durationSec: 2, byteLength: 200_000 })).toBe("full_video_data_url");
     expect(SHORT_CLIP_MAX_SEC).toBe(10);
@@ -39,6 +77,16 @@ describe("Spark request builder", () => {
     expect(body.input[0].content[0].type).toBe("input_text");
     expect(JSON.stringify(body)).toContain("Crush the ginger.");
     expect(JSON.stringify(body)).not.toContain("input_video");
+  });
+
+  it("states exact content enums and server-owned metadata in the base planning instruction", () => {
+    for (const line of [
+      "domain: indian_recipe, non_cooking_diy, other.",
+      "object role: required_present, required_absent, optional, safety_prop.",
+      "successCheck.kind: all_required_present, required_present_and_absent, ordered_presence, manual_confirm_only.",
+      "runtimeHints.preferredLiveMode: chunk_video_1_2s, keyframe_still, stills_only.",
+    ]) expect(SPARK_STEPS_INSTRUCTION).toContain(line);
+    expect(SPARK_STEPS_INSTRUCTION).toContain("server supplies tutorialId, generation metadata, and rights fields");
   });
 
   it("does not ask the model for attribution fields", () => {

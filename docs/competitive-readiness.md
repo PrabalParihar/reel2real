@@ -27,6 +27,9 @@ the original signed-in approved account; the Discord route then links the user's
 Discord account before showing an invite. The private content was not read and no
 account was linked or joined. These are the concrete next places to obtain model
 activation instructions, problem statements and current participant announcements.
+The user also supplied a screenshot of Discord server `1557169028080869426`.
+Its welcome instructions and lock icons do not establish the user's current role
+or access; private channel messages remain unread.
 
 Sources: [event](https://cerebralvalley.ai/e/meta-ai-developer-hackathon),
 [rules](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/waiver),
@@ -79,30 +82,66 @@ model verified an action, temporal order or safety from object presence.
 | Criterion | Evidence available | Evidence still needed |
 | --- | --- | --- |
 | Impact, 30% | A concrete hands-busy learning hypothesis. | Observed beginner outcomes and setup/interruptions comparison. |
-| Meta tooling, 25% | Implemented Spark planning and SAM localization; result provenance. | Successful hosted real-model correction/recheck on an owned task. |
-| Technical execution, 20% | Bounded/cancellable flows, truthful outcomes, regression coverage. | Final build/device/hosted checks after the enhancement. |
+| Meta tooling, 25% | Verified live public-origin Spark planning and decoded SAM localization through the protected worker. | Resolve restored-blue false negatives; useful fresh recheck on an owned physical task. |
+| Technical execution, 20% | Bounded/cancellable flows, truthful outcomes, passing build/regressions and hosted recorded-flow checks. | Resolve restored-blue false negatives; physical-task quality and target-phone rehearsal. |
 | Demo, 25% | Working labelled recorded exploration and recovery paths. | Filmed real task, current judge-origin rehearsal and verified portal limits. |
 
+[PR #20](https://github.com/PrabalParihar/reel2real/pull/20) merged as
+`756d34f`. CI passed; local verification passed **483 unit tests**, **36 production
+browser checks**, type checking and the production build. Five focused mobile UI
+checks then passed on the deployed origin: clip entry, supervision text, thumbnail
+clearance, honest recap and recorded restart. Those checks used recorded/synthetic
+data and made **zero live AI requests**; they do not establish camera, real-model
+or learner acceptance.
+
+Current public deployment `d3ee4b77` (frontend `756d34f`) privately forwards all
+three model routes to manually pinned worker `258e0cb5`, source `234f32a`.
+Public live acceptance passed: goal plan **22.790 s**, six-second generated clip
+**7.422 s** with later blue step at 3.2–6 s, and SAM **1.291 s** with a decoded
+red-fixture box (IoU **0.989714**, not general accuracy). A **12-second Files API
+clip** also passed in **9.97 s**, with later blue content at 6–11.5 s and independent
+schema validation. Review, **505 unit tests/70 files**, **36 production browser
+tests**, build and both CI checks passed for `234f32a`.
+
+The upload fix supplies app-owned identity/provenance and actual duration/MIME,
+prompts exact enums, and preserves model roles/source times under strict validation.
+The final revision also requests documented Spark low reasoning effort. No deadline,
+model, token-cap or retry change, fixed omitted-effort default or p95 improvement
+is claimed. Earlier model404s and recovery after equal-value key-assignment control
+do not establish a source-policy cause; no key rotation occurred. See [launch
+operations and evidence](railway-launch.md).
+
+**Useful correction remains a model-quality P0:** five controlled SAM calls returned HTTP/upstream200 and `ok:true`; all three
+restored-frame checks missed blue, while both absent-frame checks were correct.
+The misses span generic/planner PNG and planner JPEG. Raw output was not retained, so upstream
+versus adapter cause is unknown. Inspect controlled raw output, benchmark recall
+on frozen real props and verify a useful fresh correction on a physical phone.
+The positive red-box result does not close this failure. Generated QA clips do
+not establish an owned real demo or learner benefit.
+
 No numerical winning probability is supported: the actual field, organizer ranking
-and complete live/user evidence are unknown. With hosted model requests failing,
-this is a polished prototype rather than a winning-ready live demonstration. A
-successful real loop and measured benefit would materially improve that position;
-additional unrelated modes would not fill those evidence gaps.
+and complete live/user evidence are unknown. The protected-worker result establishes
+working public model integration; a useful real learner loop and measured benefit
+remain necessary before calling the demonstration winning-ready.
+Additional unrelated modes would not fill those evidence gaps.
 
 ## Product manager / engineer / QA task board
 
 | Priority / owner | Deliverable | Acceptance / status |
 | --- | --- | --- |
-| P0 — backend + Meta account owner | Resolve hosted model access/source policy using actual provider evidence. | Railway key is accepted (catalog200 vs unauthenticated401) but its validated catalog is empty; Spark/SAM must succeed on the final origin. [Support draft](meta-access-support-draft.md). |
+| Done — backend + QA | Recover real public instruction planning and localization through protected forwarding. | Current public `d3ee4b77` passes typed/semantic checks; Spark plan valid and SAM box decoded/present. Physical-task fresh recheck remains in the demo/phone tasks. [Support draft](meta-access-support-draft.md). |
+| Done — backend + QA | Repair live clip-plan contract and prove later-content/Files handling. | Source `234f32a` reviewed, 505 unit/36 browser/build/CI pass; public six-second inline and 12-second Files clips valid with later content. Generated QA proof, not physical-demo acceptance. |
+| P0 — engineering + QA | Diagnose restored-object false negatives and verify useful correction. | Five calls: all three restored-frame checks missed blue; both absent-frame checks correct, despite upstream200/ok:true. Inspect raw controlled output/adapter versus upstream; frozen real-prop recall benchmark and physical-phone missing→restore→fresh-Recheck proof required. [Canonical evidence](railway-launch.md). |
 | P0 — team representative | Switch existing Startup application to Indie and verify acceptance/waiver. | Saved track and accepted status visible in participant account; no duplicate application. |
 | P0 — team + QA | Film and test one owned safe tabletop lesson. | Later clip action represented; absent/restored object yields useful fresh responses; no replay substituted. |
-| P0 — team representative | Inspect authenticated portal and participant communications. | Actual video limit, fields and required links recorded; Discord invite checked in accepted view/email. |
-| P1 — frontend + QA | Current-step object checklist. | Unknown, absent, visible, unavailable and stale states stay distinct; recheck/step change clears old evidence. Implemented; local integration verified (483 unit tests, 36 browser checks and build); hosted CI/release pending. |
-| P1 — frontend + QA | Honest voice/status/recap labels. | No detector-derived skipped-action/order claim; still-plan origin retained; mixed count names confirmation and visibility. Implemented; local integration verified (483 unit tests, 36 browser checks and build); hosted CI/release pending. |
-| P1 — frontend + QA | Mobile clip intent and thumbnail access. | Explicit clip entry reaches the form; errors explain availability there; thumbnails are reachable above the fixed dock. Implemented; local integration verified (483 unit tests, 36 browser checks and build); hosted CI/release pending. |
-| P1 — research lead + learners | Small paired learner comparison. | Real observations, including failures/setup, in [trial worksheet](learner-evaluation.md). No fabricated testimonials or percentages. |
-| P1 — QA | Target-phone and fresh-browser rehearsal. | Real permissions, first frame, missing-object correction, recheck, voice/mute, Next/Skip and recap verified. |
-| P1 — team representative | Final video, copy and submission. | Only demonstrated claims, accurate rights/source credit, actual portal limits; save submission receipt. Drafts remain unsubmitted. |
+| P0 — team representative | Inspect authenticated portal and participant communications. | Actual video limit, fields and required links recorded; participant announcements and saved Discord role/access checked. Private content remains unverified. |
+| P0 — research lead + learners | Small paired learner comparison. | Real observations from 3–5 learners, including failures/setup, in [trial worksheet](learner-evaluation.md). No fabricated testimonials or percentages. |
+| P0 — QA | Target-phone and fresh-browser rehearsal. | Real permissions, first frame, missing-object correction, recheck, voice/mute, Next/Skip and recap verified. |
+| P0 — team representative | Final video, copy and submission. | Only demonstrated claims, accurate rights/source credit, actual portal limits; save submission receipt. Drafts remain unsubmitted. |
+| P1 — frontend + QA | Current-step object checklist. | Implemented, merged and deployed; CI/local regression and recorded-flow checks passed. Unknown, absent, visible, unavailable and stale stay distinct; real-model acceptance remains open. |
+| P1 — frontend + QA | Honest voice/status/recap labels. | Implemented, merged and deployed; relevant regressions and hosted recap check passed. No detector-derived skipped-action/order claim; still origin and mixed confirmation/visibility count retained. |
+| P1 — frontend + QA | Mobile clip intent and thumbnail access. | Implemented, merged and deployed; hosted entry and clearance checks passed. Explicit clip entry reaches the form and thumbnails remain reachable above the dock; target-phone rehearsal remains open. |
+| P1 — backend + QA | Measure planning latency and timeout margin. | Planning took 20.9 and 39.6 seconds in two runs. Measure representative-task p50/p95, timeout and cancellation rates; verify useful waiting/failure states against the 45-second model deadline. No performance improvement is claimed. |
 | P2 — team | New domains/models/automatic action detection. | Deferred until the core evidence is strong; not needed to show this loop. |
 
 Recommended internal freeze: **November 4, 22:00 IST**, leaving time before the
