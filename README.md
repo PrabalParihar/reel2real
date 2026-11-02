@@ -99,6 +99,8 @@ The [Designeer-inspired design](docs/design-reference.md) uses a light lesson ga
 
 ## Tests
 
+The media regression tests require `ffmpeg` and `ffprobe` on `PATH`. On Ubuntu, install the `ffmpeg` package; the CI workflow installs and checks both tools before running the suite. The hosted application does not require these test tools.
+
 ```bash
 npm test
 npm run build
