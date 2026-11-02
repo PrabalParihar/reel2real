@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "gate0": "tsx scripts/gate0.ts"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

@@ -1,7 +1,7 @@
 import { guardMetaRoute } from "@/src/server/meta-guard";
 import { forwardSecretOk, SAM_FORWARD_SECRET_HEADER } from "@/src/server/sam-forward";
 import { executeSegment, readSegmentBody, segmentTooLargeResponse } from "@/src/server/segment-run";
-import type { SegmentRequest } from "@/src/server/types";
+import { parseSegmentRequest } from "@/src/server/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +18,12 @@ export async function POST(request: Request) {
   }
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
-  const rawBody = await readSegmentBody(request);
+  let rawBody: string | null;
+  try { rawBody = await readSegmentBody(request); }
+  catch { return Response.json({ error: "invalid_request", message: "The request body could not be read." }, { status: 400 }); }
   if (rawBody === null) return segmentTooLargeResponse();
+  const parsed = parseSegmentRequest(rawBody);
+  if (!parsed.ok) return parsed.response;
   // executeSegment reserves the daily cap in the live client before any Meta fetch.
-  return executeSegment(JSON.parse(rawBody) as SegmentRequest);
+  return executeSegment({ ...parsed.value, signal: request.signal });
 }

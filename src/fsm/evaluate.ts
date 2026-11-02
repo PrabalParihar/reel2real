@@ -34,18 +34,10 @@ export function evaluateCheck(input: EvalInput): EvalResult {
   const missingObjectIds = required.filter((id) => !presence[id]);
   const forbidden = step.successCheck.forbiddenObjectIds ?? [];
   const forbiddenOk = forbidden.every((id) => !presence[id]);
-  let orderOk = true;
-  if (step.successCheck.kind === "ordered_presence") {
-    const order = step.successCheck.orderObjectIds ?? [];
-    let gap = false;
-    for (const id of order) {
-      if (!presence[id]) gap = true;
-      else if (gap) orderOk = false;
-    }
-    if (!order.every((id) => presence[id])) orderOk = false;
-  }
-  const manual = step.successCheck.kind === "manual_confirm_only";
-  const complete = !manual && missingObjectIds.length === 0 && forbiddenOk && orderOk;
+  // A single still cannot establish temporal order. Legacy ordered checks stay
+  // learner-confirmed until temporal evidence is implemented.
+  const manual = step.successCheck.kind === "manual_confirm_only" || step.successCheck.kind === "ordered_presence";
+  const complete = !manual && required.length > 0 && missingObjectIds.length === 0 && forbiddenOk;
 
   const counters: EvalCounters = {
     stableHits: input.counters.stableHits,

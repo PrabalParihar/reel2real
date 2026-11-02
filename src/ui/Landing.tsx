@@ -1,229 +1,217 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Camera, ChevronDown, Clapperboard, Grid2X2, Info, ListChecks, ShieldCheck, Upload } from "lucide-react";
 import { PUBLISHED_SAMPLES } from "@/src/domains/catalog";
 import { SAM_MODEL_ID, SPARK_MODEL_ID } from "@/src/models";
-import { shapeClass } from "@/src/samples/frame-fit";
-import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, RECORDED_SAM_LABEL, sceneAsset, uniqueByNoun, type SampleScene } from "@/src/samples/scene";
+import { cardCoverStep, heroSamFile, heroStep, presentNouns, recordedFrameFile, sceneAsset, uniqueByNoun, type SampleScene } from "@/src/samples/scene";
 import { SparkMark } from "./mark";
 import { PhotoFrame } from "./PhotoFrame";
 import { SafetyNote } from "./SafetyNote";
 import { SampleCoachStill } from "./SampleCoachStill";
 import { SampleCredit, SceneCredit } from "./SampleCredit";
+import { useSession } from "./session";
 
 const CHAI = PUBLISHED_SAMPLES.find((sample) => sample.id === "masala-chai") ?? PUBLISHED_SAMPLES[0];
-const HERO_STEPS = CHAI.tutorial.steps.map((step) => step.instructionText);
+const LESSON_FILTERS = [
+  { id: "all", label: "All lessons" },
+  { id: "kitchen", label: "Kitchen" },
+  { id: "make", label: "Make & grow" },
+] as const;
+type LessonCategory = typeof LESSON_FILTERS[number]["id"];
+
+function lessonCategory(id: string): Exclude<LessonCategory, "all"> {
+  return id === "masala-chai" || id === "latte-art" ? "kitchen" : "make";
+}
 
 function frameSrc(scene: SampleScene, file: string): string {
   return sceneAsset(scene, file);
 }
 
 export function Landing() {
-  const chai = CHAI.scene;
+  const { runtime } = useSession();
+  const [category, setCategory] = useState<LessonCategory>("all");
+  const lessons = PUBLISHED_SAMPLES.filter((sample) => category === "all" || lessonCategory(sample.id) === category);
+
   return (
-    <div className="landing">
-      <div className="nav-wrap">
-        <nav className="nav" aria-label="Primary">
-          <Link href="/" className="wordmark"><SparkMark /> Reel2Real</Link>
-          <div className="nav-links">
-            <a href="#how">How it works</a>
-            <a href="#demos">Demos</a>
-            <Link href="/instruct">Instruction mode</Link>
-            <a href="#meta">Built with Meta</a>
-          </div>
-          <div className="nav-actions">
-            <Link className="btn btn-ghost btn-sm" href="/upload">Open app</Link>
-            <Link className="btn btn-primary btn-sm" href="/upload">Try the coach</Link>
-          </div>
+    <div className="landing studio-theme">
+      <a className="discovery-skip" href="#demos">Skip to lessons</a>
+
+      <aside className="discovery-rail" aria-label="Explore Reel2Real">
+        <Link href="/" className="wordmark discovery-brand"><SparkMark /> Reel2Real</Link>
+        <p className="discovery-rail-intro">A tutorial on your screen.<br />A next step in your hands.</p>
+        <nav className="discovery-rail-nav" aria-label="Explore">
+          <p className="discovery-nav-label">Discover</p>
+          <a className="discovery-rail-current" href="#demos"><Grid2X2 size={17} /> Recorded lessons <span>{PUBLISHED_SAMPLES.length}</span></a>
+          <a href="#how"><ListChecks size={17} /> How it works</a>
+          <Link href="/upload"><Upload size={17} /> Use my clip</Link>
+          <Link href="/instruct"><Camera size={17} /> Goal + camera</Link>
+          <p className="discovery-nav-label discovery-nav-label-next">Behind the coach</p>
+          <a href="#meta"><SparkMark /> The models</a>
+          <a href="#credits"><ShieldCheck size={17} /> Credit & permission</a>
         </nav>
-      </div>
-
-      <header className="hero-bleed mesh section hero">
-        <div className="hero-copy">
-          <p className="kicker">Phone stand · Upload · Coach</p>
-          <h1>Follow a tutorial on camera.</h1>
-          <p className="lead">Put the phone on a stand. The objects in each step light up as you match the lesson.</p>
-          <div className="cta-row">
-            <Link className="btn btn-primary" href="/upload">Try the coach <ArrowRight size={18} strokeWidth={1.5} /></Link>
-            <Link className="btn btn-ghost" href="/instruct">Instruction mode</Link>
-            <a className="btn btn-ghost" href="#demos">Watch the demos</a>
+        <div className="discovery-rail-bottom">
+          <div className="discovery-rail-note">
+            <Clapperboard size={20} />
+            <h2>Start with a sample.</h2>
+            <p>Real lesson footage, supplied steps and recorded highlights. No camera needed.</p>
+            <a href="#demos">Find your first lesson <ArrowUpRight size={14} /></a>
           </div>
-          <p className="quiet honesty">No tutorial. Phone or laptop camera only.</p>
+          <p className="discovery-rail-foot">Made for learning by doing.</p>
         </div>
-            <HeroStage scene={chai} />
-      </header>
+      </aside>
 
-      <section className="section wrap" id="instruct">
-        <p className="kicker">No tutorial</p>
-        <h2>Instruction mode</h2>
-        <div className="instruct-home">
-          <SampleCoachStill />
-          <article className="panel instruct-home-copy">
-            <h3>Type a goal. Skip the tutorial.</h3>
-            <p>Your phone or laptop camera takes one still, then the coach checks the workspace.</p>
-            <Link className="btn btn-primary" href="/instruct">Instruction mode</Link>
-          </article>
-        </div>
-      </section>
-
-      <section className="section wrap" id="how">
-        <p className="kicker">How it works</p>
-        <h2>Three moves. The clip stays yours.</h2>
-        <div className="how-reels">
-          <article>
-            <span className="index">01</span>
-            <h3>Upload a clip you own</h3>
-            <div className={`reel-phone ${shapeClass(CHAI.shape)}`}>
-              <PhotoFrame
-                className="is-fill"
-                src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
-                alt="Kitchen mortar and pestle, first sample frame"
-                loopSrc={frameSrc(chai, CHAI.clip)}
-                objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
-                zoom={CHAI.stepZooms[0] ?? CHAI.zoom}
-                sampleChip
-                showProgress
-              />
+      <main className="discovery-main">
+        <div className="discovery-topbar">
+          <nav aria-label="Primary">
+            <Link href="/" className="wordmark discovery-mobile-brand"><SparkMark /> Reel2Real</Link>
+            <a className="discovery-breadcrumb" href="#demos"><Grid2X2 size={15} /> Explore lessons</a>
+            <div className="discovery-top-actions">
+              <a className="discovery-top-link" href="#how">How it works</a>
+              <Link className="btn btn-primary btn-sm" href="/upload">Use my clip <ArrowUpRight size={14} /></Link>
             </div>
-          </article>
-          <article>
-            <span className="index">02</span>
-            <h3>Steps from the lesson</h3>
-            <div className={`reel-phone ${shapeClass(CHAI.shape)}`}>
-              <PhotoFrame
-                className="is-fill"
-                src={frameSrc(chai, chai.steps[1]?.keyframe ?? chai.hero.image)}
-                alt="Hands crushing spices in the same mortar"
-                objectPosition={CHAI.stepCrops[1] ?? CHAI.crop}
-                zoom={CHAI.stepZooms[1] ?? CHAI.zoom}
-              />
+          </nav>
+        </div>
+
+        <div className="discovery-content">
+          <header className="discovery-intro">
+            <p className="discovery-eyebrow"><span /> From watching to doing</p>
+            <h1>Follow a tutorial on camera.</h1>
+            <p className="discovery-lead">Turn a short tutorial into steps, then follow along with your phone on a stand. Object highlights help you frame the workspace.</p>
+            <div className="discovery-actions">
+              <a className="btn btn-primary" href="#demos">Try a recorded sample <ArrowRight size={16} /></a>
+              <Link className="btn btn-ghost" href="/upload">Use my clip</Link>
+              <Link className="btn btn-ghost" href="/instruct">Goal + camera</Link>
             </div>
-          </article>
-          <article>
-            <span className="index">03</span>
-            <h3>Highlights on the objects</h3>
-            <div className={`reel-phone ${shapeClass(CHAI.shape)}`}>
-              <PhotoFrame
-                className="is-fill"
-                src={frameSrc(chai, chai.steps[0]?.keyframe ?? chai.hero.image)}
-                alt="Recorded highlight on the mortar"
-                objectPosition={CHAI.stepCrops[0] ?? CHAI.crop}
-                zoom={CHAI.stepZooms[0] ?? CHAI.zoom}
-                overlay={heroOverlay(chai)}
-              />
+            <p className="discovery-intro-note">Recorded samples need no camera. Your own plan starts with a clip, or a goal and one workspace photo.</p>
+            {runtime.capabilities?.spark === false || runtime.capabilities?.instruct === false ? (
+              <p className="discovery-availability">Available here: recorded samples.{runtime.capabilities?.spark === false ? " Clip extraction is unavailable." : ""}{runtime.capabilities?.instruct === false ? " Camera planning is unavailable." : ""}</p>
+            ) : null}
+            {runtime.capabilities?.segment === false ? <p className="discovery-availability">Live object highlights are unavailable in this environment.</p> : null}
+          </header>
+
+          <section className="discovery-lessons" id="demos" tabIndex={-1} aria-labelledby="recorded-heading">
+            <div className="discovery-section-heading">
+              <div>
+                <h2 id="recorded-heading">Try a recorded sample</h2>
+                <p>Supplied steps and recorded highlights. No camera or live model call needed.</p>
+              </div>
+              <span className="discovery-small-label"><Clapperboard size={14} /> Ready to explore</span>
             </div>
-          </article>
+            <div className="discovery-toolbar">
+              <div className="discovery-filters" role="group" aria-label="Filter recorded lessons">
+                {LESSON_FILTERS.map((filter) => (
+                  <button
+                    type="button"
+                    key={filter.id}
+                    aria-pressed={category === filter.id}
+                    aria-controls="recorded-lessons"
+                    onClick={() => setCategory(filter.id)}
+                  >
+                    {filter.label}
+                    <span>{PUBLISHED_SAMPLES.filter((sample) => filter.id === "all" || lessonCategory(sample.id) === filter.id).length}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="discovery-result-count" role="status">{lessons.length} lessons</p>
+            </div>
+            <div className="discovery-gallery" id="recorded-lessons">
+              {lessons.map((sample) => {
+                const cover = cardCoverStep(sample.scene, sample.cardOutlines);
+                const title = sample.tutorial.title.replace(/^Sample · /, "");
+                const tags = uniqueByNoun(presentNouns(cover).filter((noun) => noun.verified !== false));
+                return (
+                  <article className="lesson-card" key={sample.id}>
+                    <Link className="discovery-card-media" href={`/extracting?demo=${sample.id}`} aria-label={`Open ${title} recorded sample`}>
+                      <PhotoFrame
+                        className="is-fill"
+                        src={frameSrc(sample.scene, sample.cardOutlines ? recordedFrameFile(sample.scene, cover.index) : sample.poster)}
+                        alt={`${sample.tutorial.title} sample frame`}
+                        loopSrc={sample.cardOutlines ? undefined : frameSrc(sample.scene, sample.clip)}
+                        objectPosition={sample.cardCrop}
+                        zoom={sample.cardZoom}
+                        sampleChip
+                        recordedLabel={sample.cardOutlines}
+                        showProgress={false}
+                        durationSec={sample.cardOutlines ? undefined : sample.loopDurationSec}
+                        drawOutlines={sample.cardOutlines}
+                        overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
+                      />
+                    </Link>
+                    <div className="discovery-card-body">
+                      <p className="discovery-card-category">{lessonCategory(sample.id) === "kitchen" ? "Kitchen" : "Make & grow"}<span>{sample.tutorial.steps.length} steps</span></p>
+                      <h3>{title}</h3>
+                      <SafetyNote note={sample.safetyNote} />
+                      <p className="discovery-card-description">{sample.tutorial.steps[cover.index]?.successCheck.description}</p>
+                      {!sample.cardOutlines && tags.length ? (
+                        <ul className="discovery-object-tags">
+                          {tags.map((noun) => <li key={noun.objectId} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
+                        </ul>
+                      ) : null}
+                      <details className="discovery-card-steps">
+                        <summary>See the lesson steps <ChevronDown size={14} /></summary>
+                        <ol>
+                          {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
+                        </ol>
+                      </details>
+                      <div className="discovery-card-bottom">
+                        <SceneCredit scene={sample.scene} />
+                        <Link className="btn btn-ghost" href={`/extracting?demo=${sample.id}`} aria-label={`Open ${title} in coach`}>Open in coach <ArrowUpRight size={16} /></Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="discovery-support" id="how" aria-labelledby="how-heading">
+            <div className="discovery-section-heading">
+              <div><p className="discovery-eyebrow">A little structure. More doing.</p><h2 id="how-heading">From your clip to the next action.</h2></div>
+            </div>
+            <div className="discovery-how-grid">
+              <article><span className="discovery-step-number">01 <Upload size={17} /></span><h3>Bring a tutorial</h3><p>Upload a short clip you filmed or have permission to use. Keep the creator credit with it.</p></article>
+              <article><span className="discovery-step-number">02 <ListChecks size={17} /></span><h3>Get the steps</h3><p>Turn the lesson into a plan with one clear action at a time and the objects each step needs.</p></article>
+              <article><span className="discovery-step-number">03 <Camera size={17} /></span><h3>Follow along</h3><p>Put your phone on a stand. Keep your workspace in view and move through the steps at your pace.</p></article>
+            </div>
+            <p className="discovery-data-note"><Info size={16} /><span>Your complete clip and task details are sent to the configured AI service when you extract a plan. Camera planning sends a captured workspace photo and your goal. Live object checks send workspace images. <strong>Object presence does not verify technique or safety.</strong></span></p>
+          </section>
+
+          <section className="discovery-goal" id="instruct" aria-labelledby="goal-heading">
+            <div className="discovery-goal-copy">
+              <span className="discovery-feature-icon"><Camera size={21} /></span>
+              <p className="discovery-eyebrow">No tutorial? Start here.</p>
+              <h2 id="goal-heading">A goal. A workspace.<br />Your next steps.</h2>
+              <p>Describe a task and capture one workspace photo to create a plan. This route needs a phone or laptop camera.</p>
+              <Link className="btn btn-primary" href="/instruct">Start with a goal <ArrowRight size={16} /></Link>
+            </div>
+            <div className="discovery-goal-still"><SampleCoachStill /><SceneCredit scene={CHAI.scene} /></div>
+          </section>
+
+          <section className="discovery-support" id="meta" aria-labelledby="models-heading">
+            <div className="discovery-section-heading"><div><p className="discovery-eyebrow">The models behind the steps</p><h2 id="models-heading">Built on Meta Model API</h2></div></div>
+            <div className="discovery-model-grid">
+              <article><span className="discovery-model-mark"><SparkMark /></span><div><h3>Muse Spark</h3><p>Creates a step-by-step plan from a supported tutorial clip or a goal with a workspace photo when configured.</p><p className="mono">{SPARK_MODEL_ID}</p></div></article>
+              <article><span className="discovery-model-mark"><Grid2X2 size={21} /></span><div><h3>SAM 3.1</h3><p>Draws a box highlight around the 2 to 4 objects each step needs when live object checks are configured.</p><p className="mono">{SAM_MODEL_ID}</p></div></article>
+            </div>
+            <p className="discovery-model-note">Muse Image is not used. Recorded lessons use supplied steps and saved highlights.</p>
+          </section>
+
+          <section className="discovery-rights" id="credits" aria-labelledby="rights-heading">
+            <ShieldCheck size={24} />
+            <div><h2 id="rights-heading">Creator clip and credit on every step</h2><p>Recorded samples include their supplied media and creator credit. For your own clip, enter the creator and confirm that you filmed it or have permission to use it.</p></div>
+            <Link href="/upload">Bring your own clip <ArrowUpRight size={15} /></Link>
+          </section>
+
+          <footer className="discovery-footer">
+            <div className="discovery-footer-top"><Link href="/" className="wordmark"><SparkMark /> Reel2Real</Link><p>© Reel2Real · Indie · Meta AI Developer Hackathon</p></div>
+            <p>Recorded examples are labelled Sample. Upload clips you filmed or have permission to use.</p>
+            <SampleCredit />
+            <nav aria-label="Footer"><a href="#demos">Recorded lessons</a><a href="#how">How it works</a><Link href="/instruct">Goal + camera</Link><Link href="/upload">Use my clip</Link></nav>
+          </footer>
         </div>
-      </section>
-
-      <section className="section wrap">
-        <article className="panel credit-panel">
-          <div>
-            <p className="kicker">Credit</p>
-            <h2>Creator clip and credit on every step</h2>
-            <p>
-              Each step shows the matching segment of the tutorial and a credit line. Self-filmed demos are marked Sample.
-              A third-party clip needs a written permission letter in /legal before it can appear in a demo video or a submission.
-            </p>
-          </div>
-          <div className="credit-mock">
-            <PhotoFrame
-              src={frameSrc(chai, chai.steps[2]?.keyframe ?? chai.hero.image)}
-              alt="Dried herbs over the same kitchen mortar"
-              sampleChip
-            />
-            <p>{HERO_STEPS[1]}</p>
-            <SceneCredit scene={chai} />
-          </div>
-        </article>
-      </section>
-
-      <section className="section wrap" id="demos">
-        <p className="kicker">Demos</p>
-        <h2>Sample tutorials</h2>
-        <div className={`demo-grid${PUBLISHED_SAMPLES.length === 1 ? " is-featured" : " is-set"}`}>
-          {PUBLISHED_SAMPLES.map((sample) => {
-            const cover = cardCoverStep(sample.scene, sample.cardOutlines);
-            const tags = uniqueByNoun(presentNouns(cover).filter((noun) => noun.verified !== false));
-            return (
-              <article className="panel demo-card" key={sample.id}>
-                <div className="reel-phone card-frame">
-                  <PhotoFrame
-                    className="is-fill"
-                    src={frameSrc(sample.scene, sample.cardOutlines ? recordedFrameFile(sample.scene, cover.index) : sample.poster)}
-                    alt={`${sample.tutorial.title} sample frame`}
-                    loopSrc={sample.cardOutlines ? undefined : frameSrc(sample.scene, sample.clip)}
-                    objectPosition={sample.cardCrop}
-                    zoom={sample.cardZoom}
-                    sampleChip
-                    showProgress={false}
-                    durationSec={sample.cardOutlines ? undefined : sample.loopDurationSec}
-                    drawOutlines={sample.cardOutlines}
-                    overlay={sample.cardOutlines ? heroOverlay(sample.scene) : null}
-                  />
-                </div>
-                <div className="demo-body">
-                  <h3>{sample.tutorial.title.replace(/^Sample · /, "")}</h3>
-                  <SafetyNote note={sample.safetyNote} />
-                  <p>{sample.tutorial.steps[cover.index]?.successCheck.description}</p>
-                  {!sample.cardOutlines && tags.length ? (
-                    <ul className="demo-tags">
-                      {tags.map((noun) => <li key={noun.objectId} style={{ borderColor: noun.color }}>{noun.noun}</li>)}
-                    </ul>
-                  ) : null}
-                  <SceneCredit scene={sample.scene} />
-                  <ol className="step-list">
-                    {sample.tutorial.steps.map((step) => <li key={step.id}>{step.instructionText}</li>)}
-                  </ol>
-                  <Link className="btn btn-primary" href={`/extracting?demo=${sample.id}`}>Open in coach</Link>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="section wrap" id="meta">
-        <p className="kicker">Models</p>
-        <h2>Built on Meta Model API</h2>
-        <div className="model-grid">
-          <article className="panel model-card">
-            <h3>Muse Spark</h3>
-            <p>Turns a tutorial transcript into steps JSON. Called once, when you extract steps.</p>
-            <p className="mono">{SPARK_MODEL_ID}</p>
-          </article>
-          <article className="panel model-card">
-            <h3>SAM 3.1</h3>
-            <p>Draws a box highlight around the 2 to 4 objects each step needs.</p>
-            <p className="mono">{SAM_MODEL_ID}</p>
-          </article>
-        </div>
-        <p className="quiet">Muse Image is not used.</p>
-      </section>
-
-      <section className="closing mesh">
-        <div className="orb" />
-        <div className="phone-ghost ghost-back" />
-        <h2>Put the phone on a stand. Follow along.</h2>
-        <div className="cta-row">
-          <Link className="btn btn-primary" href="/upload">Try the coach</Link>
-          <a className="btn btn-ghost" href="#demos">View demos</a>
-        </div>
-      </section>
-
-      <footer className="footer wrap">
-        <p>© Reel2Real · Indie · Meta Global AI Hackathon</p>
-        <p>Upload only. Self-filmed demos are labelled Sample.</p>
-        <SampleCredit />
-        <p className="footer-links">
-          <a href="#how">How it works</a>
-          <a href="#demos">Demos</a>
-          <Link href="/instruct">Instruction mode</Link>
-          <Link href="/upload">App</Link>
-        </p>
-      </footer>
+      </main>
     </div>
   );
 }
@@ -236,62 +224,4 @@ function heroOverlay(scene: SampleScene) {
     samUrl: sceneAsset(scene, file),
     nouns: presentNouns(step).filter((noun) => noun.verified !== false),
   };
-}
-
-function HeroStage({ scene }: { scene: SampleScene }) {
-  const [index, setIndex] = useState(0);
-  const [motion, setMotion] = useState(true);
-  const heroStill = scene.hero.image;
-  const overlay = heroOverlay(scene);
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setMotion(!media.matches);
-    apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
-  }, []);
-  useEffect(() => {
-    if (!motion) return;
-    const timer = setInterval(() => setIndex((current) => (current + 1) % HERO_STEPS.length), 2800);
-    return () => clearInterval(timer);
-  }, [motion]);
-  return (
-    <div className="hero-media">
-      <div className="hero-proof">
-        <div className="hero-source">
-          <PhotoFrame
-            className="is-fill"
-            src={frameSrc(scene, heroStill)}
-            alt="Full 16:9 source of the sample kitchen clip"
-            sizes="(max-width: 800px) 100vw, 520px"
-            loopSrc={frameSrc(scene, CHAI.clip)}
-            objectPosition={{ x: 0.5, y: 0.5 }}
-            zoom={1}
-            priority
-            overlay={overlay}
-          />
-        </div>
-        <div className={`reel-phone hero-reel ${shapeClass(CHAI.shape)}`}>
-          <PhotoFrame
-            className="is-fill"
-            src={frameSrc(scene, heroStill)}
-            alt="Stone mortar and pestle in one kitchen, sample hero frame"
-            sizes="(max-width: 800px) 100vw, 360px"
-            loopSrc={frameSrc(scene, CHAI.clip)}
-            objectPosition={CHAI.crop}
-            zoom={CHAI.zoom}
-            priority
-            status={RECORDED_SAM_LABEL}
-            showProgress
-            overlay={overlay}
-          />
-        </div>
-      </div>
-      <article className="mock-card is-below" key={HERO_STEPS[index]}>
-        <p className="mock-kicker">Step {index + 1} of {HERO_STEPS.length} · Match</p>
-        <h2>{HERO_STEPS[index]}</h2>
-        <SceneCredit scene={scene} />
-      </article>
-    </div>
-  );
 }

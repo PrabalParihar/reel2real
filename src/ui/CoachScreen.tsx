@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { sampleByPublishedId } from "@/src/domains/catalog";
 import { SESSION_BUDGET_STOP_LABEL } from "@/src/coach/sam-scheduler";
 import { coachStatusChip, highlightsChip, missingObjectHint, showStepPanelFrame } from "@/src/fsm/ui";
@@ -21,6 +22,7 @@ import { SafetyNote } from "./SafetyNote";
 import { SceneCredit } from "./SampleCredit";
 import { useSession } from "./session";
 import { useCoach } from "./useCoach";
+import { StepSourceVideo } from "./StepSourceVideo";
 
 function useCameraCover(videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean) {
   const [size, setSize] = useState({ viewW: 0, viewH: 0, frameW: 0, frameH: 0 });
@@ -49,7 +51,6 @@ function useCameraCover(videoRef: React.RefObject<HTMLVideoElement | null>, acti
 
 const MODES: Array<{ id: PreferredLiveMode; label: string }> = [
   { id: "keyframe_still", label: "Keyframe" },
-  { id: "chunk_video_1_2s", label: "Chunk" },
   { id: "stills_only", label: "Stills" },
 ];
 const SCENARIOS: Array<{ id: MockScenario; label: string }> = [
@@ -61,16 +62,15 @@ const SCENARIOS: Array<{ id: MockScenario; label: string }> = [
 ];
 
 export function CoachScreen() {
-  const router = useRouter();
   const session = useSession();
   const tutorial = session.tutorial;
 
-  useEffect(() => {
-    if (!tutorial) router.replace("/upload");
-  }, [router, tutorial]);
-
   if (!tutorial) {
-    return <AppShell><main className="screen"><p>Opening the coach…</p></main></AppShell>;
+    return <AppShell><main className="screen"><article className="panel done-card">
+      <h1>Session interrupted</h1>
+      <p>This lesson is unavailable after a refresh or a direct link. Choose your source again or open a recorded Sample.</p>
+      <div className="cta-row"><Link className="btn btn-primary" href="/upload">Choose a lesson</Link><Link className="btn btn-ghost" href="/#demos">Recorded Samples</Link></div>
+    </article></main></AppShell>;
   }
 
   return <CoachBody />;
@@ -82,11 +82,12 @@ function CoachBody() {
   const tutorial = session.tutorial!;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const recordedRun = usesRecordedSam(session.stepsSource);
-  const coach = useCoach(tutorial, videoRef, { mock: session.runtime.mock, recordedSample: recordedRun });
+  const resultMock = session.resultProvenance ? session.resultProvenance.mode === "mock" : session.runtime.mock;
+  const coach = useCoach(tutorial, videoRef, { mock: resultMock, recordedSample: recordedRun });
   const step = tutorial.steps[coach.machine.context.stepIndex] ?? tutorial.steps[0];
   const cameraBlocked = coach.cameraPhase === "denied" || coach.cameraPhase === "missing" || coach.cameraPhase === "insecure";
   const chip = coachStatusChip(coach.machine.state, cameraBlocked);
-  const sampleSteps = session.runtime.mock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
+  const sampleSteps = resultMock || session.stepsSource === "sample" || session.stepsSource === "transcript" || session.stepsSource === "cap_sample";
   const highlights = highlightsChip(coach.machine.context.lastError);
   const checking = !cameraBlocked && (coach.machine.state === "tracking" || coach.machine.state === "evaluating");
 
@@ -100,9 +101,10 @@ function CoachBody() {
       skips: coach.machine.context.skippedStepIds.length,
       safetyHits: coach.machine.context.safetyHits,
       skippedStepIds: coach.machine.context.skippedStepIds,
+      stepOutcomes: coach.machine.context.stepOutcomes,
     });
     router.push("/done");
-  }, [coach.machine.context.safetyHits, coach.machine.context.skippedStepIds.length, coach.machine.state, router, session, tutorial.steps.length, tutorial.title]);
+  }, [coach.machine.context, coach.machine.state, router, session, tutorial.steps.length, tutorial.title]);
 
   const clip = session.videoUrl;
   const [debug, setDebug] = useState(false);
@@ -125,13 +127,13 @@ function CoachBody() {
   const recordedNouns = presentNouns(sceneStep);
   const verifiedNouns = recordedNouns.filter((noun) => noun.verified !== false);
   const noVerifiedMask = showRecorded && unverifiedStep(recordedNouns);
-  const honesty = session.stepsSource === "instruct" ? instructHonestyChips(session.runtime.mock) : null;
+  const honesty = session.stepsSource === "instruct" ? instructHonestyChips(resultMock) : null;
   const boxDrawn = coach.masks.some((mask) => Boolean(mask.present && mask.box));
   const samPhase = instructSamPhase({
     failed: coach.samStale || coach.highlightsPaused || Boolean(highlights) || coach.machine.state === "mask_lost" || coach.machine.state === "error_recoverable",
     boxDrawn,
   });
-  const samChip = session.stepsSource === "instruct" ? instructSamChip(session.runtime.mock, samPhase) : null;
+  const samChip = session.stepsSource === "instruct" ? instructSamChip(resultMock, samPhase) : null;
   const cover = useCameraCover(videoRef, liveCamera);
   const headlinePx = session.stepsSource === "instruct" ? stepHeadlineFontPx(step.instructionText) : undefined;
   const headlineStyle = headlinePx ? { fontSize: headlinePx, lineHeight: 1.15 } : undefined;
@@ -211,18 +213,20 @@ function CoachBody() {
             </div>
           ) : null}
           {coach.cameraNote ? <p className="stage-note quiet">{coach.cameraNote}</p> : null}
-          {coach.highlightsPaused ? <p className="stage-note quiet">Session budget reached. Press Next to move the step.</p> : null}
+          {coach.pauseMessage && !recordedRun ? <p className="stage-note quiet" role="status">{coach.pauseMessage}</p> : null}
         </section>
 
         <section className="coach-side">
           {honesty ? (
             <div className="chip-row is-start">
-              <Chip tone={session.runtime.mock ? "mock" : "match"}>{honesty.plan}</Chip>
+              <Chip tone={resultMock ? "mock" : "match"}>{honesty.plan}</Chip>
               <Chip tone={samPhase === "failed" ? "danger" : samPhase === "box" ? "mask" : "wait"}>{samChip}</Chip>
             </div>
           ) : null}
           {session.stepsSource === "instruct" ? <p className="quiet">{PHONE_STAND_HINT}</p> : null}
-          {session.stepsSource === "instruct" && session.runtime.mock ? <p className="quiet">Mock client. This is not a live Muse call.</p> : null}
+          {session.stepsSource === "instruct" && resultMock ? <p className="quiet">Mock client. This is not a live Muse call.</p> : null}
+          {session.stepsSource === "cache" || session.stepsSource === "cap_cache" ? <p className="quiet">Cached lesson · {resultMock ? "recorded or mock extraction" : "previous live extraction"}</p> : null}
+          {session.persistenceNote ? <p className="quiet" role="status">{session.persistenceNote}</p> : null}
           {published ? (
             <Filmstrip
               current={coach.machine.context.stepIndex}
@@ -259,10 +263,11 @@ function CoachBody() {
             <SafetyNote note={published?.safetyNote} />
             {sceneStep && sceneStep.instruction !== step.instructionText ? <p>{sceneStep.instruction}</p> : null}
             {hint ? <p className="hint">{hint}</p> : null}
+            <p className="quiet">Next confirms you performed this step. Object checks show visibility in a still frame; they do not verify the action, order or general safety.</p>
             {!hideTiming && showStepPanelFrame(showRecorded || Boolean(scene)) ? (
               <div className="clip-card">
                 {clip ? (
-                  <video src={clip} muted playsInline preload="metadata" />
+                  <StepSourceVideo src={clip} startSec={step.sourceTimeRange.startSec} endSec={step.sourceTimeRange.endSec} />
                 ) : scene && sceneStep ? (
                   <PhotoFrame
                     src={sceneAsset(scene, sceneStep.keyframe)}
@@ -270,7 +275,7 @@ function CoachBody() {
                     sampleChip={!noVerifiedMask}
                   />
                 ) : null}
-                <p className="mono">{step.sourceTimeRange.startSec}s to {step.sourceTimeRange.endSec}s</p>
+                {!clip ? <p className="mono">{step.sourceTimeRange.startSec}s to {step.sourceTimeRange.endSec}s</p> : null}
               </div>
             ) : null}
             {scene ? <SceneCredit scene={scene} /> : session.stepsSource === "instruct" ? <p className="credit">Credit · You · instruction mode</p> : <p className="credit">{formatCredit({ ...tutorial.attribution, creditLine: step.credit.creditLine })}</p>}
@@ -281,9 +286,13 @@ function CoachBody() {
             <button type="button" className="btn btn-ghost" disabled={coach.machine.state === "safety_halt"} onClick={() => coach.dispatch({ type: "USER_SKIP" })}>Skip</button>
             <button type="button" className="btn btn-primary" disabled={coach.machine.state === "safety_halt"} onClick={() => coach.dispatch({ type: "USER_ADVANCE" })}>Next</button>
           </div>
-          {coach.machine.state === "safety_halt" || coach.machine.state === "skip_detected" || coach.machine.state === "mask_lost" || coach.machine.state === "out_of_order" ? (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => coach.dispatch({ type: "USER_RETRY" })}>Retry</button>
-          ) : null}
+          <div className="cta-row">
+            {!recordedRun ? <button type="button" className="btn btn-ghost btn-sm" disabled={!coach.recheckAvailable} onClick={coach.recheck}>Recheck objects</button> : null}
+            {cameraBlocked ? <button type="button" className="btn btn-ghost btn-sm" onClick={coach.retryCamera}>Retry camera</button> : null}
+            {cameraBlocked || coach.pausedReason === "session_cap" ? <Link className="btn btn-ghost btn-sm" href="/#demos">Recorded Samples</Link> : null}
+            <button type="button" className="btn btn-ghost btn-sm" aria-pressed={coach.voiceOn} onClick={() => coach.setVoiceOn((value) => !value)}>{coach.voiceOn ? "Voice on" : "Voice off"}</button>
+          </div>
+          {!coach.voiceAvailable ? <p className="quiet">Voice may be unavailable in this browser. Instructions remain on screen.</p> : null}
           {debug ? (
             <div className="demo-controls">
               <p className="mono">muse-spark-1.3 · sam-3.1 · {tutorial.generation.toolCalls[0]?.purpose ?? "steps"}</p>
@@ -299,7 +308,7 @@ function CoachBody() {
                   </button>
                 ))}
               </div>
-              {session.runtime.mock ? (
+              {resultMock ? (
                 <div className="mode-row" role="group" aria-label="Mock signals">
                   {SCENARIOS.map((item) => (
                     <button key={item.id} type="button" className={coach.scenario === item.id ? "chip tone-mask" : "chip tone-neutral"} onClick={() => coach.setScenario(item.id)}>
@@ -308,9 +317,6 @@ function CoachBody() {
                   ))}
                 </div>
               ) : null}
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => coach.setVoiceOn((value) => !value)}>
-                {coach.voiceOn ? "Voice on" : "Voice off"}
-              </button>
             </div>
           ) : null}
         </section>

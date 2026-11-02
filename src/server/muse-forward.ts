@@ -2,6 +2,8 @@ import { SPARK_MODEL_ID } from "@/src/models";
 import { segmentTooLargeResponse } from "./segment-run";
 import { SAM_FORWARD_SECRET_HEADER } from "./sam-forward";
 import type { SparkResult } from "./types";
+import { readLimitedBody } from "./request-body";
+import { modelDeadline } from "./model-deadline";
 
 /** Same byte cap shape as the segment forward, sized for a clip's JSON body. */
 export const MUSE_MAX_BODY_BYTES = 32 * 1024 * 1024;
@@ -59,18 +61,11 @@ export function musePublicDegrade(inputKind: SparkResult["inputKind"]): SparkRes
 
 /** Null when the declared or actual body is over the Muse forward limit. */
 export async function readMuseBody(request: Request): Promise<string | null> {
-  const header = request.headers.get("content-length");
-  if (header) {
-    const declared = Number(header);
-    if (Number.isFinite(declared) && declared > MUSE_MAX_BODY_BYTES) return null;
-  }
-  const rawBody = await request.text();
-  if (Buffer.byteLength(rawBody) > MUSE_MAX_BODY_BYTES) return null;
-  return rawBody;
+  return readLimitedBody(request, MUSE_MAX_BODY_BYTES);
 }
 
 function isAbort(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
+  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
 
 export async function forwardMuseRequest(options: {
@@ -82,12 +77,12 @@ export async function forwardMuseRequest(options: {
   realIp?: string | null;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  signal?: AbortSignal;
 }): Promise<Response> {
   const url = museForwardUrl(options.env, options.route) ?? "";
   const secret = options.env.SAM_FORWARD_SECRET ?? "";
   const timeoutMs = options.timeoutMs ?? MUSE_FORWARD_TIMEOUT_MS;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const deadline = modelDeadline(timeoutMs, options.signal);
   try {
     const headers: Record<string, string> = {
       "Content-Type": options.contentType?.trim() || "application/json",
@@ -96,14 +91,14 @@ export async function forwardMuseRequest(options: {
     if (options.forwardedFor) headers["x-forwarded-for"] = options.forwardedFor;
     if (options.realIp) headers["x-real-ip"] = options.realIp;
     const fetchImpl = options.fetchImpl ?? fetch;
-    const response = await fetchImpl(url, {
+    const response = await deadline.run(() => fetchImpl(url, {
       method: "POST",
       headers,
       body: options.rawBody,
       redirect: "manual",
-      signal: controller.signal,
-    });
-    const body = await response.arrayBuffer();
+      signal: deadline.signal,
+    }));
+    const body = await deadline.run(() => response.arrayBuffer());
     const outHeaders = new Headers();
     const type = response.headers.get("content-type");
     if (type) outHeaders.set("content-type", type);
@@ -117,6 +112,6 @@ export async function forwardMuseRequest(options: {
       modelId: SPARK_MODEL_ID,
     }, { status: 502 });
   } finally {
-    clearTimeout(timer);
+    deadline.close();
   }
 }

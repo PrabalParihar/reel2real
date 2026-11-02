@@ -30,7 +30,7 @@ export function stateChip(state: CoachStateId): string | null {
     case "evaluating":
       return "Checking…";
     case "success":
-      return "Match";
+      return "Objects visible";
     case "skip_detected":
       return "Skip";
     case "out_of_order":
@@ -73,6 +73,7 @@ export function missingObjectHint(step: TutorialStep, presence: Record<string, b
 }
 
 export function coachStatusChip(state: CoachStateId, cameraBlocked: boolean): string | null {
+  if (state === "safety_halt") return stateChip(state);
   if (cameraBlocked) return "Manual, press Next";
   return stateChip(state);
 }

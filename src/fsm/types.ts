@@ -21,10 +21,13 @@ export const COACH_STATES = [
 ] as const;
 
 export type CoachStateId = (typeof COACH_STATES)[number];
+export type StepOutcome = "unvisited" | "manual_confirmed" | "objects_visible" | "skipped";
 
 export interface CoachContext {
   stepIndex: number;
   stepCount: number;
+  stepIds: string[];
+  stepOutcomes: Record<string, StepOutcome>;
   liveMode: PreferredLiveMode;
   stillsArmed: boolean;
   stableHits: number;
@@ -60,9 +63,9 @@ export type CoachEvent =
   | { type: "READY" }
   | { type: "CADENCE_TICK" }
   | { type: "CHUNK_CAPTURED" }
-  | { type: "SAM_RESULT"; presence: Record<string, boolean> }
-  | { type: "SAM_TIMEOUT" }
-  | { type: "SAM_ERROR"; message: string }
+  | { type: "SAM_RESULT"; presence: Record<string, boolean>; stepIndex?: number; tick?: number }
+  | { type: "SAM_TIMEOUT"; stepIndex?: number; tick?: number }
+  | { type: "SAM_ERROR"; message: string; stepIndex?: number; tick?: number }
   | Signal
   | { type: "USER_RETRY" }
   | { type: "USER_SKIP" }

@@ -103,3 +103,14 @@ describe("SAM poll scheduler", () => {
     expect(readSamSchedulerConfig({ NEXT_PUBLIC_SAM_SESSION_CAP: "0" }).sessionCap).toBe(60);
   });
 });
+
+describe("same-step retry budget", () => {
+  it("rearms the exhausted step without replenishing calls or bypassing the interval", () => {
+    const exhausted = { inFlight: false, calls: 11, stepCalls: 3, lastStartedAt: 5000 };
+    const retried = resetStepCalls(exhausted);
+    expect(retried.calls).toBe(11);
+    expect(poll(retried, 6000)).toEqual({ action: "wait", reason: "interval", waitMs: 1000 });
+    expect(poll(retried, 7000).action).toBe("start");
+    expect(poll(resetStepCalls({ ...exhausted, calls: 60 }), 7000)).toEqual({ action: "pause", reason: "session_cap" });
+  });
+});

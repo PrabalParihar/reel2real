@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SPARK_MODEL_ID } from "@/src/models";
 import { validateTutorialSteps } from "@/src/schema/validate";
 import {
@@ -23,7 +23,12 @@ function restoreEnv() {
   Object.assign(process.env, envSnapshot);
 }
 
+beforeEach(() => {
+  vi.stubEnv("META_DIRECT_ENABLED", "0");
+});
+
 afterEach(() => {
+  vi.unstubAllEnvs();
   restoreEnv();
   vi.restoreAllMocks();
 });

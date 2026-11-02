@@ -21,11 +21,14 @@ export async function POST(request: Request) {
   }
   const blocked = guardMetaRoute(request);
   if (blocked) return blocked;
-  const rawBody = await readMuseBody(request);
+  let rawBody: string | null;
+  try { rawBody = await readMuseBody(request); }
+  catch { return Response.json({ error: "invalid_request", message: "The request body could not be read." }, { status: 400 }); }
   if (rawBody === null) return museTooLargeResponse();
   return handleInstructRequest(new Request(request.url, {
     method: "POST",
     headers: request.headers,
     body: rawBody,
+    signal: request.signal,
   }), { skipGuard: true, skipForward: true });
 }

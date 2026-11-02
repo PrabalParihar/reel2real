@@ -2,9 +2,9 @@ import type { GateDecisionResult, GateRun } from "./decide";
 
 const METRICS = [
   "sam_still_ok",
-  "sam_still_ttfm_ms",
+  "sam_still_full_ms",
   "sam_clip_ok",
-  "sam_clip_ttfm_ms",
+  "sam_clip_full_ms",
   "sam_objects_returned",
   "spark_ok",
   "spark_latency_ms",
