@@ -30,6 +30,17 @@
           "color": "#E88C30",
           "present": true,
           "requestId": "0c215f43-aeaa-4d2f-899e-215eb9d19624",
+          "maskOrdinal": "0",
+          "verified": true
+        },
+        {
+          "objectId": "obj_gloves_1",
+          "noun": "gloves",
+          "samPrompt": "gloves",
+          "color": "#FF6BA8",
+          "present": true,
+          "requestId": "0c215f43-aeaa-4d2f-899e-215eb9d19624",
+          "maskOrdinal": "1",
           "verified": true
         },
         {
@@ -63,6 +74,17 @@
           "color": "#E88C30",
           "present": true,
           "requestId": "6e91e4cc-97e2-47d4-9548-40af88ba4be7",
+          "maskOrdinal": "0",
+          "verified": true
+        },
+        {
+          "objectId": "obj_gloves_1",
+          "noun": "gloves",
+          "samPrompt": "gloves",
+          "color": "#FF6BA8",
+          "present": true,
+          "requestId": "6e91e4cc-97e2-47d4-9548-40af88ba4be7",
+          "maskOrdinal": "1",
           "verified": true
         }
       ],
@@ -95,6 +117,17 @@
           "color": "#E88C30",
           "present": true,
           "requestId": "940de15b-d5db-4eeb-bd3e-0f684335b19c",
+          "maskOrdinal": "0",
+          "verified": true
+        },
+        {
+          "objectId": "obj_gloves_1",
+          "noun": "gloves",
+          "samPrompt": "gloves",
+          "color": "#FF6BA8",
+          "present": true,
+          "requestId": "940de15b-d5db-4eeb-bd3e-0f684335b19c",
+          "maskOrdinal": "1",
           "verified": true
         }
       ],
