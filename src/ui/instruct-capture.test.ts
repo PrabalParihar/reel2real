@@ -2,7 +2,7 @@
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CAMERA_FAILED_COPY, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL } from "./instruct-flow";
+import { CAMERA_DENIED_COPY, CAMERA_DENIED_HEADING, CAMERA_FAILED_COPY, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL } from "./instruct-flow";
 import { SAMPLES_HREF } from "./LiveCoachingOff";
 import { InstructScreen } from "./InstructScreen";
 import { SessionProvider } from "./session";
@@ -65,6 +65,7 @@ describe("instruct capture still", () => {
   afterEach(() => {
     act(() => root.unmount());
     host.remove();
+    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -189,9 +190,9 @@ describe("instruct capture still", () => {
       await Promise.resolve();
     });
     const panel = host.querySelector(".error-panel");
-    expect(panel?.querySelector("h2")?.textContent).toBe("Camera didn't start");
-    expect(panel?.querySelector("p")?.textContent).toBe(CAMERA_FAILED_COPY);
-    expect(CAMERA_FAILED_COPY).toBe("You can try again or watch a recorded Sample.");
+    expect(panel?.querySelector("h2")?.textContent).toBe(CAMERA_DENIED_HEADING);
+    expect(panel?.querySelector("p")?.textContent).toBe(CAMERA_DENIED_COPY);
+    expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
     const sample = host.querySelector(`a[href="${SAMPLES_HREF}"]`);
     expect(sample?.textContent).toBe("Try a Sample");
     expect(sample?.classList.contains("btn-ghost")).toBe(true);
@@ -294,12 +295,99 @@ describe("instruct capture still", () => {
     expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
   });
 
-  it("routes a play rejection to the camera error when no frame arrived", async () => {
-    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.reject(new Error("play failed")));
+  function useFrameClock() {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  }
+
+  it("keeps waiting when play rejects and enables Capture once a late frame arrives", async () => {
+    useFrameClock();
+    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.reject(new DOMException("interrupted", "AbortError")));
+    const proto = HTMLVideoElement.prototype;
+    const originalFrame = proto.requestVideoFrameCallback;
+    const originalCancel = proto.cancelVideoFrameCallback;
+    let deliverFrame: VideoFrameRequestCallback | null = null;
+    proto.requestVideoFrameCallback = (callback) => {
+      deliverFrame = callback;
+      return 1;
+    };
+    proto.cancelVideoFrameCallback = () => {
+      deliverFrame = null;
+    };
+    try {
+      await mount();
+      await grantCamera();
+      expect(captureButton().textContent).toBe(CAMERA_STARTING_LABEL);
+      expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
+      const playsAfterReject = play.mock.calls.length;
+      const videoEarly = host.querySelector("video")!;
+      await act(async () => {
+        videoEarly.dispatchEvent(new Event("canplay"));
+        videoEarly.dispatchEvent(new Event("loadedmetadata"));
+        videoEarly.dispatchEvent(new Event("canplay"));
+      });
+      expect(play.mock.calls.length).toBeGreaterThan(playsAfterReject);
+      expect(play.mock.calls.length).toBeLessThan(playsAfterReject + 4);
+      expect(host.querySelector(".error-panel")).toBeNull();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(captureButton().textContent).toBe(CAMERA_STARTING_LABEL);
+      expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
+      const video = host.querySelector("video")!;
+      setFrame(video, 2, 640);
+      await act(async () => {
+        deliverFrame?.(0, {} as VideoFrameCallbackMetadata);
+      });
+      expect(captureButton().textContent).toBe("Capture still");
+      expect(captureButton().disabled).toBe(false);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(8000);
+      });
+      expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
+      expect(captureButton().disabled).toBe(false);
+    } finally {
+      proto.requestVideoFrameCallback = originalFrame;
+      proto.cancelVideoFrameCallback = originalCancel;
+    }
+  });
+
+  it("waits out the 8 second frame timer when play rejects and no frame arrives", async () => {
+    useFrameClock();
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.reject(new DOMException("autoplay", "NotAllowedError")));
     await mount();
     await grantCamera();
-    expect(host.textContent).toContain(CAMERA_FAILED_COPY);
-    expect(host.querySelector(`a[href="${SAMPLES_HREF}"]`)?.textContent).toBe("Try a Sample");
-    expect(buttonNamed(host, CAMERA_STARTING_LABEL)).toBeUndefined();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(7999);
+    });
+    expect(captureButton().textContent).toBe(CAMERA_STARTING_LABEL);
+    expect(host.textContent).not.toContain(CAMERA_FAILED_COPY);
+    expect(host.querySelector(".error-panel")).toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    const panel = host.querySelector(".error-panel");
+    expect(panel?.querySelector("h2")?.textContent).toBe("Camera didn't start");
+    expect(panel?.querySelector("p")?.textContent).toBe(CAMERA_FAILED_COPY);
+    expect(host.querySelector(`a[href="${SAMPLES_HREF}"]`)?.classList.contains("btn-ghost")).toBe(true);
+    expect(buttonNamed(host, "Try again")?.classList.contains("btn-primary")).toBe(true);
+    const asked = requests.length;
+    await act(async () => {
+      buttonNamed(host, "Try again")!.click();
+    });
+    expect(requests.length).toBe(asked + 1);
+    await act(async () => {
+      requests.at(-1)!.resolve(makeStream());
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(captureButton().textContent).toBe(CAMERA_STARTING_LABEL);
+    expect(host.querySelector(".error-panel")).toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(host.querySelector(".error-panel h2")?.textContent).toBe("Camera didn't start");
   });
 });

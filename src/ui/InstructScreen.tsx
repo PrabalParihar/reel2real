@@ -9,7 +9,7 @@ import type { SparkResult } from "@/src/server/types";
 import { modelRefusalReason, screenGoal } from "@/src/safety/goal-screen";
 import { AppShell } from "./chrome";
 import { PHONE_STAND_HINT } from "./instruct-chips";
-import { INSTRUCT_GOALS, CAMERA_FAILED_COPY, CAMERA_FAILED_HEADING, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL, INSTRUCT_SECTION_LABEL, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
+import { INSTRUCT_GOALS, CAMERA_FRAME_TIMEOUT_MS, CAMERA_STARTING_LABEL, INSTRUCT_SECTION_LABEL, instructCameraFailure, instructCameraMessage, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled, type InstructCameraFailure } from "./instruct-flow";
 import { isLiveCoachingOff, LiveCoachingOff, SAMPLES_HREF } from "./LiveCoachingOff";
 import { SampleCoachStill } from "./SampleCoachStill";
 import { useSession } from "./session";
@@ -36,9 +36,10 @@ export function InstructScreen() {
   const [error, setError] = useState<string | null>(null);
   const [planning, setPlanning] = useState(false);
   const [frameReady, setFrameReady] = useState(false);
-  const [cameraFailed, setCameraFailed] = useState(false);
+  const [cameraFailure, setCameraFailure] = useState<InstructCameraFailure | null>(null);
   const readyTimer = useRef<number | null>(null);
   const detachVideo = useRef<(() => void) | null>(null);
+  const attemptRef = useRef(0);
 
   function clearReadyTimer() {
     if (readyTimer.current == null) return;
@@ -51,50 +52,105 @@ export function InstructScreen() {
     streamRef.current = null;
   }
 
-  function failCamera() {
+  function releaseCamera() {
+    attemptRef.current += 1;
     clearReadyTimer();
     detachVideo.current?.();
     detachVideo.current = null;
     stopCamera();
+  }
+
+  function failCamera(reason: InstructCameraFailure) {
+    releaseCamera();
     setFrameReady(false);
-    setCameraFailed(true);
+    setCameraFailure(reason);
     setPhase("idle");
   }
 
   function armReadyTimer() {
     clearReadyTimer();
+    const generation = attemptRef.current;
     readyTimer.current = window.setTimeout(() => {
+      if (attemptRef.current !== generation) return;
       readyTimer.current = null;
       if (instructVideoReady(videoRef.current)) {
         setFrameReady(true);
-        setCameraFailed(false);
+        setCameraFailure(null);
         return;
       }
-      failCamera();
+      failCamera("timeout");
     }, CAMERA_FRAME_TIMEOUT_MS);
   }
 
   function attachStream(video: HTMLVideoElement, stream: MediaStream) {
     detachVideo.current?.();
+    const generation = attemptRef.current;
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    let playFlight: Promise<void> | null = null;
+    const tryPlay = () => {
+      if (attemptRef.current !== generation || playFlight) return;
+      let playback: Promise<void> | undefined;
+      try {
+        playback = video.play() ?? undefined;
+      } catch {
+        return;
+      }
+      if (!playback || typeof playback.then !== "function") return;
+      // play() can reject while frames are still on the way. That is not a camera failure.
+      playFlight = playback.then(() => {
+        playFlight = null;
+      }, () => {
+        playFlight = null;
+      });
+    };
     const mark = () => {
-      if (!instructVideoReady(video)) return;
+      if (attemptRef.current !== generation || !instructVideoReady(video)) return;
       clearReadyTimer();
       setFrameReady(true);
-      setCameraFailed(false);
+      setCameraFailure(null);
     };
-    const events = ["loadeddata", "loadedmetadata", "canplay", "resize"] as const;
-    for (const name of events) video.addEventListener(name, mark);
+    const readyEvents = ["loadeddata", "loadedmetadata", "canplay", "resize", "playing"] as const;
+    const playEvents = ["loadedmetadata", "canplay"] as const;
+    for (const name of readyEvents) video.addEventListener(name, mark);
+    for (const name of playEvents) video.addEventListener(name, tryPlay);
+    let cancelFrame = () => {};
+    const scheduleFrame = () => {
+      if (attemptRef.current !== generation) return;
+      if (instructVideoReady(video)) {
+        mark();
+        return;
+      }
+      const framed = video as HTMLVideoElement & {
+        requestVideoFrameCallback?: (callback: () => void) => number;
+        cancelVideoFrameCallback?: (handle: number) => void;
+      };
+      if (typeof framed.requestVideoFrameCallback === "function") {
+        const handle = framed.requestVideoFrameCallback(() => {
+          if (attemptRef.current !== generation) return;
+          mark();
+          if (!instructVideoReady(video)) scheduleFrame();
+        });
+        cancelFrame = () => framed.cancelVideoFrameCallback?.(handle);
+        return;
+      }
+      const handle = requestAnimationFrame(() => {
+        if (attemptRef.current !== generation) return;
+        mark();
+        if (!instructVideoReady(video)) scheduleFrame();
+      });
+      cancelFrame = () => cancelAnimationFrame(handle);
+    };
     detachVideo.current = () => {
-      for (const name of events) video.removeEventListener(name, mark);
+      for (const name of readyEvents) video.removeEventListener(name, mark);
+      for (const name of playEvents) video.removeEventListener(name, tryPlay);
+      cancelFrame();
     };
     video.srcObject = stream;
     mark();
-    const playback = video.play();
-    if (playback) {
-      void playback.catch(() => {
-        if (!instructVideoReady(video)) failCamera();
-      });
-    }
+    tryPlay();
+    scheduleFrame();
   }
 
   function takeVideo(node: HTMLVideoElement | null) {
@@ -111,6 +167,7 @@ export function InstructScreen() {
 
   useEffect(() => {
     return () => {
+      attemptRef.current += 1;
       clearReadyTimer();
       detachVideo.current?.();
       detachVideo.current = null;
@@ -120,8 +177,9 @@ export function InstructScreen() {
   }, []);
 
   async function allowCamera() {
-    clearReadyTimer();
-    setCameraFailed(false);
+    releaseCamera();
+    const generation = attemptRef.current;
+    setCameraFailure(null);
     setFrameReady(false);
     setNote(null);
     setError(null);
@@ -129,18 +187,22 @@ export function InstructScreen() {
     setStill(null);
     setPhase("opening");
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setCameraFailed(true);
-      setPhase("idle");
+      if (attemptRef.current !== generation) return;
+      failCamera("insecure");
       return;
     }
     try {
-      stopCamera();
       const stream = await openRearCamera((constraints) => navigator.mediaDevices.getUserMedia(constraints));
+      if (attemptRef.current !== generation) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
       armReadyTimer();
       setPhase("live");
-    } catch {
-      failCamera();
+    } catch (cause) {
+      if (attemptRef.current !== generation) return;
+      failCamera(instructCameraFailure(cause));
     }
   }
 
@@ -293,7 +355,7 @@ export function InstructScreen() {
                 >
                   {frameReady ? "Capture still" : CAMERA_STARTING_LABEL}
                 </button>
-              ) : cameraFailed ? null : (
+              ) : cameraFailure ? null : (
                 <button className={primary === "allow" ? "btn btn-primary" : "btn btn-ghost"} type="button" onClick={() => void allowCamera()}>
                   {blocked || still ? "Allow camera again" : "Allow camera"}
                 </button>
@@ -307,11 +369,11 @@ export function InstructScreen() {
             </div>
             {note ? <p className="form-note">{note}</p> : null}
             {phase === "opening" ? <p className="form-note">Opening the camera…</p> : null}
-            {!ready && !note && phase !== "live" && !cameraFailed ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
-            {cameraFailed ? (
+            {!ready && !note && phase !== "live" && !cameraFailure ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
+            {cameraFailure ? (
               <div className="panel error-panel" role="alert">
-                <h2>{CAMERA_FAILED_HEADING}</h2>
-                <p>{CAMERA_FAILED_COPY}</p>
+                <h2>{instructCameraMessage(cameraFailure).heading}</h2>
+                <p>{instructCameraMessage(cameraFailure).body}</p>
                 <button className="btn btn-primary" type="button" onClick={() => void allowCamera()}>Try again</button>
                 <Link className="btn btn-ghost" href={SAMPLES_HREF}>Try a Sample</Link>
               </div>

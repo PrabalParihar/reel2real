@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { SAMPLE_OUTLINE_CAPTION } from "./SampleCoachStill";
-import { CAMERA_FAILED_COPY, CAMERA_FAILED_HEADING, INSTRUCT_GOALS, INSTRUCT_SECTION_LABEL, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
+import { CAMERA_BUSY_COPY, CAMERA_BUSY_HEADING, CAMERA_DENIED_COPY, CAMERA_DENIED_HEADING, CAMERA_FAILED_COPY, CAMERA_FAILED_HEADING, CAMERA_INSECURE_COPY, CAMERA_INSECURE_HEADING, CAMERA_MISSING_COPY, CAMERA_MISSING_HEADING, INSTRUCT_GOALS, INSTRUCT_SECTION_LABEL, instructCameraFailure, instructCameraMessage, instructPrimary, instructProgress, instructVideoReady, planStepsEnabled } from "./instruct-flow";
 
 function uiFiles(dir: string): string[] {
   const found: string[] = [];
@@ -30,7 +30,20 @@ describe("instruction flow", () => {
     expect(INSTRUCT_SECTION_LABEL).toBe("Live coach");
     expect(CAMERA_FAILED_HEADING).toBe("Camera didn't start");
     expect(CAMERA_FAILED_COPY).toBe("You can try again or watch a recorded Sample.");
-    expect(CAMERA_FAILED_COPY).not.toContain(CAMERA_FAILED_HEADING);
+    expect(CAMERA_DENIED_HEADING).toBe("Camera access is blocked");
+    expect(CAMERA_DENIED_COPY).toBe("Allow camera access in your browser settings, then try again, or watch a recorded Sample.");
+    expect(CAMERA_MISSING_HEADING).toBe("No camera found");
+    expect(CAMERA_BUSY_HEADING).toBe("Camera is in use");
+    for (const line of [CAMERA_FAILED_COPY, CAMERA_DENIED_COPY, CAMERA_MISSING_COPY, CAMERA_BUSY_COPY, CAMERA_INSECURE_COPY, CAMERA_FAILED_HEADING, CAMERA_DENIED_HEADING, CAMERA_MISSING_HEADING, CAMERA_BUSY_HEADING, CAMERA_INSECURE_HEADING]) {
+      expect(line).not.toMatch(/[—–]/);
+    }
+    expect(instructCameraFailure({ name: "NotAllowedError" })).toBe("denied");
+    expect(instructCameraFailure({ name: "SecurityError" })).toBe("denied");
+    expect(instructCameraFailure({ name: "NotFoundError" })).toBe("missing");
+    expect(instructCameraFailure({ name: "OverconstrainedError" })).toBe("missing");
+    expect(instructCameraFailure({ name: "NotReadableError" })).toBe("busy");
+    expect(instructCameraMessage("denied").body).toBe(CAMERA_DENIED_COPY);
+    expect(instructCameraMessage("timeout").heading).toBe(CAMERA_FAILED_HEADING);
     const instruct = readFileSync("src/ui/InstructScreen.tsx", "utf8");
     const landing = readFileSync("src/ui/Landing.tsx", "utf8");
     expect(instruct).toContain("INSTRUCT_SECTION_LABEL");
