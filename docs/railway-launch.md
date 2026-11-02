@@ -2,68 +2,164 @@
 
 Public URL: **https://web-production-d1454.up.railway.app**
 
-Latest observed baseline: **November 3, 2026 (Asia/Calcutta)**, deployment
-`4b0c48cc-d948-416f-9fc7-801d6291dd9c`, main `a522a73` (PR #19). Railway reports
-SUCCESS and the latest camera-readiness source is deployed. This observation
-predates the judge-readiness enhancement branch; later receipts must identify
-their own reviewed revision.
+Current production deployment: **`d3ee4b77`**, frontend source **`756d34f`**,
+forwarding privately to healthy worker **`258e0cb5`**, manually pinned source
+**`234f32a`**. All three public model routes pass live acceptance, including a
+valid uploaded-clip plan. A 12-second Files API clip also passes. **Useful
+missing-object correction remains P0:** restored blue-card fixtures were not
+detected despite successful SAM responses. Physical phones, owned real-demo footage
+and learner acceptance remain open; this is not a completed learner journey.
 
-Fresh representative hosted acceptance captured 14 inspected screenshots: landing,
-mobile source entry, recorded Next/Skip/recap/replay, sample switching, supervision
-and cold-route recovery. There were no page errors or failed browser requests.
-Recorded progression worked; real hosted instruction returned **502**, while SAM
-returned outer 200 with **`ok:false`, upstream404**. Configured capability or an
-outer 200 is not a successful model result.
+## Current topology
 
-PR #19 verification passed 458 unit tests, 31 browser regressions and build.
-Enhancement evidence is recorded separately in its plan/PR. Physical-phone and
-learner testing remain separate. See [current priorities](competitive-readiness.md).
+- Existing `reel2real` project, production environment and public `web` service.
+- `MUSE_FORWARD_ENABLED=1` and `SAM_FORWARD_ENABLED=1` select forwarding for all
+  three model flows. The already-configured `SAM_FORWARD_URL` targets
+  `http://meta-worker-live.railway.internal:8080/api/internal/segment`; Muse derives
+  `/api/internal/instruct` and `/api/internal/spark` on the same worker.
+- Healthy worker deployment `258e0cb5` serves manually pinned source `234f32a`.
+  Its internal routes require the shared forwarding secret.
+  The worker's public preview remains password protected. No key or secret value
+  belongs in this document, logs or chat.
+- Primary configured cap remains the approved **200 provider attempts per process
+  per day**. The healthy worker also has **200/process/day**; old preview retains 100/process/day and is no longer the model backend.
+- The existing authorized key was retained; final worker stores that same key as an
+  encrypted platform secret, while forwarding-secret/password references are unchanged. No key replacement, billing-plan change or Contributor consent change
+  was made to enable this path.
+- Temporary diagnostics have been removed; `NODE_OPTIONS` is absent. No cloud
+  environment configuration was republished for the Railway deployment.
 
-## Historical November 2 launch checkpoint
+## Verified behavior and remaining acceptance
 
-The following counts and old deployment `050fc742-3680-4db7-af47-4051a6bc837b`
-belong to the earlier launch; that deployment has since been replaced.
+PR #20 passed CI, **483 unit tests**, **36 production browser checks**, type
+checking and the production build. Five hosted mobile recorded-flow checks passed:
+clip entry, supervision text, thumbnail clearance, honest recap and restart.
+These checks made zero live AI requests and do not establish camera/learner results.
 
-- Existing `reel2real` project, `production` environment, `web` service reused.
-- User approved public access and live AI with 200 provider attempts per server process/day. Password gate removed; direct mode enabled; forwarding disabled.
-- Railway build/type validation passed. Latest local suite: 66 files, 448 tests passed.
-- Fresh hosted browser acceptance: 17 checks passed, 0 failed. Real HTTPS pages/assets/runtime, all five recorded lessons, truthful recaps/restart/jumps, sample switching/credits/media, category filters, mobile supervision/controls, four responsive widths and cold-route recovery passed.
-- Recorded acceptance acquired no camera, made no segment/instruction requests, intercepted no API responses and recorded no browser errors. Optional web fonts were blocked for deterministic captures. Physical-phone camera testing remains separate.
+The existing protected worker, reviewed source `756d34f`, then passed two real-model
+checks with unchanged owned synthetic fixtures on **November 3, 03:22 IST**:
 
-## Live AI blocker
+| Route | Result | Observed client time |
+| --- | --- | --- |
+| Internal instruction | HTTP 200; live Spark, parsed/schema-valid three-step plan, two objects per step. | 39.576 s |
+| Internal segmentation | HTTP/upstream 200; live SAM, `ok:true`, one present mask, no timeout. | 2.328 s |
 
-The deployed service's real Spark and SAM requests returned upstream `404 model_not_found`. Current official Meta documentation confirms the configured identifiers `muse-spark-1.3` and `sam-3.1`; changing model names or silently selecting contributor mode is not justified.
+On the public origin at **03:26:47–03:27:09 IST**, the original instruction returned
+200 with a schema-valid three-step live Spark plan in **20.893 seconds**. SAM
+returned 200/upstream 200 and a decoded positive normalized box in **1.009 seconds**.
+Its box IoU against this one synthetic fixture's ground truth was **0.9897**;
+this does not measure general accuracy or physical technique.
 
-The November 3 investigation kept the existing key unchanged. Provider replies
-carried `model_not_found`, `model-api-rust` and request IDs in 199/211 ms; Railway
-resolved the intended `api.meta.ai` host and flow records showed no drop. This
-contradicts a general Railway DNS/TCP/TLS/egress block. It does not establish that
-the key is invalid: project/model access or a provider source policy remains to
-be resolved. See the [sanitized support draft](meta-access-support-draft.md) for
-exact request IDs. Do not replace credentials or model IDs merely on this evidence.
-No key value belongs in chat, logs or repository files.
+The original public-model blocker is operationally resolved through forwarding.
+The existing worker rejected an uploaded six-second generated QA clip: missing
+`tutorialId` and nine enum errors. Local repair `2f4f8e6` supplies app-owned
+identity/provenance and actual clip duration/MIME, prompts exact enums and preserves
+model roles/source times under strict validation. Review passed; **501 unit tests
+in 70 files**, the production build and **36 production browser tests** passed.
+A separate manual worker candidate, source `fc241004`, reached Railway SUCCESS
+on deployment `361b0f53` (`meta-worker`). Basic-auth and POST-only route checks
+passed. Three protected model POSTs then ran once each, without retry:
 
-A private Railway diagnostic used a server-side reference to the existing web key
-in the same `us-west2` region. A schema-validated authenticated `GET /v1/models`
-returned **200 with `data: []`**; the unauthenticated control returned **401
-`invalid_api_key`**. The key was present, reference-resolved and unchanged by trim.
-The key is accepted, but neither required model is visible in that catalog.
-Request IDs: authenticated `c7fbd628-593d-4e8e-ace0-5bc8cdff7e70`, control
-`a5b99672-65a2-4d97-9c54-b8f5085d86e6`. This excludes a parser artifact and general
-Railway network blocking; Meta team/project entitlement or provider source policy
-still needs resolution. The earlier parser-limited result is superseded.
+| Candidate route | Result | Client time |
+| --- | --- | --- |
+| Clip | HTTP 200; live Spark, strict schema pass, six-second generated QA video; later blue placement represented at 3–6 seconds. | 15.1 s |
+| SAM | HTTP/upstream 200; decoded bounded box on the owned synthetic fixture, IoU 0.9897. | 1.8 s |
+| Instruction | Client HTTP 502; application timeout, no tutorial. Provider status/request ID unobserved. | 45.5 s |
 
-All four temporary diagnostic services were removed and verified absent; existing
-service deployment IDs were unchanged. Credentials were never exported and no
-inference POSTs were made by those jobs. After a justified access remediation,
-repeat real hosted plan/localization/recheck and physical-device acceptance.
+Source `234f32a` adds only documented Spark `reasoning.effort: "low"`;
+models, deadlines, token caps and retries are unchanged. Peer review passed,
+**505 unit tests in 70 files**, **36 production browser tests** and the production
+build/CI passed. No fixed omitted-effort default or p95 improvement is claimed.
 
-Independent probes using the managed cloud credential context returned completed Spark and SAM responses for a self-generated synthetic JPEG. Spark normalizes to a valid three-step plan. The SAM response exposed an encoding-marker/dimension adapter defect, which was fixed and deployed with canonical positive, empty, non-square, lossless, malformed and size-limit regressions. Full-client replay now returns the expected red-square box. These checks establish the corrected contract, not hosted credential success or physical-task quality.
+Subsequent candidate requests returned model404, including SAM. Restoring the
+prior image and equal snapshot variables did not recover that candidate, while
+the existing worker still returned SAM200. The final fresh `meta-worker-live`
+worker, source `234f32a`, deployment `258e0cb5`, passed all protected checks after
+a credential-assignment control: the existing authorized key's rendered value was
+identical before and after changing its assignment from reference to encrypted
+platform secret. No key rotation occurred; the context/source-policy cause remains
+unproven. The same image was retained.
 
-## Evidence and redeployment
+| Final protected route | Result | Client time |
+| --- | --- | --- |
+| Instruction | HTTP 200; original fixture, valid live plan. | 20.262 s |
+| Clip | HTTP 200; valid six-second generated QA plan, later blue placement at 3–6 s. | 7.689 s |
+| SAM | HTTP/upstream 200; decoded synthetic-fixture box, IoU 0.989714. | 1.821 s |
 
-Workspace evidence is in `/workspace/reel2real-review/hosted/acceptance-after-sam-fix.json`, with 17 screenshots and deployment ID. The deployment receipt and non-secret target/settings metadata are in `RAILWAY-DEPLOYMENT-STATUS.md` and `RAILWAY-DEPLOYMENT-TARGET.json` in that review folder.
+Public promotion then passed all three original checks on `d3ee4b77`:
 
-The exact uploaded source is recorded in `RAILWAY-SOURCE-MANIFEST-SAM-FIX.json` and backed up at `/workspace/reel2real-deployed-source.tar.gz`. The initial deployment used the working tree, including new source files. Future GitHub-triggered deployments must include this launch source and the canonical SAM decoder correction. This launch note was added after the application upload and does not change runtime code.
+| Public route | Result | Client time |
+| --- | --- | --- |
+| Instruction | HTTP 200; valid live plan. | 22.790 s |
+| Clip | HTTP 200; valid six-second generated QA plan, later blue step at 3.2–6 s. | 7.422 s |
+| SAM | HTTP/upstream 200; decoded red-fixture box, IoU 0.989714. | 1.291 s |
 
-No cloud-environment configuration changes or publication were performed during Railway deployment. Participant eligibility, portal artifacts, real learner benefit and target-phone acceptance remain tracked in [the readiness ledger](hackathon-readiness.md).
+A further **12-second public clip** passed in **9.97 s** through the Files API,
+with independent schema validation and blue-card content at 6–11.5 s; both Files
+and response provider calls returned 200. Generated QA footage is not an owned
+physical lesson or learner-benefit result.
+
+**Model-quality P0:** five calls covered generic-prompt PNG absent/restored
+frames, planner-prompt PNG absent/restored frames and a restored planner-prompt
+JPEG control. All three restored-frame checks missed blue (`present:false`); both
+absent-frame checks were correct. All returned live HTTP/upstream200, `ok:true`
+and no timeout. Raw SAM output was not retained, so provider-versus-decoder
+cause is unestablished. Do not claim a successful missing→restored loop. Triage
+raw controlled output and the adapter, establish recall on frozen real props and
+verify a useful fresh correction on a physical phone before demo acceptance. Two planning observations
+under changed execution conditions do not establish a speed improvement.
+
+The healthy worker is **manually pinned to `234f32a`**, uses the existing key as an
+encrypted platform secret, and does not automatically inherit future key changes.
+Forwarding-secret/password references remain unchanged; its cap is 200/process/day,
+execution flags remain off and it listens on port 8080. Its Basic-protected public
+domain remains for administration. GitHub main deployments update the frontend
+and old preview; they do not automatically rebuild this healthy backend.
+
+Require an owned physical-lesson plan with later content, fresh missing-object recheck,
+real phone camera permissions and an owned physical lesson. The observed
+20.9- and 39.6-second plans need representative latency and timeout measurement
+against the 45-second model deadline; no speed improvement is claimed.
+
+The unused failed `meta-worker` service (`2e08ce46`) and its generated `c785`
+domain were deleted after public acceptance. Exactly four services remain: `web`
+(`d3ee4b77`), `web-pr`, `web-preview` (`7d21232e`) and healthy
+`meta-worker-live` (`258e0cb5`). Their deployment IDs were unchanged by cleanup;
+the healthy worker's Basic-protected admin domain was deliberately retained.
+
+## Direct-process discrepancy
+
+Before forwarding was enabled, the primary process returned instruction 502/no plan
+and SAM upstream 404/no masks. Actual serialized Authorization matched the unchanged
+startup/runtime key, and the replies did not redirect. Its native catalog returned
+200 with no models, whereas a private Railway control listed nine and the existing
+protected worker subsequently performed both model operations successfully.
+
+The direct-process discrepancy remains unexplained. Successful worker calls
+contradict a blanket Railway networking block or blanket inability of the key to
+execute SAM. They do not identify a provider account/source-policy cause. The
+[optional support draft](meta-access-support-draft.md) retains failed and successful
+provider request IDs without asserting that direct access has been fixed.
+
+Earlier launch receipts describe preceding direct-only deployments. The canonical
+SAM decoder correction and judge-readiness UI changes are included in reviewed main.
+
+## Evidence
+
+Workspace receipts live under
+`/workspace/reel2real-review/meta-screenshot-followup/`, including
+`forward-public-acceptance/`, `existing-worker/urllib-result.json`,
+`upload-acceptance/schema-diagnostic-attempt-2/` and
+`actual-runtime-preload/activation-run-2/restoration.json`. Local repair evidence
+is in `/workspace/reel2real-review/upload-contract/task-1-report.md` and `browser.log`.
+Candidate receipts are in `stage-fc24100/summary.json` and
+`candidate-acceptance-fc24100/REPORT.md`, `stage-234f32a/summary.json` and
+`candidate-acceptance-234f32a/REPORT.md` and
+`credential-assignment-control/{sam-gate,remaining-quality}/`,
+`final-public-234f32a/ACCEPTANCE.json`, `live-files-acceptance/` and
+`live-recheck-{acceptance,planner-prompt,jpeg-control}/` under the follow-up evidence directory. Recorded UI release receipts are under
+`/workspace/reel2real-review/hackathon-nov3/hosted/final-release/`.
+
+Use [current priorities](competitive-readiness.md) for PM/engineering/QA work.
+Participant track/portal verification, real learner benefit, owned demo footage and
+target-phone acceptance remain open; no submission receipt is claimed.
