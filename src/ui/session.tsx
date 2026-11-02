@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ToolCall, TutorialSteps } from "@/src/schema/types";
 import { SPARK_MODEL_ID, SAM_MODEL_ID } from "@/src/models";
 
@@ -38,6 +38,8 @@ export interface SessionSummary {
 }
 
 interface SessionValue {
+  /** True after the provider's first client commit. Redirects wait for this. */
+  hydrated: boolean;
   runtime: RuntimeInfo;
   prepare: PrepareRequest | null;
   tutorial: TutorialSteps | null;
@@ -56,6 +58,7 @@ interface SessionValue {
 const SessionContext = createContext<SessionValue | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
+  const [hydrated, setHydrated] = useState(false);
   const [runtime, setRuntime] = useState<RuntimeInfo>({ mock: true, sparkModelId: SPARK_MODEL_ID, samModelId: SAM_MODEL_ID });
   const [prepare, setPrepareState] = useState<PrepareRequest | null>(null);
   const [tutorial, setTutorialState] = useState<TutorialSteps | null>(null);
@@ -64,6 +67,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [sparkLatencyMs, setSparkLatencyMs] = useState<number | null>(null);
   const [stepsSource, setStepsSource] = useState<StepsSource | null>(null);
   const [summary, setSummary] = useState<SessionSummary | null>(null);
+  const videoUrlRef = useRef(videoUrl);
+  videoUrlRef.current = videoUrl;
+
+  useEffect(() => {
+    let cancel = false;
+    // After this commit's queued writes, not a timer. A tutorial set in the same turn lands first.
+    queueMicrotask(() => {
+      if (!cancel) setHydrated(true);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,7 +96,41 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const setPrepare = useCallback((next: PrepareRequest, url: string | null) => {
+    const current = videoUrlRef.current;
+    if (current && current !== url) URL.revokeObjectURL(current);
+    setPrepareState(next);
+    setVideoUrl(url);
+    setTutorialState(null);
+    setStepsSource(null);
+    setSummary(null);
+  }, []);
+
+  const setTutorial = useCallback((next: TutorialSteps, latencyMs: number, toolCalls: ToolCall[], source: StepsSource) => {
+    setTutorialState(next);
+    setSparkLatencyMs(latencyMs);
+    setToolLog(toolCalls);
+    setStepsSource(source);
+  }, []);
+
+  const addTools = useCallback((toolCalls: ToolCall[]) => {
+    setToolLog((current) => [...current, ...toolCalls]);
+  }, []);
+
+  const reset = useCallback(() => {
+    const current = videoUrlRef.current;
+    if (current) URL.revokeObjectURL(current);
+    setPrepareState(null);
+    setTutorialState(null);
+    setVideoUrl(null);
+    setToolLog([]);
+    setSparkLatencyMs(null);
+    setStepsSource(null);
+    setSummary(null);
+  }, []);
+
   const value = useMemo<SessionValue>(() => ({
+    hydrated,
     runtime,
     prepare,
     tutorial,
@@ -89,33 +139,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     sparkLatencyMs,
     stepsSource,
     summary,
-    setPrepare: (next, url) => {
-      if (videoUrl && videoUrl !== url) URL.revokeObjectURL(videoUrl);
-      setPrepareState(next);
-      setVideoUrl(url);
-      setTutorialState(null);
-      setStepsSource(null);
-      setSummary(null);
-    },
-    setTutorial: (next, latencyMs, toolCalls, source) => {
-      setTutorialState(next);
-      setSparkLatencyMs(latencyMs);
-      setToolLog(toolCalls);
-      setStepsSource(source);
-    },
-    addTools: (toolCalls) => setToolLog((current) => [...current, ...toolCalls]),
+    setPrepare,
+    setTutorial,
+    addTools,
     setSummary,
-    reset: () => {
-      if (videoUrl) URL.revokeObjectURL(videoUrl);
-      setPrepareState(null);
-      setTutorialState(null);
-      setVideoUrl(null);
-      setToolLog([]);
-      setSparkLatencyMs(null);
-      setStepsSource(null);
-      setSummary(null);
-    },
-  }), [prepare, runtime, sparkLatencyMs, stepsSource, summary, toolLog, tutorial, videoUrl]);
+    reset,
+  }), [addTools, hydrated, prepare, reset, runtime, setPrepare, setSummary, setTutorial, sparkLatencyMs, stepsSource, summary, toolLog, tutorial, videoUrl]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

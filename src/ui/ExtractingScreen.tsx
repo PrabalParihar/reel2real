@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell, Chip } from "./chrome";
@@ -13,6 +13,7 @@ import { PUBLISHED_SAMPLES, sampleByPublishedId } from "@/src/domains/catalog";
 import { heroNouns, heroSamFile, heroStep, sceneAsset } from "@/src/samples/scene";
 import { PhotoFrame } from "./PhotoFrame";
 import { REFUSAL_UNSAFE } from "@/src/safety/goal-screen";
+import { coachHref } from "./coach-open";
 import { isLiveCoachingOff, LiveCoachingOff } from "./LiveCoachingOff";
 import { readStepsCache, writeStepsCache } from "./steps-cache";
 
@@ -51,12 +52,18 @@ export function ExtractingScreen() {
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<ExtractStage>("reading");
   const demo = params.get("demo");
+  const prepare = session.prepare;
+  const setPrepare = session.setPrepare;
+  const setTutorial = session.setTutorial;
+  const prepareRef = useRef(prepare);
+  prepareRef.current = prepare;
+  const navigated = useRef(false);
 
   useEffect(() => {
-    if (!demo || session.prepare) return;
+    if (!demo || prepare) return;
     const published = sampleByPublishedId(demo);
     const sampleId = published?.id ?? (demo === "aloo-jeera" ? "aloo-jeera" : PUBLISHED_SAMPLES[0].id);
-    const prepare: PrepareRequest = {
+    const next: PrepareRequest = {
       key: `demo:${sampleId}`,
       sampleId,
       hasClip: false,
@@ -65,8 +72,8 @@ export function ExtractingScreen() {
       domain: published?.domain ?? "indian_recipe",
       title: published?.tutorial.title,
     };
-    session.setPrepare(prepare, null);
-  }, [demo, session]);
+    setPrepare(next, null);
+  }, [demo, prepare, setPrepare]);
 
   useEffect(() => {
     if (!session.prepare && !demo) router.replace("/upload");
@@ -80,14 +87,21 @@ export function ExtractingScreen() {
   }, [session.prepare]);
 
   useEffect(() => {
-    const prepare = session.prepare;
-    if (!prepare || error) return;
-    const request = attempt ? { ...prepare, key: `${prepare.key}:retry${attempt}` } : prepare;
+    const current = prepareRef.current;
+    if (!current || error || navigated.current) return;
+    const request = attempt ? { ...current, key: `${current.key}:retry${attempt}` } : current;
     let cancelled = false;
+    const openCoach = (tutorial: TutorialSteps, latencyMs: number, toolCalls: ToolCall[], source: StepsSource, sampleId?: string) => {
+      if (cancelled || navigated.current) return;
+      navigated.current = true;
+      setStage("preparing");
+      setTutorial(tutorial, latencyMs, toolCalls, source);
+      router.push(coachHref(sampleId, source));
+    };
     postSpark(request, (next) => {
       if (!cancelled) setStage(next);
     }).then(async (result) => {
-      if (cancelled) return;
+      if (cancelled || navigated.current) return;
       setStage("validating");
       if (result.refused) {
         setRefusal(result.refusalReason || REFUSAL_UNSAFE);
@@ -112,27 +126,23 @@ export function ExtractingScreen() {
           inputKind: result.inputKind,
         });
       }
-      if (cancelled) return;
-      setStage("preparing");
-      session.setTutorial(result.tutorial, result.latencyMs, result.toolCalls, result.inputKind);
-      router.push("/coach");
-    }).catch(async (error: Error & { code?: string }) => {
-      if (cancelled) return;
-      if (error.code === "daily_cap") {
+      if (cancelled || navigated.current) return;
+      openCoach(result.tutorial, result.latencyMs, result.toolCalls, result.inputKind, request.sampleId);
+    }).catch(async (caught: Error & { code?: string }) => {
+      if (cancelled || navigated.current) return;
+      if (caught.code === "daily_cap") {
         const saved = await useCapFallback(request);
         if (saved) {
-          setStage("preparing");
-          session.setTutorial(saved.tutorial, 0, saved.toolCalls, saved.source);
-          router.push("/coach");
+          openCoach(saved.tutorial, 0, saved.toolCalls, saved.source, request.sampleId);
           return;
         }
       }
-      setError(error.message || "Spark did not return steps.");
+      setError(caught.message || "Spark did not return steps.");
     });
     return () => {
       cancelled = true;
     };
-  }, [attempt, error, router, session, session.prepare]);
+  }, [attempt, error, prepare?.key, router, setTutorial]);
 
   const published = sampleByPublishedId(demo) ?? sampleByPublishedId(session.prepare?.sampleId);
   const heroFile = published ? heroSamFile(published.scene) : undefined;
