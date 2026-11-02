@@ -391,6 +391,20 @@ describe("instruct capture still", () => {
     expect(host.querySelector(".error-panel h2")?.textContent).toBe("Camera didn't start");
   });
 
+  it("announces Opening the camera only in the polite status region", async () => {
+    await mount();
+    await allowCamera();
+    const regions = [...host.querySelectorAll("[aria-live]")];
+    expect(regions).toHaveLength(1);
+    expect(regions[0]?.classList.contains("visually-hidden")).toBe(true);
+    expect(regions[0]?.getAttribute("aria-live")).toBe("polite");
+    expect(regions[0]?.textContent).toContain("Opening the camera…");
+    const visible = host.cloneNode(true) as HTMLElement;
+    visible.querySelectorAll(".visually-hidden").forEach((node) => node.remove());
+    expect(visible.textContent).not.toContain("Opening the camera…");
+    expect(host.querySelector(".instruct-starting")?.textContent).toContain(CAMERA_STARTING_LABEL);
+  });
+
   it("mounts the video while getUserMedia is still pending and attaches when it resolves", async () => {
     const order: string[] = [];
     const proto = HTMLMediaElement.prototype;

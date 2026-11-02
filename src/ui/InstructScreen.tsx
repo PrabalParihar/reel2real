@@ -384,10 +384,10 @@ export function InstructScreen() {
               </button>
             </div>
             <div className="visually-hidden" aria-live="polite">
-              {(phase === "live" || phase === "opening") && !frameReady ? CAMERA_STARTING_LABEL : ""}
+              {phase === "opening" ? "Opening the camera…" : ""}
+              {phase === "live" && !frameReady ? CAMERA_STARTING_LABEL : ""}
             </div>
             {note ? <p className="form-note">{note}</p> : null}
-            {phase === "opening" ? <p className="form-note">Opening the camera…</p> : null}
             {!ready && !note && phase !== "live" && phase !== "opening" && !cameraFailure ? <p className="form-note">Enter a goal, then capture one still.</p> : null}
             {cameraFailure ? (
               <div className="panel error-panel" role="alert">
