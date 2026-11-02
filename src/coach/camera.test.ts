@@ -3,6 +3,18 @@ import { cameraBlockMessage, classifyCameraError, FALLBACK_CAMERA_CONSTRAINTS, o
 import { INSTRUCT_STILL_WIDTH, KEYFRAME_JPEG_QUALITY, KEYFRAME_LONGEST_PX, instructStillSize, keyframeSize } from "./keyframe";
 
 describe("rear camera", () => {
+  it.each(["NotReadableError", "TrackStartError"])("reports %s without retrying another device constraint", async (name) => {
+    const busy = Object.assign(new Error("Camera already in use"), { name });
+    const calls: MediaStreamConstraints[] = [];
+    const result = openRearCamera(async (constraints) => {
+      calls.push(constraints);
+      if (calls.length === 1) throw busy;
+      return {} as MediaStream;
+    });
+    await expect(result).rejects.toBe(busy);
+    expect(calls).toEqual([REAR_CAMERA_CONSTRAINTS]);
+  });
+
   it("does not request a camera when acquisition was already cancelled", async () => {
     const controller = new AbortController();
     controller.abort();

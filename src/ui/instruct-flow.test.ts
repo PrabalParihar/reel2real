@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { SAMPLE_OUTLINE_CAPTION } from "./SampleCoachStill";
-import { INSTRUCT_GOALS, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
+import { INSTRUCT_GOALS, instructCameraBusyMessage, instructPrimary, instructProgress, planStepsEnabled } from "./instruct-flow";
 
 function uiFiles(dir: string): string[] {
   const found: string[] = [];
@@ -15,6 +15,18 @@ function uiFiles(dir: string): string[] {
 }
 
 describe("instruction flow", () => {
+  it("gives busy camera failures actionable recovery without relabeling permission errors", () => {
+    for (const name of ["NotReadableError", "TrackStartError"]) {
+      const message = instructCameraBusyMessage({ name });
+      expect(message).toMatch(/close/i);
+      expect(message).toMatch(/camera/i);
+      expect(message).toMatch(/retry/i);
+    }
+    expect(instructCameraBusyMessage({ name: "NotAllowedError" })).toBeNull();
+    expect(instructCameraBusyMessage({ name: "NotFoundError" })).toBeNull();
+    expect(instructCameraBusyMessage(null)).toBeNull();
+  });
+
   it("keeps Plan steps off until a goal and a still are both present", () => {
     expect(planStepsEnabled("", false)).toBe(false);
     expect(planStepsEnabled("Make a chai spice mix", false)).toBe(false);
