@@ -1,5 +1,7 @@
 # Reel2Real
 
+[Watch the 2:03 prototype demo](https://web-production-d1454.up.railway.app/submission/index.html) · [Submission copy and verification](docs/SUBMISSION-PACK.md)
+
 Reel2Real is a phone-on-a-stand browser guide. Upload a short tutorial you own or have permission to use, get a step plan, and use camera keyframes to highlight the objects for each step. Instruction mode instead starts from a goal and one workspace still. Object visibility does not verify that an action was performed correctly, its temporal order, or general safety. Next records the learner's confirmation.
 
 Five recorded Sample demos are included: masala chai, a kids science flask, origami, seed planting, and latte art. They use saved instructions, media, creator credits, and recorded SAM output. They work without a model key or camera and never stand in for live acceptance evidence.

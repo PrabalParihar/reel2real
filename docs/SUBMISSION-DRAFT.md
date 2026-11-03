@@ -1,5 +1,7 @@
 # DRAFT. Do not submit.
 
+**Latest handoff:** use [SUBMISSION-PACK.md](SUBMISSION-PACK.md) for the finished 2:03 demo, ready-to-paste copy, observed participant form values and fresh verification. This older planning draft is retained for its original evidence checklist. The portal submission itself remains unconfirmed.
+
 This is editable submission copy for Reel2Real. **This submission draft has not been submitted or published.** The [official sources were refreshed November 3, 2026, Asia/Calcutta](event-requirements.md); submissions are due **November 5 at 07:30 IST**. The user prefers Indie Developer after applying to Startup; the official application permits switching, but the saved track and acceptance remain unverified. Portal fields/length limits, rights/prior-work questions, owned physical-lesson/full-journey acceptance, physical-device testing and learner observations remain pending. Public goal, generated-clip inline/Files and red-box SAM checks pass; restored-blue false negatives leave useful correction unverified; see the current evidence below. See the [competition assessment and task board](competitive-readiness.md). Source implementation and mocked/browser tests are not substitutes for live results.
 
 ## Name

@@ -1,0 +1,121 @@
+1
+00:00:00,300 --> 00:00:02,619
+Hands busy. Tutorial paused.
+
+2
+00:00:02,779 --> 00:00:04,655
+Where does the next step belong?
+
+3
+00:00:04,815 --> 00:00:07,744
+Reel to Real brings the guide into your
+workspace.
+
+4
+00:00:08,300 --> 00:00:11,818
+Start with a short tutorial you own or have
+permission to use.
+
+5
+00:00:11,978 --> 00:00:14,555
+Reel to Real turns it into a step guide.
+
+6
+00:00:18,300 --> 00:00:24,635
+Five Samples replay saved instructions, media,
+and recorded SAM output, with creator credit.
+
+7
+00:00:24,795 --> 00:00:29,349
+The lesson stays labelled as a recorded Sample
+throughout playback and coaching.
+
+8
+00:00:29,509 --> 00:00:33,252
+Explore this guided experience without a
+camera or model key.
+
+9
+00:00:38,300 --> 00:00:40,076
+Now, the live path.
+
+10
+00:00:40,236 --> 00:00:44,382
+This owned, generated six-second clip contains
+red and blue shapes.
+
+11
+00:00:44,542 --> 00:00:47,840
+The complete clip goes to the real Muse Spark
+API.
+
+12
+00:00:48,000 --> 00:00:52,552
+Its response becomes a structured lesson,
+including later content.
+
+13
+00:00:58,300 --> 00:01:02,390
+The coach sends virtual-camera keyframes to
+the real SAM API.
+
+14
+00:01:02,550 --> 00:01:05,590
+It highlights detected objects for this step.
+
+15
+00:01:05,750 --> 00:01:08,678
+This synthetic camera test can miss objects.
+
+16
+00:01:08,838 --> 00:01:11,395
+A highlight cannot verify technique.
+
+17
+00:01:18,300 --> 00:01:20,039
+You stay in control.
+
+18
+00:01:20,199 --> 00:01:23,801
+Next records your confirmation. Skip is
+explicit.
+
+19
+00:01:23,961 --> 00:01:30,322
+The recap separates confirmed steps, visible
+objects, skipped steps, and unvisited steps.
+
+20
+00:01:33,300 --> 00:01:36,321
+Or start with a goal and one workspace still.
+
+21
+00:01:36,481 --> 00:01:39,857
+This alternate route has no tutorial
+timestamps.
+
+22
+00:01:41,300 --> 00:01:43,554
+Muse Spark plans the sequence.
+
+23
+00:01:43,714 --> 00:01:46,551
+SAM localizes each step's objects.
+
+24
+00:01:46,711 --> 00:01:51,374
+The app server keeps model credentials out of
+the browser and bounds requests.
+
+25
+00:01:53,300 --> 00:01:56,712
+Physical-device trials and learner studies are
+next.
+
+26
+00:01:56,872 --> 00:01:59,503
+Try the prototype and explore the source.
+
+27
+00:01:59,663 --> 00:02:02,067
+Reel to Real: from watching to doing.

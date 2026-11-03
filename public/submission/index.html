@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Watch Reel2Real: complete-clip planning with Muse Spark and step-specific object checks with SAM 3.1.">
+  <title>Reel2Real — Hackathon demo</title>
+  <style>
+    :root{font-family:system-ui,sans-serif;color:#232428;background:#f5f7fc;line-height:1.6;color-scheme:light}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:auto;padding:36px 24px 64px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:42px}
+    .brand{font-size:22px;font-weight:750;text-decoration:none;color:#232428}.star{color:#2165f5}
+    h1{font-size:clamp(30px,5vw,56px);line-height:1.12;letter-spacing:-.045em;margin:12px 0 20px}
+    .eyebrow{color:#2165f5;font-size:13px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+    .lead{max-width:760px;color:#566071;font-size:19px}a{color:#1755db;text-underline-offset:3px}
+    a:focus-visible,video:focus-visible,summary:focus-visible{outline:3px solid #2165f5;outline-offset:5px}
+    video{display:block;background:#142033;width:100%;aspect-ratio:16/9;border-radius:14px;box-shadow:0 12px 40px #1c2d4c16;margin-top:28px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}.button{padding:11px 18px;border:1px solid #cdd7e8;border-radius:9px;text-decoration:none;background:white;font-weight:650}
+    .primary{background:#2165f5;color:white;border-color:#2165f5}.note{font-size:14px;color:#566071}
+    .panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px}.panel{background:white;border:1px solid #dce3ee;border-radius:14px;padding:22px}
+    h2{font-size:20px;margin:0 0 12px}p{margin:10px 0}ul{padding-left:22px}li{margin-bottom:8px}
+    details{margin-top:28px}summary{cursor:pointer;font-weight:650}footer{border-top:1px solid #dce3ee;margin-top:32px;padding-top:20px;font-size:13px;color:#566071}
+    @media(max-width:640px){main{padding:24px 16px 42px}header{margin-bottom:28px}.panels{grid-template-columns:1fr}.button{padding:10px 14px}.lead{font-size:17px}}
+    @media(prefers-reduced-motion:no-preference){a{transition:background-color .15s ease}a.button:hover{filter:brightness(.96)}}
+  </style>
+</head>
+<body>
+<main>
+  <header><a class="brand" href="/"><span class="star" aria-hidden="true">✦</span> Reel2Real</a><a href="https://github.com/PrabalParihar/reel2real">View source</a></header>
+  <div class="eyebrow">Meta AI Developer Hackathon · Prototype demo</div>
+  <h1>From watching to doing.</h1>
+  <p class="lead">A short tutorial becomes a step guide. Muse Spark plans the sequence; SAM 3.1 checks the objects for the current step in a workspace frame. The learner controls progress.</p>
+  <video controls playsinline preload="metadata" poster="poster.png" aria-label="Reel2Real narrated prototype demonstration, two minutes and three seconds">
+    <source src="reel2real-demo.mp4" type="video/mp4">
+    <track kind="captions" src="captions.vtt" srclang="en" label="English">
+    Your browser cannot play this video. <a href="reel2real-demo.mp4">Download the MP4</a> or <a href="transcript.txt">read the transcript</a>.
+  </video>
+  <p class="note">2:03 · English synthetic narration and burned-in captions. Recorded Samples, generated QA media, virtual-camera input and separate live runs are labelled in the edit. One planning wait is shortened and disclosed.</p>
+  <nav class="actions" aria-label="Demo links">
+    <a class="button primary" href="/">Try the app</a>
+    <a class="button" href="reel2real-demo.mp4" download>Download demo</a>
+    <a class="button" href="transcript.txt">Read transcript</a>
+    <a class="button" href="https://github.com/PrabalParihar/reel2real">GitHub repository</a>
+  </nav>
+  <section class="panels" aria-label="What the demonstration shows">
+    <article class="panel"><h2>What runs in the demo</h2><ul>
+      <li>A recorded lesson with saved instructions, saved SAM output and creator credit.</li>
+      <li>A real Muse Spark API call planning a complete, owned six-second generated clip, including its later blue-card step.</li>
+      <li>Real SAM checks from a virtual camera: missed objects in one run; a red-paper box and fresh recheck in a separate goal-plus-still run.</li>
+      <li>Next, Skip and a recap that preserve the learner’s choices.</li>
+    </ul></article>
+    <article class="panel"><h2>Current boundaries</h2><ul>
+      <li>Detection can miss visible objects. These test runs include missed card/tray and paper edge/corner checks.</li>
+      <li>An object box does not verify the action, technique, order or general safety.</li>
+      <li>This is a generated-media test, not physical learner footage. Phone trials, useful physical-task correction and learner outcome studies remain to be done.</li>
+      <li>Recorded Samples replay supplied results; they do not make live inference calls.</li>
+    </ul></article>
+  </section>
+  <details><summary>Media provenance and credits</summary>
+    <p>The red/blue lesson and red-square image are original procedural QA media created for this project. Camera input comes from Chromium’s virtual video device. The screencast records the hosted application without intercepting or replacing model responses. Narration uses the synthetic flite SLT voice.</p>
+    <p>The main recorded lesson uses <a href="https://www.pexels.com/video/5480225/">Pexels 5480225</a> under the <a href="https://www.pexels.com/license/">Pexels License</a>. Gallery thumbnails retain the project’s <a href="https://github.com/PrabalParihar/reel2real/blob/main/public/samples/CREDITS.md">full source and licence credits</a>. Stock footage is not presented as self-filmed.</p>
+  </details>
+  <footer>Recorded November 3, 2026 UTC (November 4 IST). This page presents the prototype and its evidence; it is not a hackathon submission confirmation.</footer>
+</main>
+</body>
+</html>

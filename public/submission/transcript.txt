@@ -1,0 +1,17 @@
+Hands busy. Tutorial paused. Where does the next step belong? Reel to Real brings the guide into your workspace.
+
+Start with a short tutorial you own or have permission to use. Reel to Real turns it into a step guide.
+
+Five Samples replay saved instructions, media, and recorded SAM output, with creator credit. The lesson stays labelled as a recorded Sample throughout playback and coaching. Explore this guided experience without a camera or model key.
+
+Now, the live path. This owned, generated six-second clip contains red and blue shapes. The complete clip goes to the real Muse Spark API. Its response becomes a structured lesson, including later content.
+
+The coach sends virtual-camera keyframes to the real SAM API. It highlights detected objects for this step. This synthetic camera test can miss objects. A highlight cannot verify technique.
+
+You stay in control. Next records your confirmation. Skip is explicit. The recap separates confirmed steps, visible objects, skipped steps, and unvisited steps.
+
+Or start with a goal and one workspace still. This alternate route has no tutorial timestamps.
+
+Muse Spark plans the sequence. SAM localizes each step's objects. The app server keeps model credentials out of the browser and bounds requests.
+
+Physical-device trials and learner studies are next. Try the prototype and explore the source. Reel to Real: from watching to doing.

@@ -5,6 +5,7 @@ placeholders/
 
 # Audio and video. The india-check still PNG is intentionally not ignored.
 *.mp4
+!public/submission/reel2real-demo.mp4
 !public/samples/
 !public/samples/**
 !public/samples/**/*.mp4
