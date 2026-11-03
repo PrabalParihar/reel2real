@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex"><title>Fill Reel2Real submission</title>
+  <style>
+    :root{font:17px/1.6 system-ui,sans-serif;color:#1e293b;background:#f4f7fc}*{box-sizing:border-box}body{margin:0}main{max-width:820px;margin:40px auto;padding:28px;background:white;border:1px solid #dae3f0;border-radius:18px}h1{font-size:36px;line-height:1.15;letter-spacing:-.035em}h2{font-size:21px}.lead{color:#536176}a{color:#1755db;text-underline-offset:3px}.bookmark{display:inline-block;background:#2165f5;color:white;padding:15px 24px;border-radius:10px;font-weight:750;text-decoration:none;cursor:grab}li{padding-left:6px;margin:16px 0}.note{padding:15px;background:#eef4ff;border-radius:10px;font-size:15px}button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #bdcce2;background:white;cursor:pointer}a:focus-visible,button:focus-visible{outline:3px solid #2165f5;outline-offset:5px}footer{margin-top:30px;font-size:14px;color:#536176}@media(max-width:600px){main{margin:12px;padding:22px}h1{font-size:29px}}
+  </style>
+</head>
+<body><main>
+  <a href="index.html">Reel2Real demo</a>
+  <h1>Fill your Meta submission.</h1>
+  <p class="lead">Install this small bookmark once, then run it in your existing signed-in submission tab. It fills the prepared answers without copying each field separately.</p>
+  <ol>
+    <li>In desktop Chrome, show the bookmarks bar with <strong>Ctrl + Shift + B</strong> (Mac: <strong>⌘ + Shift + B</strong>).</li>
+    <li>Drag this blue link onto that bar:<br><a id="bookmark" class="bookmark" href="#">Fill Reel2Real</a><p id="install-status" role="status"></p></li>
+    <li>Return to the <a href="https://cerebralvalley.ai/e/meta-ai-developer-hackathon/hackathon/submit" target="_blank" rel="noopener">open Cerebral Valley submission form</a> and click the saved <strong>Fill Reel2Real</strong> bookmark. A report on that page tells you which fields were filled or need attention.</li>
+  </ol>
+  <p class="note">Keep your existing form open so its unsaved entries stay there. Clicking the blue link on this helper page will not fill another tab—save it to the bookmarks bar and run it in the submission tab.</p>
+  <h2>What it fills</h2>
+  <p>Blank project description, GitHub repository, demo video, Meta product usage, why the models matter, and factual partner-technology feedback. Existing text, team members, track, problem statement, ratings and declarations are preserved.</p>
+  <p>It does not submit the form or create a remote browser connection. It does not read passwords, cookies or tokens, and does not send your form contents to our server. The portal can respond normally to input changes.</p>
+  <p>The video is <a href="reel2real-demo.mp4">our real 2:03 MP4</a>. A YouTube placeholder does not establish host validation. If the portal requires YouTube, upload the MP4 and use its actual link.</p>
+  <details><summary>Code and prepared answers</summary><p>The bookmark is self-contained and restricted to this Meta event's submission/edit path. Missing, ambiguous, read-only and invalid fields are reported. Actual private-page compatibility is not established by local fixture tests.</p><p><a href="autofill.js">Read the complete helper source</a> · <a href="https://github.com/PrabalParihar/reel2real/blob/main/docs/SUBMISSION-PACK.md">Read the prepared project copy</a></p></details>
+  <footer>This tool prepares visible form fields. A submission exists only after Cerebral Valley returns a confirmation.</footer>
+</main>
+<script src="autofill.js"></script>
+<script>
+  const bookmark = document.getElementById('bookmark');
+  bookmark.href = 'javascript:' + encodeURIComponent('void (' + window.reel2realFillSubmission.toString() + ')()');
+  bookmark.addEventListener('click', event => { event.preventDefault(); document.getElementById('install-status').textContent = 'Drag the blue link to your bookmarks bar. Then click that saved bookmark while the submission form is active.'; });
+</script>
+</body></html>

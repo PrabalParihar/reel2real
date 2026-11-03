@@ -1,6 +1,12 @@
 # Reel2Real — submission copy
 
-Prepared November 3 UTC / November 4 IST. The participant screenshot confirms the team/track/problem-statement fields below. Additional artifact fields and character limits remain unobserved. This pack is ready to use; it is not a submission confirmation.
+Prepared November 4 IST. Participant screenshots confirm team/track/problem-statement fields and required Project Description, Public GitHub Repository, 3-Minute Demo Video, Meta product usage and why the models matter. The form also has optional partner feedback and a required future-use likelihood question. Character limits and video-host validation remain unverified. This pack is ready to use; it is not a submission confirmation.
+
+## Fill the actual form without field-by-field copying
+
+[Open the autofill helper](https://web-production-d1454.up.railway.app/submission/autofill.html), drag its Fill Reel2Real link to Chrome's bookmarks bar, then click that saved bookmark while your existing signed-in submission form is active. The self-contained bookmarklet fills the six known blank text fields using native setters/events compatible with controlled React inputs. It preserves nonempty entries, team/track selections, ratings and declarations; it does not click Submit. Missing, ambiguous, read-only and invalid fields are reported. It does not read cookies, credentials or storage or transmit form contents to our server; site listeners can react normally to input events. Actual private-page execution is unverified until the user invokes it.
+
+The demo is a real 123-second MP4. The form's YouTube placeholder alone does not prove a host restriction. If the portal rejects that link, upload the prepared video to an accepted host and use its real URL. Do not invent a YouTube link.
 
 ## Submission links and observed form values
 
@@ -17,7 +23,7 @@ Prepared November 3 UTC / November 4 IST. The participant screenshot confirms th
 | Direct MP4 | https://web-production-d1454.up.railway.app/submission/reel2real-demo.mp4 |
 | GitHub | https://github.com/PrabalParihar/reel2real |
 
-The track and problem statement were visibly selected in the user's form, but saving/submission requires the portal's actual confirmation. The screenshot did not show project-description or artifact-link fields. Do not invent a completed submission, extra team members, an X post, a Hugging Face repository, personal eligibility, rights declarations or waiver assent. No authenticated participant session or Chrome-control tool is connected to this workspace.
+The track and problem statement were visibly selected in the user's form, but saving/submission requires the portal's actual confirmation. Later screenshots show the required description/repository/video/Meta-answer fields; the repository field is populated. Partner feedback is optional; the future-use likelihood field already shows the user's Very likely selection. Do not invent a completed submission, extra team members, an X post, a Hugging Face repository, personal eligibility, rights declarations or waiver assent. No authenticated participant session or Chrome-control tool is connected to this workspace.
 
 The demo is 2:03, an editorial duration rather than a verified event limit. It records the hosted app with synthetic narration, labelled recorded Sample playback, owned generated QA media and a virtual camera. Model responses are real and are not intercepted. The uploaded-clip and goal-plus-still results come from separate labelled runs. A planning wait is shortened and labelled. No physical learner footage or measured learning benefit is claimed. See [media provenance](../public/submission/README.md).
 

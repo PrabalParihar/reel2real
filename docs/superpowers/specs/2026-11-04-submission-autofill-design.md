@@ -1,0 +1,9 @@
+# Submission form autofill
+
+The user wants the actual Cerebral Valley form filled without copying each answer manually. This chat has no browser-control connector or participant session. Supply a self-contained bookmarklet that the user can invoke once in the signed-in tab; do not imply remote tab control.
+
+Only operate on cerebralvalley.ai and this event's submission/edit path. Match the six known project text labels using only their native label/control association. Missing associations remain missing; do not guess a nearby control. Fill blank editable text controls using React-compatible native setters and bubbling events. Respect effective disabled state, including ancestor fieldsets. Preserve nonempty values, team members, track, problem statement and likelihood selections. Do not click Submit or alter personal/legal declarations. Report filled, preserved, missing, ambiguous or uneditable fields in a dismissible page message. Do not read credentials or call network/storage APIs. Portal listeners may react normally to input events.
+
+Use the existing real 123-second MP4 URL. The YouTube placeholder does not establish host validation; report browser constraint errors and leave any server-side validation to the portal. Do not fabricate a YouTube URL or partner experience. Partner feedback may accurately state that the project uses Meta API and Railway rather than Fireworks/Modal/Baseten.
+
+Host a small helper page alongside the existing demo, explaining how to drag the bookmarklet to Chrome's bookmarks bar and run it in the existing form. Keep runtime/model code and Railway variables unchanged. Test with real controlled React inputs using the public components' observed label associations, not the authenticated form. Passing fixture tests must never be described as proof of filling the user's personal tab.
